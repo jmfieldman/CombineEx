@@ -37,11 +37,3 @@ public class AnyDeferredPublisher<Output, Failure: Error>: DeferredPublisherProt
     deferredPublisher.createPublisher
   }
 }
-
-public extension AnyDeferredPublisher {
-  /// `eraseToAnyPublisher` can be overwritten to ensure that the response
-  /// maintains its subclass.
-  func eraseToAnyPublisher() -> Self {
-    self
-  }
-}

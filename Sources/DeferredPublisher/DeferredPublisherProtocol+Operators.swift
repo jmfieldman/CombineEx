@@ -44,6 +44,17 @@ public extension DeferredPublisherProtocol {
   }
 }
 
+// MARK: SetFailureType
+
+public extension DeferredPublisherProtocol {
+  @_disfavoredOverload
+  func setFailureType<E>(
+    to failureType: E.Type
+  ) -> Deferred<Publishers.SetFailureType<WrappedPublisher, E>> where WrappedPublisher.Failure == Never, E: Error {
+    deferredLift { $0.setFailureType(to: E.self) }
+  }
+}
+
 // MARK: FlatMap
 
 public extension DeferredPublisherProtocol {

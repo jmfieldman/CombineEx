@@ -16,18 +16,19 @@ final class DeferredPublisherTests: XCTestCase {
     basicSingleFutureTest(input: 1, output: 1) { $0 }
   }
 
-  func testEraseReturnsSelf() {
-    let anyDeferredPublisher: AnyDeferredPublisher<Int, Never> =
-      Deferred { Just(1) }.eraseToAnyPublisher()
-
-    XCTAssert(anyDeferredPublisher === anyDeferredPublisher.eraseToAnyPublisher())
+  /// This is just a compilation test to ensure that setFailureType works
+  func testSetFailureType() {
+    let anyDeferredPublisher: AnyDeferredPublisher<Int, TestError> =
+      Deferred { Just(1) }
+        .setFailureType(to: TestError.self)
+        .eraseToAnyDeferredPublisher()
   }
 
   // MARK: Map
 
   func testMapSingle() {
-    basicSingleFutureTest(input: 1, output: 2) { $0.map { $0 + 1 }.eraseToAnyPublisher() }
-    basicSingleFutureTest(input: "Hello", output: "HelloHello") { $0.map { $0 + $0 }.eraseToAnyPublisher() }
+    basicSingleFutureTest(input: 1, output: 2) { $0.map { $0 + 1 }.eraseToAnyDeferredPublisher() }
+    basicSingleFutureTest(input: "Hello", output: "HelloHello") { $0.map { $0 + $0 }.eraseToAnyDeferredPublisher() }
   }
 }
 
@@ -47,7 +48,7 @@ private extension DeferredPublisherTests {
     }
 
     let anyDeferredPublisher: AnyDeferredPublisher<Output, TestError> =
-      transform(Deferred { countableFuture }.eraseToAnyPublisher())
+      transform(Deferred { countableFuture }.eraseToAnyDeferredPublisher())
 
     XCTAssertEqual(countableInnerFire, 0)
     XCTAssertEqual(countableFuture.receiveCount, 0)
