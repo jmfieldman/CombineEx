@@ -13,6 +13,7 @@ private enum TestError: Error {
 
 final class DeferredFutureTests: XCTestCase {
   // MARK: - Basic
+
   func testBasic() {
     let future = TestableDeferredFuture(emission: 1, delay: 0.1)
     XCTAssert(!future.attempted)
@@ -21,6 +22,7 @@ final class DeferredFutureTests: XCTestCase {
   }
 
   // MARK: - Map
+
   private func _testMapUtility(_ futureBlock: (TestableDeferredFuture, @escaping (Int) -> Int) -> AnyPublisher<Int, TestError>) {
     let future = TestableDeferredFuture(emission: 1, delay: 0.1)
     XCTAssert(!future.attempted)

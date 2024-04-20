@@ -120,12 +120,13 @@ public extension DeferredFutureProtocol {
   @_disfavoredOverload
   func setFailureType<NewFailure>(
     to failureType: NewFailure.Type
-  ) -> DeferredFuture<Output, NewFailure> where Failure == Never, NewFailure : Error {
+  ) -> DeferredFuture<Output, NewFailure> where Failure == Never, NewFailure: Error {
     futureLiftFailure { _, _ in }
   }
 }
 
 // MARK: - Deferred Operator Aliases
+
 // These can be used to return DeferredFutures in a non-ambiguous manner.
 
 public extension DeferredFutureProtocol {
@@ -167,7 +168,7 @@ public extension DeferredFutureProtocol {
 
   func setFailureTypeDeferred<NewFailure>(
     to failureType: NewFailure.Type
-  ) -> DeferredFuture<Output, NewFailure> where Failure == Never, NewFailure : Error {
+  ) -> DeferredFuture<Output, NewFailure> where Failure == Never, NewFailure: Error {
     setFailureType(to: failureType)
   }
 }

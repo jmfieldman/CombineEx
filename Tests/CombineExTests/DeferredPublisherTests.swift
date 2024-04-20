@@ -47,7 +47,7 @@ private extension DeferredPublisherTests {
     }
 
     let anyDeferredPublisher: AnyDeferredPublisher<Output, TestError> =
-      transform(Deferred { countableFuture }.eraseToAnyPublisher())    
+      transform(Deferred { countableFuture }.eraseToAnyPublisher())
 
     XCTAssertEqual(countableInnerFire, 0)
     XCTAssertEqual(countableFuture.receiveCount, 0)

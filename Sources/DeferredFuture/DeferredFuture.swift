@@ -37,5 +37,5 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, De
 
   public func eraseToAnyDeferredFuture() -> AnyDeferredFuture<Output, Failure> {
     AnyDeferredFuture(self)
-  }  
+  }
 }
