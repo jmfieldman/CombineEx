@@ -22,6 +22,8 @@ final class DeferredPublisherTests: XCTestCase {
       Deferred { Just(1) }
         .setFailureType(to: TestError.self)
         .eraseToAnyDeferredPublisher()
+
+    XCTAssertNotNil(anyDeferredPublisher)
   }
 
   // MARK: Map

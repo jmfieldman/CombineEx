@@ -14,7 +14,9 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, De
     _ attemptToFulfill: @escaping (@escaping WrappedFuture.Promise) -> Void
   ) {
     self.attemptToFulfill = attemptToFulfill
-    self.wrappedDeferredFuture = Deferred { Future(attemptToFulfill).eraseToAnyPublisher() }
+    self.wrappedDeferredFuture = Deferred {
+      Future(attemptToFulfill).eraseToAnyPublisher()
+    }
   }
 
   public func receive<S>(

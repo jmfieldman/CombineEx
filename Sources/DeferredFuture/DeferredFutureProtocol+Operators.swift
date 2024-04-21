@@ -45,6 +45,8 @@ public extension DeferredFutureProtocol {
   }
 }
 
+// MARK: - Mapping Elements
+
 public extension DeferredFutureProtocol {
   @_disfavoredOverload
   func map<NewOutput>(
@@ -105,8 +107,8 @@ public extension DeferredFutureProtocol {
   func flatMapError<NewFailure>(
     _ transform: @escaping (Failure) -> DeferredFuture<Output, NewFailure>
   ) -> DeferredFuture<Output, NewFailure> {
-    futureLiftFailure { outerOutput, innerPromise in
-      transform(outerOutput).attemptToFulfill { innerResult in
+    futureLiftFailure { outerFailure, innerPromise in
+      transform(outerFailure).attemptToFulfill { innerResult in
         switch innerResult {
         case let .success(innerOutput):
           innerPromise(.success(innerOutput))
@@ -125,48 +127,113 @@ public extension DeferredFutureProtocol {
   }
 }
 
+// MARK: - Filtering Elements
+
+public extension DeferredFutureProtocol {
+  @_disfavoredOverload
+  func filter(
+    _ isIncluded: @escaping (Output) -> Bool
+  ) -> DeferredFuture<Output, Failure> {
+    futureLiftOutput { outerOutput, innerPromise in
+      if isIncluded(outerOutput) {
+        innerPromise(.success(outerOutput))
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func tryFilter(
+    _ isIncluded: @escaping (Output) throws -> Bool
+  ) -> DeferredFuture<Output, Failure> where Failure == Error {
+    futureLiftOutput { outerOutput, innerPromise in
+      do {
+        if try isIncluded(outerOutput) {
+          innerPromise(.success(outerOutput))
+        }
+      } catch {
+        innerPromise(.failure(error))
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func compactMap<NewOutput>(
+    _ transform: @escaping (Output) -> NewOutput?
+  ) -> DeferredFuture<NewOutput, Failure> {
+    futureLiftOutput { outerOutput, innerPromise in
+      if let newValue = transform(outerOutput) {
+        innerPromise(.success(newValue))
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func tryCompactMap<NewOutput>(
+    _ transform: @escaping (Output) throws -> NewOutput?
+  ) -> DeferredFuture<NewOutput, Failure> where Failure == Error {
+    futureLiftOutput { outerOutput, innerPromise in
+      do {
+        if let newValue = try transform(outerOutput) {
+          innerPromise(.success(newValue))
+        }
+      } catch {
+        innerPromise(.failure(error))
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func replaceError(
+    with output: Output
+  ) -> DeferredFuture<Output, Failure> {
+    futureLiftFailure { _, innerPromise in
+      innerPromise(.success(output))
+    }
+  }
+}
+
 // MARK: - Deferred Operator Aliases
 
 // These can be used to return DeferredFutures in a non-ambiguous manner.
 
 public extension DeferredFutureProtocol {
-  func mapDeferred<NewOutput>(
+  func mapDeferredFuture<NewOutput>(
     _ transform: @escaping (Output) -> NewOutput
   ) -> DeferredFuture<NewOutput, Failure> {
     map(transform)
   }
 
-  func tryMapDeferred<NewOutput>(
+  func tryMapDeferredFuture<NewOutput>(
     _ transform: @escaping (Output) throws -> NewOutput
   ) -> DeferredFuture<NewOutput, Failure> where Failure == Error {
     tryMap(transform)
   }
 
-  func mapErrorDeferred<NewError: Error>(
+  func mapErrorDeferredFuture<NewError: Error>(
     _ transform: @escaping (Failure) -> NewError
   ) -> DeferredFuture<Output, NewError> {
     mapError(transform)
   }
 
-  func replaceNilDeferred<NewOutput>(
+  func replaceNilDeferredFuture<NewOutput>(
     with output: NewOutput
   ) -> DeferredFuture<NewOutput, Failure> where Self.Output == NewOutput? {
     replaceNil(with: output)
   }
 
-  func flatMapDeferred<NewOutput>(
+  func flatMapDeferredFuture<NewOutput>(
     _ transform: @escaping (Output) -> DeferredFuture<NewOutput, Failure>
   ) -> DeferredFuture<NewOutput, Failure> {
     flatMap(transform)
   }
 
-  func flatMapErrorDeferred<NewFailure>(
+  func flatMapErrorDeferredFuture<NewFailure>(
     _ transform: @escaping (Failure) -> DeferredFuture<Output, NewFailure>
   ) -> DeferredFuture<Output, NewFailure> {
     flatMapError(transform)
   }
 
-  func setFailureTypeDeferred<NewFailure>(
+  func setFailureTypeDeferredFuture<NewFailure>(
     to failureType: NewFailure.Type
   ) -> DeferredFuture<Output, NewFailure> where Failure == Never, NewFailure: Error {
     setFailureType(to: failureType)
