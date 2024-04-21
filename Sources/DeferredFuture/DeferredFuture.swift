@@ -1,21 +1,21 @@
 //
 //  DeferredFuture.swift
-//  Copyright © 2023 Jason Fieldman.
+//  Copyright © 2024 Jason Fieldman.
 //
 
 import Combine
 
 public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, DeferredPublisherProtocol {
-  public typealias WrappedPublisher = AnyPublisher<Output, Failure>
+  public typealias WrappedFuture = Future<Output, Failure>
   public let attemptToFulfill: (@escaping WrappedFuture.Promise) -> Void
-  let wrappedDeferredFuture: Deferred<WrappedPublisher>
+  let wrappedDeferredFuture: Deferred<WrappedFuture>
 
   public init(
     _ attemptToFulfill: @escaping (@escaping WrappedFuture.Promise) -> Void
   ) {
     self.attemptToFulfill = attemptToFulfill
     self.wrappedDeferredFuture = Deferred {
-      Future(attemptToFulfill).eraseToAnyPublisher()
+      Future(attemptToFulfill)
     }
   }
 
@@ -29,7 +29,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, De
     wrappedDeferredFuture.receive(subscriber: subscriber)
   }
 
-  public var createPublisher: () -> WrappedPublisher {
+  public var createPublisher: () -> WrappedFuture {
     wrappedDeferredFuture.createPublisher
   }
 

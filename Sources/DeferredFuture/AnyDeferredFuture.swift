@@ -37,6 +37,9 @@ public class AnyDeferredFuture<Output, Failure: Error>: AnyDeferredPublisher<Out
   }
 
   override public var createPublisher: () -> AnyDeferredPublisher<Output, Failure>.WrappedPublisher {
-    wrappedDeferredFuture.createPublisher
+    let wrapped = wrappedDeferredFuture
+    return {
+      wrapped.createPublisher().eraseToAnyPublisher()
+    }
   }
 }
