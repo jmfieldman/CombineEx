@@ -131,58 +131,6 @@ public extension DeferredFutureProtocol {
 
 public extension DeferredFutureProtocol {
   @_disfavoredOverload
-  func filter(
-    _ isIncluded: @escaping (Output) -> Bool
-  ) -> DeferredFuture<Output, Failure> {
-    futureLiftOutput { outerOutput, innerPromise in
-      if isIncluded(outerOutput) {
-        innerPromise(.success(outerOutput))
-      }
-    }
-  }
-
-  @_disfavoredOverload
-  func tryFilter(
-    _ isIncluded: @escaping (Output) throws -> Bool
-  ) -> DeferredFuture<Output, Failure> where Failure == Error {
-    futureLiftOutput { outerOutput, innerPromise in
-      do {
-        if try isIncluded(outerOutput) {
-          innerPromise(.success(outerOutput))
-        }
-      } catch {
-        innerPromise(.failure(error))
-      }
-    }
-  }
-
-  @_disfavoredOverload
-  func compactMap<NewOutput>(
-    _ transform: @escaping (Output) -> NewOutput?
-  ) -> DeferredFuture<NewOutput, Failure> {
-    futureLiftOutput { outerOutput, innerPromise in
-      if let newValue = transform(outerOutput) {
-        innerPromise(.success(newValue))
-      }
-    }
-  }
-
-  @_disfavoredOverload
-  func tryCompactMap<NewOutput>(
-    _ transform: @escaping (Output) throws -> NewOutput?
-  ) -> DeferredFuture<NewOutput, Failure> where Failure == Error {
-    futureLiftOutput { outerOutput, innerPromise in
-      do {
-        if let newValue = try transform(outerOutput) {
-          innerPromise(.success(newValue))
-        }
-      } catch {
-        innerPromise(.failure(error))
-      }
-    }
-  }
-
-  @_disfavoredOverload
   func replaceError(
     with output: Output
   ) -> DeferredFuture<Output, Failure> {
@@ -197,6 +145,8 @@ public extension DeferredFutureProtocol {
 // These can be used to return DeferredFutures in a non-ambiguous manner.
 
 public extension DeferredFutureProtocol {
+  // Mapping
+
   func mapDeferredFuture<NewOutput>(
     _ transform: @escaping (Output) -> NewOutput
   ) -> DeferredFuture<NewOutput, Failure> {
@@ -237,5 +187,13 @@ public extension DeferredFutureProtocol {
     to failureType: NewFailure.Type
   ) -> DeferredFuture<Output, NewFailure> where Failure == Never, NewFailure: Error {
     setFailureType(to: failureType)
+  }
+
+  // Filtering
+
+  func replaceErrorDeferredFuture(
+    with output: Output
+  ) -> DeferredFuture<Output, Failure> {
+    replaceError(with: output)
   }
 }

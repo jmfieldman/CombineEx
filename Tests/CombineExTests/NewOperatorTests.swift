@@ -91,4 +91,39 @@ final class NewOperatorTests: XCTestCase {
     }
     XCTAssert(finished)
   }
+
+  func testAttemptMap() {
+    let justOne = Just(1).setFailureType(to: TestError.self)
+    let attemptSuccess = justOne.attemptMap { .success("\($0)") }
+    var receivedValue: String? = nil
+    var finished = false
+    let _ = attemptSuccess.sink { result in
+      switch result {
+      case .finished:
+        finished = true
+      case .failure:
+        XCTFail("Should not fail")
+      }
+    } receiveValue: {
+      receivedValue = $0
+    }
+    XCTAssert(finished)
+    XCTAssertEqual(receivedValue, "1")
+
+    let attemptFail: AnyPublisher<String, TestError> = justOne.attemptMap { _ in .failure(.error1) }.eraseToAnyPublisher()
+    receivedValue = nil
+    var failed = false
+    let _ = attemptFail.sink { result in
+      switch result {
+      case .finished:
+        XCTFail("Should not finish")
+      case let .failure(error):
+        failed = true
+        XCTAssertEqual(error, .error1)
+      }
+    } receiveValue: {
+      receivedValue = $0
+    }
+    XCTAssert(failed)
+  }
 }
