@@ -44,24 +44,28 @@ final class DeferredFutureTests: XCTestCase {
   // MARK: - Basic
 
   func testBasic() {
+    let future = TestableDeferredFuture(emission: 1, delay: 0.1)
+
     _testRig(
       expectedFailure: nil,
-      shouldOutput: true,
-      expectedOutput: 1,
-      future: TestableDeferredFuture(emission: 1, delay: 0.1)
+      outputExpectation: { $0 == 1 },
+      future: future,
+      attemptables: [future]
     ) {
-      $0
+      $0.eraseToAnyDeferredFuture()
     }
   }
 
   // MARK: - Mapping Elements
 
   func testMap() {
+    let future = TestableDeferredFuture(emission: 1, delay: 0.1)
+
     _testRig(
       expectedFailure: nil,
-      shouldOutput: true,
-      expectedOutput: 2,
-      future: TestableDeferredFuture(emission: 1, delay: 0.1)
+      outputExpectation: { $0 == 2 },
+      future: future,
+      attemptables: [future]
     ) {
       $0.map { $0 + 1 }.eraseToAnyDeferredFuture()
     }
@@ -70,20 +74,43 @@ final class DeferredFutureTests: XCTestCase {
   // MARK: - Filtering Elements
 
   func testReplaceError() {
+    let future = TestableDeferredFuture<Int>(failure: .error1, delay: 0)
+
     _testRig(
       expectedFailure: nil,
-      shouldOutput: true,
-      expectedOutput: 3,
-      future: TestableDeferredFuture<Int>(failure: .error1, delay: 0)
+      outputExpectation: { $0 == 3 },
+      future: future,
+      attemptables: [future]
     ) {
       $0.replaceError(with: 3).eraseToAnyDeferredFuture()
+    }
+  }
+
+  // MARK: - Combining Elements
+
+  func testCombineLatestP_Success() {
+    let publisher1 = TestableDeferredFuture(emission: 1, delay: 0.1)
+    let publisher2 = TestableDeferredFuture(emission: "Hello", delay: 0.1)
+    let combined: DeferredFuture = publisher1.combineLatest(publisher2)
+
+    _testRig(
+      expectedFailure: nil,
+      outputExpectation: { $0.0 == 1 && $0.1 == "Hello" },
+      future: combined,
+      attemptables: [publisher1, publisher2]
+    ) {
+      $0.eraseToAnyDeferredFuture()
     }
   }
 }
 
 // MARK: - Utils
 
-private class TestableDeferredFuture<T>: AnyDeferredFuture<T, TestError> {
+private protocol Attemptable {
+  var attempted: Bool { get }
+}
+
+private class TestableDeferredFuture<T>: AnyDeferredFuture<T, TestError>, Attemptable {
   var attempted: Bool = false
 
   init(emission: T, delay: TimeInterval) {
@@ -120,15 +147,15 @@ private class TestableDeferredFuture<T>: AnyDeferredFuture<T, TestError> {
 }
 
 private extension DeferredFutureTests {
-  func _testRig<T: Equatable>(
+  func _testRig<T>(
     expectedFailure: TestError?,
-    shouldOutput: Bool,
-    expectedOutput: T?,
-    future: TestableDeferredFuture<T>,
-    futureOperation: (TestableDeferredFuture<T>) -> AnyDeferredFuture<T, TestError>
+    outputExpectation: ((T) -> Bool)?,
+    future: some DeferredFutureProtocol<T, TestError>,
+    attemptables: [Attemptable],
+    futureOperation: (any DeferredFutureProtocol<T, TestError>) -> AnyDeferredFuture<T, TestError>
   ) {
     let operatedFuture = futureOperation(future)
-    XCTAssert(!future.attempted)
+    XCTAssert(attemptables.allSatisfy { !$0.attempted })
 
     var receivedFinish = false
     var receivedValue = false
@@ -157,14 +184,18 @@ private extension DeferredFutureTests {
       XCTAssert(receivedFinish)
     }
 
-    if shouldOutput {
+    if let outputExpectation {
       XCTAssert(receivedValue)
-      XCTAssertEqual(output, expectedOutput)
+      guard let output else {
+        XCTFail("No output, but expected")
+        return
+      }
+      XCTAssert(outputExpectation(output))
     } else {
       XCTAssert(!receivedValue)
     }
 
-    XCTAssert(future.attempted)
+    XCTAssert(attemptables.allSatisfy(\.attempted))
 
     cancellable.cancel()
   }

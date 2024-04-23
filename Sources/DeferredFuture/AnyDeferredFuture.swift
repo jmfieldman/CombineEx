@@ -1,6 +1,6 @@
 //
 //  AnyDeferredFuture.swift
-//  Copyright © 2023 Jason Fieldman.
+//  Copyright © 2024 Jason Fieldman.
 //
 
 import Combine
@@ -41,5 +41,9 @@ public class AnyDeferredFuture<Output, Failure: Error>: AnyDeferredPublisher<Out
     return {
       wrapped.createPublisher().eraseToAnyPublisher()
     }
+  }
+
+  public func eraseToAnyDeferredFuture() -> AnyDeferredFuture<Output, Failure> {
+    self
   }
 }

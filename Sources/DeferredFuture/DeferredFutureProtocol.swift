@@ -10,4 +10,5 @@ import Combine
 public protocol DeferredFutureProtocol<Output, Failure>: Publisher {
   associatedtype WrappedFuture = Future<Output, Failure>
   var attemptToFulfill: (@escaping Future<Output, Failure>.Promise) -> Void { get }
+  func eraseToAnyDeferredFuture() -> AnyDeferredFuture<Output, Failure>
 }
