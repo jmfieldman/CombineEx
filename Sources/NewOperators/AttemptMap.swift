@@ -33,11 +33,6 @@ private extension Publishers.AttemptMap {
       self.subscriber = subscriber
     }
 
-    func cancel() {
-      transform = nil
-      subscriber = nil
-    }
-
     func receive(subscription: Subscription) {
       subscriber?.receive(subscription: subscription)
     }

@@ -93,6 +93,7 @@ final class NewOperatorTests: XCTestCase {
   }
 
   func testAttemptMap() {
+    // Success
     let justOne = Just(1).setFailureType(to: TestError.self)
     let attemptSuccess = justOne.attemptMap { .success("\($0)") }
     var receivedValue: String? = nil
@@ -110,6 +111,7 @@ final class NewOperatorTests: XCTestCase {
     XCTAssert(finished)
     XCTAssertEqual(receivedValue, "1")
 
+    // Failure
     let attemptFail: AnyPublisher<String, TestError> = justOne.attemptMap { _ in .failure(.error1) }.eraseToAnyPublisher()
     receivedValue = nil
     var failed = false
@@ -125,5 +127,32 @@ final class NewOperatorTests: XCTestCase {
       receivedValue = $0
     }
     XCTAssert(failed)
+
+    // Cancels
+    let future = Future<Int, TestError> { promise in
+      DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
+        promise(.success(1))
+      }
+    }
+    let mapped = future
+      .attemptMap { .success($0 + 1) }
+
+    finished = false
+    var receivedInt = false
+    let cancellable = mapped.sink { completion in
+      switch completion {
+      case .finished:
+        finished = true
+      case .failure:
+        XCTFail("Should not fail")
+      }
+    } receiveValue: { _ in
+      receivedInt = true
+    }
+    cancellable.cancel()
+    Thread.sleep(forTimeInterval: 0.5)
+
+    XCTAssertTrue(!finished)
+    XCTAssertFalse(receivedInt)
   }
 }
