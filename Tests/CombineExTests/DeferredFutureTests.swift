@@ -71,6 +71,38 @@ final class DeferredFutureTests: XCTestCase {
     }
   }
 
+  func testFlatMap() {
+    let p1 = TestableDeferredFuture(emission: 1, delay: 0.1)
+    let p2 = TestableDeferredFuture(emission: 2, delay: 0.1)
+    let future = p1.flatMap { _ in p2 }.eraseToAnyDeferredFuture()
+
+    _testRig(
+      expectedFailure: nil,
+      outputExpectation: { $0 == 2 },
+      future: future,
+      attemptables: [p1, p2]
+    ) {
+      $0.eraseToAnyDeferredFuture()
+    }
+  }
+
+  func testFlatMapDynamic() {
+    let future = TestableDeferredFuture(emission: 100, delay: 0.1)
+
+    _testRig(
+      expectedFailure: nil,
+      outputExpectation: { $0 == 175 },
+      future: future,
+      attemptables: [future]
+    ) {
+      $0.flatMap { outer in
+        TestableDeferredFuture(emission: outer * 2, delay: 0.1).flatMapDeferredFuture { inner in
+          TestableDeferredFuture(emission: inner - 50, delay: 0.0).map { $0 + 25 }
+        }
+      }.eraseToAnyDeferredFuture()
+    }
+  }
+
   // MARK: - Filtering Elements
 
   func testReplaceError() {
@@ -96,6 +128,36 @@ final class DeferredFutureTests: XCTestCase {
     _testRig(
       expectedFailure: nil,
       outputExpectation: { $0.0 == 1 && $0.1 == "Hello" },
+      future: combined,
+      attemptables: [publisher1, publisher2]
+    ) {
+      $0.eraseToAnyDeferredFuture()
+    }
+  }
+
+  func testCombineLatestP_FailureSelf() {
+    let publisher1 = TestableDeferredFuture<Int>(failure: .error1, delay: 0.1)
+    let publisher2 = TestableDeferredFuture(emission: "Hello", delay: 0.1)
+    let combined: DeferredFuture = publisher1.combineLatest(publisher2)
+
+    _testRig(
+      expectedFailure: .error1,
+      outputExpectation: nil,
+      future: combined,
+      attemptables: [publisher1, publisher2]
+    ) {
+      $0.eraseToAnyDeferredFuture()
+    }
+  }
+
+  func testCombineLatestP_FailureP() {
+    let publisher1 = TestableDeferredFuture(emission: "Hello", delay: 0.1)
+    let publisher2 = TestableDeferredFuture<Int>(failure: .error1, delay: 0.1)
+    let combined: DeferredFuture = publisher1.combineLatest(publisher2)
+
+    _testRig(
+      expectedFailure: .error1,
+      outputExpectation: nil,
       future: combined,
       attemptables: [publisher1, publisher2]
     ) {

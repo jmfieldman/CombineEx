@@ -41,3 +41,13 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, De
     AnyDeferredFuture(self)
   }
 }
+
+public extension DeferredFuture {
+  static func just(_ value: Output) -> DeferredFuture<Output, Failure> {
+    DeferredFuture { $0(.success(value)) }
+  }
+
+  static func fail(_ error: Failure) -> DeferredFuture<Output, Failure> {
+    DeferredFuture { $0(.failure(error)) }
+  }
+}

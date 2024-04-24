@@ -44,6 +44,25 @@ public extension DeferredFutureProtocol {
       }
     }
   }
+
+  /// Maps a failure from the receiving DeferredFuture into the `lift` tuple.
+  /// This allows the caller to transform the failure of the receiver into a new output.
+  /// Successes are piped through without change.
+  func futureLiftFailureToOutput(
+    _ lift: @escaping (Failure, @escaping Future<Output, Failure>.Promise) -> Void
+  ) -> DeferredFuture<Output, Failure> {
+    let outerAttempt = attemptToFulfill
+    return DeferredFuture<Output, Failure> { innerPromise in
+      outerAttempt { outerResult in
+        switch outerResult {
+        case let .success(outerOutput):
+          innerPromise(.success(outerOutput))
+        case let .failure(outerFailure):
+          lift(outerFailure, innerPromise)
+        }
+      }
+    }
+  }
 }
 
 /// A private class that helps us accumuate N promises. The class
@@ -143,7 +162,7 @@ public extension DeferredFutureProtocol {
 
   @_disfavoredOverload
   func flatMap<NewOutput>(
-    _ transform: @escaping (Output) -> DeferredFuture<NewOutput, Failure>
+    _ transform: @escaping (Output) -> some DeferredFutureProtocol<NewOutput, Failure>
   ) -> DeferredFuture<NewOutput, Failure> {
     futureLiftOutput { outerOutput, innerPromise in
       transform(outerOutput).attemptToFulfill { innerResult in
@@ -159,7 +178,7 @@ public extension DeferredFutureProtocol {
 
   @_disfavoredOverload
   func flatMapError<NewFailure>(
-    _ transform: @escaping (Failure) -> DeferredFuture<Output, NewFailure>
+    _ transform: @escaping (Failure) -> some DeferredFutureProtocol<Output, NewFailure>
   ) -> DeferredFuture<Output, NewFailure> {
     futureLiftFailure { outerFailure, innerPromise in
       transform(outerFailure).attemptToFulfill { innerResult in
@@ -256,6 +275,59 @@ public extension DeferredFutureProtocol {
   }
 }
 
+// MARK: - Handling Errors
+
+public extension DeferredFutureProtocol {
+  @_disfavoredOverload
+  func `catch`(
+    _ transform: @escaping (Failure) -> some DeferredFutureProtocol<Output, Failure>
+  ) -> DeferredFuture<Output, Failure> {
+    futureLiftFailureToOutput { outerFailure, innerPromise in
+      transform(outerFailure).attemptToFulfill { innerResult in
+        switch innerResult {
+        case let .success(innerOutput):
+          innerPromise(.success(innerOutput))
+        case let .failure(innerFailure):
+          innerPromise(.failure(innerFailure))
+        }
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func tryCatch(
+    _ transform: @escaping (Failure) throws -> some DeferredFutureProtocol<Output, Failure>
+  ) -> DeferredFuture<Output, Failure> where Failure == Error {
+    futureLiftFailureToOutput { outerFailure, innerPromise in
+      do {
+        try transform(outerFailure).attemptToFulfill { innerResult in
+          switch innerResult {
+          case let .success(innerOutput):
+            innerPromise(.success(innerOutput))
+          case let .failure(innerFailure):
+            innerPromise(.failure(innerFailure))
+          }
+        }
+      } catch {
+        innerPromise(.failure(error))
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func retry(
+    _ retries: Int
+  ) -> DeferredFuture<Output, Failure> {
+    `catch` { [attemptToFulfill] error -> DeferredFuture<Output, Failure> in
+      if retries <= 0 {
+        return .fail(error)
+      } else {
+        return DeferredFuture(attemptToFulfill).retry(retries - 1)
+      }
+    }
+  }
+}
+
 // MARK: - Deferred Operator Aliases
 
 // These can be used to return DeferredFutures in a non-ambiguous manner.
@@ -263,43 +335,43 @@ public extension DeferredFutureProtocol {
 public extension DeferredFutureProtocol {
   // Mapping
 
-  func mapDeferredFuture<NewOutput>(
+  @inlinable func mapDeferredFuture<NewOutput>(
     _ transform: @escaping (Output) -> NewOutput
   ) -> DeferredFuture<NewOutput, Failure> {
     map(transform)
   }
 
-  func tryMapDeferredFuture<NewOutput>(
+  @inlinable func tryMapDeferredFuture<NewOutput>(
     _ transform: @escaping (Output) throws -> NewOutput
   ) -> DeferredFuture<NewOutput, Failure> where Failure == Error {
     tryMap(transform)
   }
 
-  func mapErrorDeferredFuture<NewError: Error>(
+  @inlinable func mapErrorDeferredFuture<NewError: Error>(
     _ transform: @escaping (Failure) -> NewError
   ) -> DeferredFuture<Output, NewError> {
     mapError(transform)
   }
 
-  func replaceNilDeferredFuture<NewOutput>(
+  @inlinable func replaceNilDeferredFuture<NewOutput>(
     with output: NewOutput
   ) -> DeferredFuture<NewOutput, Failure> where Self.Output == NewOutput? {
     replaceNil(with: output)
   }
 
-  func flatMapDeferredFuture<NewOutput>(
+  @inlinable func flatMapDeferredFuture<NewOutput>(
     _ transform: @escaping (Output) -> DeferredFuture<NewOutput, Failure>
   ) -> DeferredFuture<NewOutput, Failure> {
     flatMap(transform)
   }
 
-  func flatMapErrorDeferredFuture<NewFailure>(
+  @inlinable func flatMapErrorDeferredFuture<NewFailure>(
     _ transform: @escaping (Failure) -> DeferredFuture<Output, NewFailure>
   ) -> DeferredFuture<Output, NewFailure> {
     flatMapError(transform)
   }
 
-  func setFailureTypeDeferredFuture<NewFailure>(
+  @inlinable func setFailureTypeDeferredFuture<NewFailure>(
     to failureType: NewFailure.Type
   ) -> DeferredFuture<Output, NewFailure> where Failure == Never, NewFailure: Error {
     setFailureType(to: failureType)
@@ -307,9 +379,23 @@ public extension DeferredFutureProtocol {
 
   // Filtering
 
-  func replaceErrorDeferredFuture(
+  @inlinable func replaceErrorDeferredFuture(
     with output: Output
   ) -> DeferredFuture<Output, Failure> {
     replaceError(with: output)
+  }
+
+  // Handling Errors
+
+  @inlinable func catchDeferredFuture(
+    _ transform: @escaping (Failure) -> some DeferredFutureProtocol<Output, Failure>
+  ) -> DeferredFuture<Output, Failure> {
+    `catch`(transform)
+  }
+
+  @inlinable func tryCatchDeferredFuture(
+    _ transform: @escaping (Failure) throws -> some DeferredFutureProtocol<Output, Failure>
+  ) -> DeferredFuture<Output, Failure> where Failure == Error {
+    tryCatch(transform)
   }
 }
