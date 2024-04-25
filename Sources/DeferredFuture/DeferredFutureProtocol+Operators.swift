@@ -273,6 +273,41 @@ public extension DeferredFutureProtocol {
       accumulator.add(publisher2)
     }
   }
+
+  @_disfavoredOverload
+  func combineLatest<P, Q, R>(
+    _ publisher1: some DeferredFutureProtocol<P, Failure>,
+    _ publisher2: some DeferredFutureProtocol<Q, Failure>,
+    _ publisher3: some DeferredFutureProtocol<R, Failure>
+  ) -> DeferredFuture<(Self.Output, P, Q, R), Failure> {
+    DeferredFuture { promise in
+      let accumulator = CombineLatestAccumulator(promise, 4) {
+        ($0[0] as! Self.Output, $0[1] as! P, $0[2] as! Q, $0[3] as! R)
+      }
+      accumulator.add(self)
+      accumulator.add(publisher1)
+      accumulator.add(publisher2)
+      accumulator.add(publisher3)
+    }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<P, Q, R, T>(
+    _ publisher1: some DeferredFutureProtocol<P, Failure>,
+    _ publisher2: some DeferredFutureProtocol<Q, Failure>,
+    _ publisher3: some DeferredFutureProtocol<R, Failure>,
+    _ transform: @escaping (Self.Output, P, Q, R) -> T
+  ) -> DeferredFuture<T, Failure> {
+    DeferredFuture { promise in
+      let accumulator = CombineLatestAccumulator(promise, 4) {
+        transform($0[0] as! Self.Output, $0[1] as! P, $0[2] as! Q, $0[3] as! R)
+      }
+      accumulator.add(self)
+      accumulator.add(publisher1)
+      accumulator.add(publisher2)
+      accumulator.add(publisher3)
+    }
+  }
 }
 
 // MARK: - Handling Errors
@@ -323,6 +358,39 @@ public extension DeferredFutureProtocol {
         return .fail(error)
       } else {
         return DeferredFuture(attemptToFulfill).retry(retries - 1)
+      }
+    }
+  }
+}
+
+// MARK: - Encoding and Decoding
+
+public extension DeferredFutureProtocol {
+  @_disfavoredOverload
+  func encode<Coder: TopLevelEncoder>(
+    encoder: Coder
+  ) -> DeferredFuture<Coder.Output, Failure> where Failure == Error, Output: Encodable {
+    futureLiftOutput { outerOutput, innerPromise in
+      do {
+        let attemptEncoding = try encoder.encode(outerOutput)
+        innerPromise(.success(attemptEncoding))
+      } catch {
+        innerPromise(.failure(error))
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func decode<Item: Decodable, Coder: TopLevelDecoder>(
+    item: Item.Type,
+    decoder: Coder
+  ) -> DeferredFuture<Item, Failure> where Failure == Error, Output == Coder.Input {
+    futureLiftOutput { outerOutput, innerPromise in
+      do {
+        let attemptDecoding = try decoder.decode(item, from: outerOutput)
+        innerPromise(.success(attemptDecoding))
+      } catch {
+        innerPromise(.failure(error))
       }
     }
   }
@@ -385,6 +453,53 @@ public extension DeferredFutureProtocol {
     replaceError(with: output)
   }
 
+  // Combining Elements
+
+  @inlinable func combineLatestDeferredFuture<P>(
+    _ other: some DeferredFutureProtocol<P, Failure>
+  ) -> DeferredFuture<(Self.Output, P), Failure> {
+    combineLatest(other)
+  }
+
+  @inlinable func combineLatestDeferredFuture<P, T>(
+    _ other: some DeferredFutureProtocol<P, Failure>,
+    _ transform: @escaping (Self.Output, P) -> T
+  ) -> DeferredFuture<T, Failure> {
+    combineLatest(other, transform)
+  }
+
+  @inlinable func combineLatestDeferredFuture<P, Q>(
+    _ publisher1: some DeferredFutureProtocol<P, Failure>,
+    _ publisher2: some DeferredFutureProtocol<Q, Failure>
+  ) -> DeferredFuture<(Self.Output, P, Q), Failure> {
+    combineLatest(publisher1, publisher2)
+  }
+
+  @inlinable func combineLatestDeferredFuture<P, Q, T>(
+    _ publisher1: some DeferredFutureProtocol<P, Failure>,
+    _ publisher2: some DeferredFutureProtocol<Q, Failure>,
+    _ transform: @escaping (Self.Output, P, Q) -> T
+  ) -> DeferredFuture<T, Failure> {
+    combineLatest(publisher1, publisher2, transform)
+  }
+
+  @inlinable func combineLatestDeferredFuture<P, Q, R>(
+    _ publisher1: some DeferredFutureProtocol<P, Failure>,
+    _ publisher2: some DeferredFutureProtocol<Q, Failure>,
+    _ publisher3: some DeferredFutureProtocol<R, Failure>
+  ) -> DeferredFuture<(Self.Output, P, Q, R), Failure> {
+    combineLatest(publisher1, publisher2, publisher3)
+  }
+
+  @inlinable func combineLatestDeferredFuture<P, Q, R, T>(
+    _ publisher1: some DeferredFutureProtocol<P, Failure>,
+    _ publisher2: some DeferredFutureProtocol<Q, Failure>,
+    _ publisher3: some DeferredFutureProtocol<R, Failure>,
+    _ transform: @escaping (Self.Output, P, Q, R) -> T
+  ) -> DeferredFuture<T, Failure> {
+    combineLatest(publisher1, publisher2, publisher3, transform)
+  }
+
   // Handling Errors
 
   @inlinable func catchDeferredFuture(
@@ -397,5 +512,26 @@ public extension DeferredFutureProtocol {
     _ transform: @escaping (Failure) throws -> some DeferredFutureProtocol<Output, Failure>
   ) -> DeferredFuture<Output, Failure> where Failure == Error {
     tryCatch(transform)
+  }
+
+  @inlinable func retryDeferredFuture(
+    _ retries: Int
+  ) -> DeferredFuture<Output, Failure> {
+    retry(retries)
+  }
+
+  // Encoding and Decoding
+
+  @inlinable func encodeDeferredFuture<Coder: TopLevelEncoder>(
+    encoder: Coder
+  ) -> DeferredFuture<Coder.Output, Failure> where Failure == Error, Output: Encodable {
+    encode(encoder: encoder)
+  }
+
+  @inlinable func decodeDeferredFuture<Item: Decodable, Coder: TopLevelDecoder>(
+    item: Item.Type,
+    decoder: Coder
+  ) -> DeferredFuture<Item, Failure> where Failure == Error, Output == Coder.Input {
+    decode(item: item, decoder: decoder)
   }
 }
