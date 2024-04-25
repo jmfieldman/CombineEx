@@ -535,3 +535,14 @@ public extension DeferredFutureProtocol {
     decode(item: item, decoder: decoder)
   }
 }
+
+public extension Array where Element: DeferredFutureProtocol {
+  func combineLatest() -> DeferredFuture<[Element.Output], Element.Failure> {
+    DeferredFuture { promise in
+      let accumulator = CombineLatestAccumulator(promise, self.count) {
+        $0 as! [Element.Output]
+      }
+      self.forEach { accumulator.add($0) }
+    }
+  }
+}

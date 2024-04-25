@@ -164,6 +164,38 @@ final class DeferredFutureTests: XCTestCase {
       $0.eraseToAnyDeferredFuture()
     }
   }
+
+  func testArrayCombineLatest_Success() {
+    let publisher1 = TestableDeferredFuture<Int>(emission: 1, delay: 0.01)
+    let publisher2 = TestableDeferredFuture<Int>(emission: 2, delay: 0.1)
+    let publisher3 = TestableDeferredFuture<Int>(emission: 3, delay: 0)
+    let combined = [publisher1, publisher2, publisher3].combineLatest().eraseToAnyDeferredFuture()
+
+    _testRig(
+      expectedFailure: nil,
+      outputExpectation: { $0 == [1] },
+      future: combined,
+      attemptables: [publisher1, publisher2, publisher3]
+    ) {
+      $0.eraseToAnyDeferredFuture()
+    }
+  }
+
+  func testArrayCombineLatest_Failure() {
+    let publisher1 = TestableDeferredFuture<Int>(emission: 1, delay: 0.01)
+    let publisher2 = TestableDeferredFuture<Int>(failure: .error1, delay: 0.1)
+    let publisher3 = TestableDeferredFuture<Int>(emission: 3, delay: 0)
+    let combined = [publisher1, publisher2, publisher3].combineLatest().eraseToAnyDeferredFuture()
+
+    _testRig(
+      expectedFailure: .error1,
+      outputExpectation: nil,
+      future: combined,
+      attemptables: [publisher1, publisher2, publisher3]
+    ) {
+      $0.eraseToAnyDeferredFuture()
+    }
+  }
 }
 
 // MARK: - Utils
