@@ -396,6 +396,53 @@ public extension DeferredFutureProtocol {
   }
 }
 
+// MARK: - Keypath Mapping
+
+public extension DeferredFutureProtocol {
+  func map<T>(
+    _ keyPath: KeyPath<Output, T>
+  ) -> DeferredFuture<T, Failure> {
+    map { $0[keyPath: keyPath] }
+  }
+
+  func map<T0, T1>(
+    _ keyPath0: KeyPath<Self.Output, T0>,
+    _ keyPath1: KeyPath<Self.Output, T1>
+  ) -> DeferredFuture<(T0, T1), Failure> {
+    map { ($0[keyPath: keyPath0], $0[keyPath: keyPath1]) }
+  }
+
+  func map<T0, T1, T2>(
+    _ keyPath0: KeyPath<Self.Output, T0>,
+    _ keyPath1: KeyPath<Self.Output, T1>,
+    _ keyPath2: KeyPath<Self.Output, T2>
+  ) -> DeferredFuture<(T0, T1, T2), Failure> {
+    map { ($0[keyPath: keyPath0], $0[keyPath: keyPath1], $0[keyPath: keyPath2]) }
+  }
+}
+
+// MARK: - Handling Events
+
+public extension DeferredFutureProtocol {
+  func handleValue(
+    _ receiveOutput: ((Output) -> Void)? = nil
+  ) -> DeferredFuture<Output, Failure> {
+    futureLiftOutput { outerValue, innerPromise in
+      receiveOutput?(outerValue)
+      innerPromise(.success(outerValue))
+    }
+  }
+
+  func handleError(
+    _ receiveError: ((Failure) -> Void)? = nil
+  ) -> DeferredFuture<Output, Failure> {
+    futureLiftFailure { outerError, innerPromise in
+      receiveError?(outerError)
+      innerPromise(.failure(outerError))
+    }
+  }
+}
+
 // MARK: - Deferred Operator Aliases
 
 // These can be used to return DeferredFutures in a non-ambiguous manner.
@@ -533,6 +580,29 @@ public extension DeferredFutureProtocol {
     decoder: Coder
   ) -> DeferredFuture<Item, Failure> where Failure == Error, Output == Coder.Input {
     decode(item: item, decoder: decoder)
+  }
+
+  // Keypath Mapping
+
+  @inlinable func mapDeferredFuture<T>(
+    _ keyPath: KeyPath<Output, T>
+  ) -> DeferredFuture<T, Failure> {
+    map(keyPath)
+  }
+
+  @inlinable func mapDeferredFuture<T0, T1>(
+    _ keyPath0: KeyPath<Self.Output, T0>,
+    _ keyPath1: KeyPath<Self.Output, T1>
+  ) -> DeferredFuture<(T0, T1), Failure> {
+    map(keyPath0, keyPath1)
+  }
+
+  @inlinable func mapDeferredFuture<T0, T1, T2>(
+    _ keyPath0: KeyPath<Self.Output, T0>,
+    _ keyPath1: KeyPath<Self.Output, T1>,
+    _ keyPath2: KeyPath<Self.Output, T2>
+  ) -> DeferredFuture<(T0, T1, T2), Failure> {
+    map(keyPath0, keyPath1, keyPath2)
   }
 }
 

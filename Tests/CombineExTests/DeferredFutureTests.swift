@@ -196,6 +196,52 @@ final class DeferredFutureTests: XCTestCase {
       $0.eraseToAnyDeferredFuture()
     }
   }
+
+  // MARK: - Handling Events
+
+  func testHandleValue() {
+    let accumulation = TestBox(0)
+    let future = TestableDeferredFuture(emission: 1, delay: 0.1)
+    let operated = future
+      .handleValue { accumulation.value += $0 }
+      .handleError { _ in accumulation.value += 100 }
+      .handleValue { accumulation.value += $0 }
+      .handleError { _ in accumulation.value += 100 }
+      .handleValue { accumulation.value += $0 }
+      .handleError { _ in accumulation.value += 100 }
+
+    _testRig(
+      expectedFailure: nil,
+      outputExpectation: { _ in accumulation.value == 3 },
+      future: operated,
+      attemptables: [future]
+    ) {
+      $0.eraseToAnyDeferredFuture()
+    }
+  }
+
+  func testHandleError() {
+    let accumulation = TestBox(0)
+    let future = TestableDeferredFuture<Int>(failure: .error1, delay: 0.1)
+    let operated = future
+      .handleValue { _ in accumulation.value += 100 }
+      .handleError { _ in accumulation.value += 1 }
+      .handleValue { _ in accumulation.value += 100 }
+      .handleError { _ in accumulation.value += 1 }
+      .handleValue { _ in accumulation.value += 100 }
+      .handleError { _ in accumulation.value += 1 }
+
+    _testRig(
+      expectedFailure: .error1,
+      outputExpectation: nil,
+      future: operated,
+      attemptables: [future]
+    ) {
+      $0.eraseToAnyDeferredFuture()
+    }
+
+    XCTAssertEqual(accumulation.value, 3)
+  }
 }
 
 // MARK: - Utils
@@ -293,4 +339,9 @@ private extension DeferredFutureTests {
 
     cancellable.cancel()
   }
+}
+
+class TestBox<T> {
+  var value: T
+  init(_ initial: T) { self.value = initial }
 }
