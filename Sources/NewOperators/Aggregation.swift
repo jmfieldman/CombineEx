@@ -173,6 +173,121 @@ public extension Publishers {
 }
 
 public extension Publisher {
+  func combineLatest<A, B, C, D>(
+    _ p1: some Publisher<A, Failure>,
+    _ p2: some Publisher<B, Failure>,
+    _ p3: some Publisher<C, Failure>,
+    _ p4: some Publisher<D, Failure>
+  ) -> Publishers.Aggregate<(Output, A, B, C, D), Failure> {
+    Publishers.Aggregate<(Output, A, B, C, D), Failure>(
+      strategy: .combineLatest)
+    {
+      $0.add(self)
+      $0.add(p1)
+      $0.add(p2)
+      $0.add(p3)
+      $0.add(p4)
+    } aggregationBlock: {
+      ($0[0] as! Output, $0[1] as! A, $0[2] as! B, $0[3] as! C, $0[4] as! D)
+    }
+  }
+
+  func combineLatest<A, B, C, D, E>(
+    _ p1: some Publisher<A, Failure>,
+    _ p2: some Publisher<B, Failure>,
+    _ p3: some Publisher<C, Failure>,
+    _ p4: some Publisher<D, Failure>,
+    _ p5: some Publisher<E, Failure>
+  ) -> Publishers.Aggregate<(Output, A, B, C, D, E), Failure> {
+    Publishers.Aggregate<(Output, A, B, C, D, E), Failure>(
+      strategy: .combineLatest)
+    {
+      $0.add(self)
+      $0.add(p1)
+      $0.add(p2)
+      $0.add(p3)
+      $0.add(p4)
+      $0.add(p5)
+    } aggregationBlock: {
+      ($0[0] as! Output, $0[1] as! A, $0[2] as! B, $0[3] as! C, $0[4] as! D, $0[5] as! E)
+    }
+  }
+
+  func combineLatest<A, B, C, D, E, F>(
+    _ p1: some Publisher<A, Failure>,
+    _ p2: some Publisher<B, Failure>,
+    _ p3: some Publisher<C, Failure>,
+    _ p4: some Publisher<D, Failure>,
+    _ p5: some Publisher<E, Failure>,
+    _ p6: some Publisher<F, Failure>
+  ) -> Publishers.Aggregate<(Output, A, B, C, D, E, F), Failure> {
+    Publishers.Aggregate<(Output, A, B, C, D, E, F), Failure>(
+      strategy: .combineLatest)
+    {
+      $0.add(self)
+      $0.add(p1)
+      $0.add(p2)
+      $0.add(p3)
+      $0.add(p4)
+      $0.add(p5)
+      $0.add(p6)
+    } aggregationBlock: {
+      ($0[0] as! Output, $0[1] as! A, $0[2] as! B, $0[3] as! C, $0[4] as! D, $0[5] as! E, $0[6] as! F)
+    }
+  }
+
+  func combineLatest<A, B, C, D, E, F, G>(
+    _ p1: some Publisher<A, Failure>,
+    _ p2: some Publisher<B, Failure>,
+    _ p3: some Publisher<C, Failure>,
+    _ p4: some Publisher<D, Failure>,
+    _ p5: some Publisher<E, Failure>,
+    _ p6: some Publisher<F, Failure>,
+    _ p7: some Publisher<G, Failure>
+  ) -> Publishers.Aggregate<(Output, A, B, C, D, E, F, G), Failure> {
+    Publishers.Aggregate<(Output, A, B, C, D, E, F, G), Failure>(
+      strategy: .combineLatest)
+    {
+      $0.add(self)
+      $0.add(p1)
+      $0.add(p2)
+      $0.add(p3)
+      $0.add(p4)
+      $0.add(p5)
+      $0.add(p6)
+      $0.add(p7)
+    } aggregationBlock: {
+      ($0[0] as! Output, $0[1] as! A, $0[2] as! B, $0[3] as! C, $0[4] as! D, $0[5] as! E, $0[6] as! F, $0[7] as! G)
+    }
+  }
+
+  func combineLatest<A, B, C, D, E, F, G, H>(
+    _ p1: some Publisher<A, Failure>,
+    _ p2: some Publisher<B, Failure>,
+    _ p3: some Publisher<C, Failure>,
+    _ p4: some Publisher<D, Failure>,
+    _ p5: some Publisher<E, Failure>,
+    _ p6: some Publisher<F, Failure>,
+    _ p7: some Publisher<G, Failure>,
+    _ p8: some Publisher<H, Failure>
+  ) -> Publishers.Aggregate<(Output, A, B, C, D, E, F, G, H), Failure> {
+    Publishers.Aggregate<(Output, A, B, C, D, E, F, G, H), Failure>(
+      strategy: .combineLatest)
+    {
+      $0.add(self)
+      $0.add(p1)
+      $0.add(p2)
+      $0.add(p3)
+      $0.add(p4)
+      $0.add(p5)
+      $0.add(p6)
+      $0.add(p7)
+      $0.add(p8)
+    } aggregationBlock: {
+      ($0[0] as! Output, $0[1] as! A, $0[2] as! B, $0[3] as! C, $0[4] as! D, $0[5] as! E, $0[6] as! F, $0[7] as! G, $0[8] as! H)
+    }
+  }
+
   func combineLatest<A, B, C, D, E, F, G, H, I>(
     _ p1: some Publisher<A, Failure>,
     _ p2: some Publisher<B, Failure>,
