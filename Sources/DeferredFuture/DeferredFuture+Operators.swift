@@ -1,5 +1,5 @@
 //
-//  DeferredFutureProtocol+Operators.swift
+//  DeferredFuture+Operators.swift
 //  Copyright © 2023 Jason Fieldman.
 //
 

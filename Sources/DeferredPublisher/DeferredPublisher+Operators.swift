@@ -1,5 +1,5 @@
 //
-//  DeferredPublisherProtocol+Operators.swift
+//  DeferredPublisher+Operators.swift
 //  Copyright © 2024 Jason Fieldman.
 //
 

@@ -1,9 +1,28 @@
 //
-//  AnyDeferredPublisher.swift
-//  Copyright © 2023 Jason Fieldman.
+//  DeferredPublisher.swift
+//  Copyright © 2024 Jason Fieldman.
 //
 
 import Combine
+
+// MARK: DeferredPublisherProtocol
+
+/// `DeferredPublisherProtocol` allow both `Deferred` and `AnyDeferredPublisher`
+/// to conform and inherit the new deferred operators.
+public protocol DeferredPublisherProtocol<Output, Failure>: Publisher {
+  associatedtype WrappedPublisher = any Publisher<Output, Failure>
+  var createPublisher: () -> WrappedPublisher { get }
+}
+
+// MARK: Deferred Extension
+
+extension Deferred: DeferredPublisherProtocol {
+  public func eraseToAnyDeferredPublisher() -> AnyDeferredPublisher<Output, Failure> {
+    AnyDeferredPublisher(self)
+  }
+}
+
+// MARK: AnyDeferredPublisher
 
 /// Define a AnyDeferredPublisher concrete class that guarantees it only
 /// wraps deferred publishers.
