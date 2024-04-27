@@ -179,8 +179,9 @@ final class NewOperatorTests: XCTestCase {
 
     var emissions: [(Int, Int, Int, Int, Int, Int, Int, Int, Int, Int)] = []
     var finished = false
+    var cancellables: [AnyCancellable] = []
     let combined = p1.combineLatest(p2, p3, p4, p5, p6, p7, p8, p9, p10)
-    let cancellable = combined.sink {
+    combined.sink {
       switch $0 {
       case .finished:
         finished = true
@@ -189,7 +190,7 @@ final class NewOperatorTests: XCTestCase {
       }
     } receiveValue: {
       emissions.append($0)
-    }
+    }.store(in: &cancellables)
 
     XCTAssertFalse(finished)
     XCTAssertEqual(emissions.count, 1)

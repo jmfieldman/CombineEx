@@ -13,8 +13,6 @@ public protocol AggregatePublisherAggregator<AggregateFailure> {
 
 public extension Publishers {
   struct Aggregate<Output, Failure: Error>: Publisher {
-    typealias Foo = Subscriber<Output, Failure>
-
     public enum Strategy {
       case combineLatest
       case zip
@@ -168,38 +166,6 @@ public extension Publishers {
               cancel()
             }
           }
-        }
-      }
-
-      /// Subscribes to a single upstream factor
-      private final class AggregateSubscriptionComponent<T, F>: Subscriber {
-        typealias Input = T
-
-        let index: Int
-        weak var listener: AggregateSubscription?
-
-        init(
-          index: Int,
-          listener: AggregateSubscription
-        ) {
-          self.index = index
-          self.listener = listener
-        }
-
-        func receive(subscription: Subscription) {}
-
-        func receive(completion: Subscribers.Completion<Failure>) {
-          switch completion {
-          case .finished:
-            listener?.onFinish(index: index)
-          case let .failure(error):
-            listener?.onError(index: index, error: error)
-          }
-        }
-
-        func receive(_ input: T) -> Subscribers.Demand {
-          listener?.onValue(index: index, value: input)
-          return .unlimited
         }
       }
     }
