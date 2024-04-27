@@ -6,65 +6,59 @@
 import Combine
 import Foundation
 
-public protocol AggregationComponentIngesting: Subscription {
-  associatedtype Failure: Error
-  func add<T>(_ publisher: () -> some Publisher<T, Failure>)
-}
-
-private protocol AggregationStartable: Subscription {
-  func start()
+public protocol AggregatePublisherAggregator {
+  associatedtype AggregateFailure: Error
+  func add(_ publisher: some Publisher<some Any, AggregateFailure>)
 }
 
 public extension Publishers {
   struct Aggregate<Output, Failure: Error>: Publisher {
+    typealias Foo = Subscriber<Output, Failure>
+
     public enum Strategy {
       case combineLatest
       case zip
     }
 
     let strategy: Strategy
-    let componentBuilder: (any AggregationComponentIngesting) -> Void
-    let aggregationBlock: (ContiguousArray<Any>) -> Output
+    let componentBuilder: (any AggregatePublisherAggregator) -> Void
+    let aggregationBlock: ([Any]) -> Output
 
     public func receive<S: Subscriber>(subscriber: S) where S.Input == Output, S.Failure == Failure {
-      let subscription: AggregationStartable = switch strategy {
-      case .combineLatest:
-        CombineLatestSubscription(
-          subscriber: subscriber,
-          strategy: strategy,
-          componentBuilder: componentBuilder,
-          aggregationBlock: aggregationBlock
-        )
-      case .zip:
-        fatalError("unimplemented")
-      }
+      let subscription = AggregateSubscription(
+        subscriber: subscriber,
+        strategy: strategy,
+        componentBuilder: componentBuilder,
+        aggregationBlock: aggregationBlock
+      )
       subscriber.receive(subscription: subscription)
       subscription.start()
     }
 
-    private final class CombineLatestSubscription<S: Subscriber>: Subscription, AggregationStartable, AggregationComponentIngesting where S.Input == Output {
-      typealias Failure = S.Failure
-      typealias Input = Output
+    public final class AggregateSubscription<S: Subscriber>: Subscription, AggregatePublisherAggregator where S.Input == Output, S.Failure == Failure {
+      public typealias AggregateFailure = Failure
+      public typealias Input = Output
 
       var subscriber: S?
       var isCancelled = false
       var demand: Subscribers.Demand = .unlimited
 
       let strategy: Strategy
-      let componentBuilder: (any AggregationComponentIngesting) -> Void
-      let aggregationBlock: (ContiguousArray<Any>) -> Output
+      let componentBuilder: (AggregateSubscription) -> Void
+      let aggregationBlock: ([Any]) -> Output
 
       var lock = NSLock()
       var startBlocks: [() -> Void] = []
-      var subscribers: [any Subscriber] = []
-      var values: ContiguousArray<Any> = []
+      var upstreams: [any Subscriber] = []
+      var values: ContiguousArray<[Any]> = []
       var finished: ContiguousArray<Bool> = []
+      var countWithValues = 0
 
       init(
         subscriber: S,
         strategy: Strategy,
-        componentBuilder: @escaping (any AggregationComponentIngesting) -> Void,
-        aggregationBlock: @escaping (ContiguousArray<Any>) -> Output
+        componentBuilder: @escaping (AggregateSubscription) -> Void,
+        aggregationBlock: @escaping ([Any]) -> Output
       ) {
         self.subscriber = subscriber
         self.strategy = strategy
@@ -72,84 +66,113 @@ public extension Publishers {
         self.aggregationBlock = aggregationBlock
 
         componentBuilder(self)
-        self.values = ContiguousArray(repeating: 0, count: startBlocks.count)
+        self.values = ContiguousArray(repeating: [], count: startBlocks.count)
         self.finished = ContiguousArray(repeating: false, count: startBlocks.count)
       }
 
-      func request(_ demand: Subscribers.Demand) {
+      public func request(_ demand: Subscribers.Demand) {
         lock.withLock {
           self.demand = demand
         }
       }
 
-      func cancel() {
+      public func cancel() {
         subscriber = nil
-        subscribers = []
+        upstreams = []
         isCancelled = true
       }
 
-      func add(_ publisher: () -> some Publisher<some Any, Failure>) {
+      public func add(_ publisher: some Publisher<some Any, Failure>) {
         let index = startBlocks.count
-        let p = publisher()
         startBlocks.append { [weak self] in
-          self?.attach(p, index: index)
+          self?.attach(publisher, index: index)
         }
       }
 
-      func attach<T>(_ publisher: some Publisher<T, Failure>, index: Int) {
-        let subscriber = CombineLatestSubscriptionComponent<T, Failure>(index: index, listener: self)
-        subscribers.append(subscriber)
+      private func attach<T>(_ publisher: some Publisher<T, Failure>, index: Int) {
+        let subscriber = AggregateSubscriptionComponent<T, Failure>(index: index, listener: self)
+        upstreams.append(subscriber)
         publisher.subscribe(subscriber)
       }
 
-      func start() {
+      fileprivate func start() {
         startBlocks.forEach { $0() }
       }
 
-      func onValue(index: Int, value: some Any) {
+      private func onValue(index: Int, value: some Any) {
         lock.withLock {
-          values[index] = value
-          process()
+          if values[index].isEmpty {
+            countWithValues += 1
+          }
+
+          switch strategy {
+          case .combineLatest:
+            values[index][0] = value
+          case .zip:
+            values[index].append(value)
+          }
+
+          // Emit next value if possible
+          guard let subscriber, countWithValues == values.count, demand > 0, !isCancelled else { return }
+
+          let nextValue = aggregationBlock(values.compactMap(\.first))
+          switch strategy {
+          case .combineLatest:
+            break
+          case .zip:
+            for i in 0 ..< values.count {
+              values[i].removeFirst()
+              if values[i].isEmpty {
+                countWithValues -= 1
+              }
+            }
+          }
+          demand = subscriber.receive(nextValue)
         }
       }
 
-      func onError(index: Int, error: Failure) {
+      private func onError(index: Int, error: Failure) {
         lock.withLock {
           subscriber?.receive(completion: .failure(error))
           cancel()
         }
       }
 
-      func onFinish(index: Int) {
+      private func onFinish(index: Int) {
         lock.withLock {
           finished[index] = true
-          process()
-        }
-      }
+          guard let subscriber else { return }
 
-      func process() {
-        guard let subscriber else { return }
-
-        if finished.allSatisfy({ $0 }) {
-          subscriber.receive(completion: .finished)
-          cancel()
-        }
-
-        if demand > 0, !isCancelled {
-          demand = subscriber.receive(aggregationBlock(values))
+          switch strategy {
+          case .combineLatest:
+            // For combineLatest, we propogate the finish only when all
+            // upstream publishers have finished (or if one has finished
+            // without emitting a value)
+            if values[index].isEmpty || finished.allSatisfy({ $0 }) {
+              subscriber.receive(completion: .finished)
+              cancel()
+            }
+          case .zip:
+            // For zip, we propogate the finish only if any finished
+            // publisher has zero elements (otherwise it can still drain)
+            if values[index].isEmpty {
+              subscriber.receive(completion: .finished)
+              cancel()
+            }
+          }
         }
       }
 
       /// Subscribes to a single upstream factor
-      private final class CombineLatestSubscriptionComponent<T, F>: Subscriber {
+      private final class AggregateSubscriptionComponent<T, F>: Subscriber {
         typealias Input = T
 
         let index: Int
-        weak var listener: CombineLatestSubscription?
+        weak var listener: AggregateSubscription?
 
         init(
           index: Int,
-          listener: CombineLatestSubscription
+          listener: AggregateSubscription
         ) {
           self.index = index
           self.listener = listener
@@ -175,4 +198,33 @@ public extension Publishers {
   }
 }
 
-public extension Publisher {}
+public extension Publisher {
+  func combineLatest<A, B, C, D, E, F, G, H, I>(
+    _ p1: some Publisher<A, Failure>,
+    _ p2: some Publisher<B, Failure>,
+    _ p3: some Publisher<C, Failure>,
+    _ p4: some Publisher<D, Failure>,
+    _ p5: some Publisher<E, Failure>,
+    _ p6: some Publisher<F, Failure>,
+    _ p7: some Publisher<G, Failure>,
+    _ p8: some Publisher<H, Failure>,
+    _ p9: some Publisher<I, Failure>
+  ) -> Publishers.Aggregate<(Output, A, B, C, D, E, F, G, H, I), Failure> {
+    Publishers.Aggregate<(Output, A, B, C, D, E, F, G, H, I), Failure>(
+      strategy: .combineLatest)
+    {
+      $0.add(self)
+      $0.add(p1)
+      $0.add(p2)
+      $0.add(p3)
+      $0.add(p4)
+      $0.add(p5)
+      $0.add(p6)
+      $0.add(p7)
+      $0.add(p8)
+      $0.add(p9)
+    } aggregationBlock: {
+      ($0[0] as! Output, $0[1] as! A, $0[2] as! B, $0[3] as! C, $0[4] as! D, $0[5] as! E, $0[6] as! F, $0[7] as! G, $0[8] as! H, $0[9] as! I)
+    }
+  }
+}
