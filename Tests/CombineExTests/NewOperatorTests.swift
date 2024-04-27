@@ -164,4 +164,35 @@ final class NewOperatorTests: XCTestCase {
     _ = p2.sink { result.append($0) }
     XCTAssertEqual(result, [100, 1])
   }
+
+  func testCombineLatestSelfPlus9() {
+    let p1 = CurrentValueSubject<Int, TestError>(1)
+    let p2 = CurrentValueSubject<Int, TestError>(2)
+    let p3 = CurrentValueSubject<Int, TestError>(3)
+    let p4 = CurrentValueSubject<Int, TestError>(4)
+    let p5 = CurrentValueSubject<Int, TestError>(5)
+    let p6 = CurrentValueSubject<Int, TestError>(6)
+    let p7 = CurrentValueSubject<Int, TestError>(7)
+    let p8 = CurrentValueSubject<Int, TestError>(8)
+    let p9 = CurrentValueSubject<Int, TestError>(9)
+    let p10 = CurrentValueSubject<Int, TestError>(10)
+
+    var emissions: [(Int, Int, Int, Int, Int, Int, Int, Int, Int, Int)] = []
+    var finished = false
+    let combined = p1.combineLatest(p2, p3, p4, p5, p6, p7, p8, p9, p10)
+    let cancellable = combined.sink {
+      switch $0 {
+      case .finished:
+        finished = true
+      case .failure:
+        XCTFail("Should not fail")
+      }
+    } receiveValue: {
+      emissions.append($0)
+    }
+
+    XCTAssertFalse(finished)
+    XCTAssertEqual(emissions.count, 1)
+    XCTAssertEqual(emissions[0].0, 1)
+  }
 }

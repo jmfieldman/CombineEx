@@ -1,12 +1,12 @@
 //
 //  Aggregation.swift
-//  Copyright © 2023 Jason Fieldman.
+//  Copyright © 2024 Jason Fieldman.
 //
 
 import Combine
 import Foundation
 
-public protocol AggregatePublisherAggregator {
+public protocol AggregatePublisherAggregator<AggregateFailure> {
   associatedtype AggregateFailure: Error
   func add(_ publisher: some Publisher<some Any, AggregateFailure>)
 }
@@ -21,7 +21,7 @@ public extension Publishers {
     }
 
     let strategy: Strategy
-    let componentBuilder: (any AggregatePublisherAggregator) -> Void
+    let componentBuilder: (any AggregatePublisherAggregator<Failure>) -> Void
     let aggregationBlock: ([Any]) -> Output
 
     public func receive<S: Subscriber>(subscriber: S) where S.Input == Output, S.Failure == Failure {
