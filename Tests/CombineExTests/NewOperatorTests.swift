@@ -155,4 +155,13 @@ final class NewOperatorTests: XCTestCase {
     XCTAssertTrue(!finished)
     XCTAssertFalse(receivedInt)
   }
+
+  func testPrependDynamic() {
+    let p1 = Just(1).setFailureType(to: Never.self)
+    let s = 10
+    let p2 = p1.prependDynamic { s * 10 }
+    var result: [Int] = []
+    _ = p2.sink { result.append($0) }
+    XCTAssertEqual(result, [100, 1])
+  }
 }

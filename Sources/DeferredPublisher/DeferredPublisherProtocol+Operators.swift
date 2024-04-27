@@ -1,6 +1,6 @@
 //
 //  DeferredPublisherProtocol+Operators.swift
-//  Copyright © 2023 Jason Fieldman.
+//  Copyright © 2024 Jason Fieldman.
 //
 
 import Combine
@@ -22,7 +22,7 @@ public extension DeferredPublisherProtocol {
   }
 }
 
-// MARK: Map
+// MARK: Mapping Elements
 
 public extension DeferredPublisherProtocol {
   @_disfavoredOverload
@@ -31,22 +31,44 @@ public extension DeferredPublisherProtocol {
   ) -> Deferred<Publishers.Map<WrappedPublisher, T>> where WrappedPublisher.Failure == Failure {
     deferredLift { $0.map(transform) }
   }
-}
 
-// MARK: TryMap
-
-public extension DeferredPublisherProtocol {
   @_disfavoredOverload
   func tryMap<T>(
     _ transform: @escaping (WrappedPublisher.Output) throws -> T
   ) -> Deferred<Publishers.TryMap<WrappedPublisher, T>> {
     deferredLift { $0.tryMap(transform) }
   }
-}
 
-// MARK: SetFailureType
+  @_disfavoredOverload
+  func mapError<E>(
+    _ transform: @escaping (WrappedPublisher.Failure) -> E
+  ) -> Deferred<Publishers.MapError<WrappedPublisher, E>> where E: Error {
+    deferredLift { $0.mapError(transform) }
+  }
 
-public extension DeferredPublisherProtocol {
+  @_disfavoredOverload
+  func replaceNil<T>(
+    with output: T
+  ) -> Deferred<Publishers.Map<WrappedPublisher, T>> where WrappedPublisher.Output == T? {
+    deferredLift { $0.replaceNil(with: output) }
+  }
+
+  @_disfavoredOverload
+  func scan<T>(
+    _ initialResult: T,
+    _ nextPartialResult: @escaping (T, WrappedPublisher.Output) -> T
+  ) -> Deferred<Publishers.Scan<WrappedPublisher, T>> {
+    deferredLift { $0.scan(initialResult, nextPartialResult) }
+  }
+
+  @_disfavoredOverload
+  func tryScan<T>(
+    _ initialResult: T,
+    _ nextPartialResult: @escaping (T, WrappedPublisher.Output) throws -> T
+  ) -> Deferred<Publishers.TryScan<WrappedPublisher, T>> {
+    deferredLift { $0.tryScan(initialResult, nextPartialResult) }
+  }
+
   @_disfavoredOverload
   func setFailureType<E>(
     to failureType: E.Type
@@ -55,7 +77,7 @@ public extension DeferredPublisherProtocol {
   }
 }
 
-// MARK: FlatMap
+// MARK: Republishing Elements by Subscribing to New Publishers
 
 public extension DeferredPublisherProtocol {
   @_disfavoredOverload
@@ -101,11 +123,7 @@ public extension DeferredPublisherProtocol {
   {
     deferredLift { $0.flatMap(maxPublishers: maxPublishers, transform) }
   }
-}
 
-// MARK: SwitchToLatest
-
-public extension DeferredPublisherProtocol {
   @_disfavoredOverload
   func switchToLatest() -> Deferred<Publishers.SwitchToLatest<Output, WrappedPublisher>> where
     Output: Publisher,

@@ -173,7 +173,7 @@ final class DeferredFutureTests: XCTestCase {
 
     _testRig(
       expectedFailure: nil,
-      outputExpectation: { $0 == [1] },
+      outputExpectation: { $0 == [1, 2, 3] },
       future: combined,
       attemptables: [publisher1, publisher2, publisher3]
     ) {
@@ -203,12 +203,12 @@ final class DeferredFutureTests: XCTestCase {
     let accumulation = TestBox(0)
     let future = TestableDeferredFuture(emission: 1, delay: 0.1)
     let operated = future
-      .handleValue { accumulation.value += $0 }
-      .handleError { _ in accumulation.value += 100 }
-      .handleValue { accumulation.value += $0 }
-      .handleError { _ in accumulation.value += 100 }
-      .handleValue { accumulation.value += $0 }
-      .handleError { _ in accumulation.value += 100 }
+      .onValue { accumulation.value += $0 }
+      .onError { _ in accumulation.value += 100 }
+      .onValue { accumulation.value += $0 }
+      .onError { _ in accumulation.value += 100 }
+      .onValue { accumulation.value += $0 }
+      .onError { _ in accumulation.value += 100 }
 
     _testRig(
       expectedFailure: nil,
@@ -224,12 +224,12 @@ final class DeferredFutureTests: XCTestCase {
     let accumulation = TestBox(0)
     let future = TestableDeferredFuture<Int>(failure: .error1, delay: 0.1)
     let operated = future
-      .handleValue { _ in accumulation.value += 100 }
-      .handleError { _ in accumulation.value += 1 }
-      .handleValue { _ in accumulation.value += 100 }
-      .handleError { _ in accumulation.value += 1 }
-      .handleValue { _ in accumulation.value += 100 }
-      .handleError { _ in accumulation.value += 1 }
+      .onValue { _ in accumulation.value += 100 }
+      .onError { _ in accumulation.value += 1 }
+      .onValue { _ in accumulation.value += 100 }
+      .onError { _ in accumulation.value += 1 }
+      .onValue { _ in accumulation.value += 100 }
+      .onError { _ in accumulation.value += 1 }
 
     _testRig(
       expectedFailure: .error1,

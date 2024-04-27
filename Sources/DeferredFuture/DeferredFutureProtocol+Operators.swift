@@ -424,7 +424,7 @@ public extension DeferredFutureProtocol {
 // MARK: - Handling Events
 
 public extension DeferredFutureProtocol {
-  func handleValue(
+  func onValue(
     _ receiveOutput: ((Output) -> Void)? = nil
   ) -> DeferredFuture<Output, Failure> {
     futureLiftOutput { outerValue, innerPromise in
@@ -433,7 +433,7 @@ public extension DeferredFutureProtocol {
     }
   }
 
-  func handleError(
+  func onError(
     _ receiveError: ((Failure) -> Void)? = nil
   ) -> DeferredFuture<Output, Failure> {
     futureLiftFailure { outerError, innerPromise in
