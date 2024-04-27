@@ -49,10 +49,10 @@ public extension Publishers {
 
       var lock = NSLock()
       var startBlocks: [() -> Void] = []
-      var upstreams: [any Subscriber] = []
       var values: ContiguousArray<[Any]> = []
       var finished: ContiguousArray<Bool> = []
       var countWithValues = 0
+      var cancellables: [AnyCancellable] = []
 
       init(
         subscriber: S,
@@ -78,8 +78,8 @@ public extension Publishers {
 
       public func cancel() {
         subscriber = nil
-        upstreams = []
         isCancelled = true
+        cancellables = []
       }
 
       public func add(_ publisher: some Publisher<some Any, Failure>) {
@@ -89,10 +89,17 @@ public extension Publishers {
         }
       }
 
-      private func attach<T>(_ publisher: some Publisher<T, Failure>, index: Int) {
-        let subscriber = AggregateSubscriptionComponent<T, Failure>(index: index, listener: self)
-        upstreams.append(subscriber)
-        publisher.subscribe(subscriber)
+      private func attach(_ publisher: some Publisher<some Any, Failure>, index: Int) {
+        publisher.sink { [weak self] completion in
+          switch completion {
+          case .finished:
+            self?.onFinish(index: index)
+          case let .failure(error):
+            self?.onError(index: index, error: error)
+          }
+        } receiveValue: { [weak self] value in
+          self?.onValue(index: index, value: value)
+        }.store(in: &cancellables)
       }
 
       fileprivate func start() {
@@ -103,13 +110,14 @@ public extension Publishers {
         lock.withLock {
           if values[index].isEmpty {
             countWithValues += 1
-          }
-
-          switch strategy {
-          case .combineLatest:
-            values[index][0] = value
-          case .zip:
             values[index].append(value)
+          } else {
+            switch strategy {
+            case .combineLatest:
+              values[index][0] = value
+            case .zip:
+              values[index].append(value)
+            }
           }
 
           // Emit next value if possible
@@ -127,7 +135,7 @@ public extension Publishers {
               }
             }
           }
-          demand = subscriber.receive(nextValue)
+          _ = subscriber.receive(nextValue)
         }
       }
 
