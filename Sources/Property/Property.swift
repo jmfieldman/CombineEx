@@ -40,7 +40,7 @@ public final class Property<Output>: PropertyProtocol {
 
   /// Initializes a Property with an initial value, and then updates with each
   /// new value from the provided publisher.
-  public init(initial: Output, then: AnyPublisher<Output, Never>) {
+  public init(initial: Output, then: some Publisher<Output, Never>) {
     self._value = initial
     self.captured = nil
     self.cancellable = then.sink(receiveValue: { [weak self] value in
@@ -51,7 +51,7 @@ public final class Property<Output>: PropertyProtocol {
   /// Initializes a property from an unsafe Publisher. The publisher *must*
   /// emit an initial value *immediately* when it is initially subscribed to.
   /// This is primarily used to lift Property operators.
-  public init(unsafe: AnyPublisher<Output, Never>) {
+  public init(unsafe: some Publisher<Output, Never>) {
     self.captured = nil
     self.cancellable = unsafe.sink(receiveValue: { [weak self] value in
       self?.update(value)
