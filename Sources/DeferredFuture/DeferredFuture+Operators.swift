@@ -45,6 +45,19 @@ public extension DeferredFutureProtocol {
     }
   }
 
+  /// Maps a result from the receiving DeferredFuture into the `lift` tuple.
+  /// This allows the caller to act on the result of the receiver.
+  func futureLiftResult<Output>(
+    _ lift: @escaping (Result<Self.Output, Failure>, @escaping Future<Output, Failure>.Promise) -> Void
+  ) -> DeferredFuture<Output, Failure> {
+    let outerAttempt = attemptToFulfill
+    return DeferredFuture<Output, Failure> { innerPromise in
+      outerAttempt { outerResult in
+        lift(outerResult, innerPromise)
+      }
+    }
+  }
+
   /// Maps a failure from the receiving DeferredFuture into the `lift` tuple.
   /// This allows the caller to transform the failure of the receiver into a new output.
   /// Successes are piped through without change.
@@ -418,28 +431,6 @@ public extension DeferredFutureProtocol {
     _ keyPath2: KeyPath<Self.Output, T2>
   ) -> DeferredFuture<(T0, T1, T2), Failure> {
     map { ($0[keyPath: keyPath0], $0[keyPath: keyPath1], $0[keyPath: keyPath2]) }
-  }
-}
-
-// MARK: - Handling Events
-
-public extension DeferredFutureProtocol {
-  func onValue(
-    _ receiveOutput: ((Output) -> Void)? = nil
-  ) -> DeferredFuture<Output, Failure> {
-    futureLiftOutput { outerValue, innerPromise in
-      receiveOutput?(outerValue)
-      innerPromise(.success(outerValue))
-    }
-  }
-
-  func onError(
-    _ receiveError: ((Failure) -> Void)? = nil
-  ) -> DeferredFuture<Output, Failure> {
-    futureLiftFailure { outerError, innerPromise in
-      receiveError?(outerError)
-      innerPromise(.failure(outerError))
-    }
   }
 }
 
