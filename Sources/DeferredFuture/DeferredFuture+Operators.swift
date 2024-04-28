@@ -10,7 +10,7 @@ public extension DeferredFutureProtocol {
   /// Maps an output from the receiving DeferredFuture into the `lift` tuple.
   /// This allows the caller to transform the output type/value of the receiver.
   /// Failures are piped through without change.
-  func futureLiftOutput<NewOutput>(
+  @inlinable func futureLiftOutput<NewOutput>(
     _ lift: @escaping (Output, @escaping Future<NewOutput, Failure>.Promise) -> Void
   ) -> DeferredFuture<NewOutput, Failure> {
     let outerAttempt = attemptToFulfill
@@ -29,7 +29,7 @@ public extension DeferredFutureProtocol {
   /// Maps a failure from the receiving DeferredFuture into the `lift` tuple.
   /// This allows the caller to transform the failure type/value of the receiver.
   /// Successes are piped through without change.
-  func futureLiftFailure<NewFailure: Error>(
+  @inlinable func futureLiftFailure<NewFailure: Error>(
     _ lift: @escaping (Failure, @escaping Future<Output, NewFailure>.Promise) -> Void
   ) -> DeferredFuture<Output, NewFailure> {
     let outerAttempt = attemptToFulfill
@@ -47,7 +47,7 @@ public extension DeferredFutureProtocol {
 
   /// Maps a result from the receiving DeferredFuture into the `lift` tuple.
   /// This allows the caller to act on the result of the receiver.
-  func futureLiftResult<Output>(
+  @inlinable func futureLiftResult<Output>(
     _ lift: @escaping (Result<Self.Output, Failure>, @escaping Future<Output, Failure>.Promise) -> Void
   ) -> DeferredFuture<Output, Failure> {
     let outerAttempt = attemptToFulfill
@@ -61,7 +61,7 @@ public extension DeferredFutureProtocol {
   /// Maps a failure from the receiving DeferredFuture into the `lift` tuple.
   /// This allows the caller to transform the failure of the receiver into a new output.
   /// Successes are piped through without change.
-  func futureLiftFailureToOutput(
+  @inlinable func futureLiftFailureToOutput(
     _ lift: @escaping (Failure, @escaping Future<Output, Failure>.Promise) -> Void
   ) -> DeferredFuture<Output, Failure> {
     let outerAttempt = attemptToFulfill

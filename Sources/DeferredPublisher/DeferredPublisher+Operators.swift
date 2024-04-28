@@ -14,7 +14,7 @@ public extension DeferredPublisherProtocol {
   /// Use this to transform the inner-wrapped publisher, and re-wrap it in a
   /// new Deferred publisher. This guarantees that transforms result in a new
   /// deferred publisher.
-  func deferredLift<TargetPublisher: Publisher>(
+  @inlinable func deferredLift<TargetPublisher: Publisher>(
     _ transform: @escaping (WrappedPublisher) -> TargetPublisher
   ) -> Deferred<TargetPublisher> {
     let innerCreatePublisher = createPublisher
