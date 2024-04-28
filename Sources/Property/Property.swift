@@ -6,7 +6,7 @@
 import Combine
 import Foundation
 
-public protocol PropertyProtocol: AnyObject, Publisher where Failure == Never {
+public protocol PropertyProtocol<Output>: AnyObject, Publisher where Failure == Never {
   var value: Output { get }
 }
 

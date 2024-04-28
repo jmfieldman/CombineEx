@@ -64,3 +64,104 @@ public extension PropertyProtocol where Output: Equatable {
     lift { $0.removeDuplicates() }
   }
 }
+
+public extension PropertyProtocol {
+  @_disfavoredOverload
+  func combineLatest<A>(
+    _ pA: some PropertyProtocol<A>
+  ) -> Property<(Output, A)> {
+    lift { $0.combineLatest(pA) }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>
+  ) -> Property<(Output, A, B)> {
+    lift { $0.combineLatest(pA, pB) }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>
+  ) -> Property<(Output, A, B, C)> {
+    lift { $0.combineLatest(pA, pB, pC) }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C, D>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>
+  ) -> Property<(Output, A, B, C, D)> {
+    lift { $0.combineLatest(pA, pB, pC, pD) }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C, D, E>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>
+  ) -> Property<(Output, A, B, C, D, E)> {
+    lift { $0.combineLatest(pA, pB, pC, pD, pE) }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C, D, E, F>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>,
+    _ pF: some PropertyProtocol<F>
+  ) -> Property<(Output, A, B, C, D, E, F)> {
+    lift { $0.combineLatest(pA, pB, pC, pD, pE, pF) }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C, D, E, F, G>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>,
+    _ pF: some PropertyProtocol<F>,
+    _ pG: some PropertyProtocol<G>
+  ) -> Property<(Output, A, B, C, D, E, F, G)> {
+    lift { $0.combineLatest(pA, pB, pC, pD, pE, pF, pG) }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C, D, E, F, G, H>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>,
+    _ pF: some PropertyProtocol<F>,
+    _ pG: some PropertyProtocol<G>,
+    _ pH: some PropertyProtocol<H>
+  ) -> Property<(Output, A, B, C, D, E, F, G, H)> {
+    lift { $0.combineLatest(pA, pB, pC, pD, pE, pF, pG, pH) }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C, D, E, F, G, H, I>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>,
+    _ pF: some PropertyProtocol<F>,
+    _ pG: some PropertyProtocol<G>,
+    _ pH: some PropertyProtocol<H>,
+    _ pI: some PropertyProtocol<I>
+  ) -> Property<(Output, A, B, C, D, E, F, G, H, I)> {
+    lift { $0.combineLatest(pA, pB, pC, pD, pE, pF, pG, pH, pI) }
+  }
+}
