@@ -13,3 +13,10 @@ public extension Publisher {
     }
   }
 }
+
+public extension DeferredPublisherProtocol {
+  @_disfavoredOverload
+  func ignoreFailure() -> Deferred<Publishers.Catch<WrappedPublisher, Empty<Output, Failure>>> where WrappedPublisher: Publisher, WrappedPublisher.Failure == Failure {
+    deferredLift { $0.ignoreFailure() }
+  }
+}
