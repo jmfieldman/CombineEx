@@ -174,6 +174,9 @@ public extension Publishers {
 
 // MARK: - Publisher Combine Latest
 
+// Additional combineLatest implementations that combine the receiver with
+// other publishers -- these extend the limit beyond 3
+
 public extension Publisher {
   func combineLatest<A, B, C, D>(
     _ p1: some Publisher<A, Failure>,
@@ -321,6 +324,9 @@ public extension Publisher {
 }
 
 // MARK: - Publisher Static Combine Latest
+
+// Additional static combineLatest implementations that combine the arguments
+// together into a single publisher, allowing up to 10 combined publishers.
 
 public extension Publisher {
   static func combineLatest<A, B>(
@@ -518,6 +524,167 @@ public extension Publisher {
       $0.add(p10)
     } aggregationBlock: {
       ($0[0] as! A, $0[1] as! B, $0[2] as! C, $0[3] as! D, $0[4] as! E, $0[5] as! F, $0[6] as! G, $0[7] as! H, $0[8] as! I, $0[9] as! J)
+    }
+  }
+}
+
+// MARK: - DeferredPublisher Combine Latest
+
+public extension DeferredPublisherProtocol {
+  @_disfavoredOverload
+  func combineLatest<A>(
+    _ p1: some DeferredPublisherProtocol<A, Failure>
+  ) -> Deferred<Publishers.Aggregate<(Output, A), Failure>> {
+    Deferred {
+      Publishers.Aggregate<(Output, A), Failure>(
+        strategy: .combineLatest)
+      {
+        $0.add(self)
+        $0.add(p1)
+      } aggregationBlock: {
+        ($0[0] as! Output, $0[1] as! A)
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, NewOutput>(
+    _ p1: some DeferredPublisherProtocol<A, Failure>,
+    _ transform: @escaping (Output, A) -> NewOutput
+  ) -> Deferred<Publishers.Aggregate<NewOutput, Failure>> {
+    Deferred {
+      Publishers.Aggregate<NewOutput, Failure>(
+        strategy: .combineLatest)
+      {
+        $0.add(self)
+        $0.add(p1)
+      } aggregationBlock: {
+        transform($0[0] as! Output, $0[1] as! A)
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B>(
+    _ p1: some DeferredPublisherProtocol<A, Failure>,
+    _ p2: some DeferredPublisherProtocol<B, Failure>
+  ) -> Deferred<Publishers.Aggregate<(Output, A, B), Failure>> {
+    Deferred {
+      Publishers.Aggregate<(Output, A, B), Failure>(
+        strategy: .combineLatest)
+      {
+        $0.add(self)
+        $0.add(p1)
+        $0.add(p2)
+      } aggregationBlock: {
+        ($0[0] as! Output, $0[1] as! A, $0[2] as! B)
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, NewOutput>(
+    _ p1: some DeferredPublisherProtocol<A, Failure>,
+    _ p2: some DeferredPublisherProtocol<B, Failure>,
+    _ transform: @escaping (Output, A, B) -> NewOutput
+  ) -> Deferred<Publishers.Aggregate<NewOutput, Failure>> {
+    Deferred {
+      Publishers.Aggregate<NewOutput, Failure>(
+        strategy: .combineLatest)
+      {
+        $0.add(self)
+        $0.add(p1)
+        $0.add(p2)
+      } aggregationBlock: {
+        transform($0[0] as! Output, $0[1] as! A, $0[2] as! B)
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C>(
+    _ p1: some DeferredPublisherProtocol<A, Failure>,
+    _ p2: some DeferredPublisherProtocol<B, Failure>,
+    _ p3: some DeferredPublisherProtocol<C, Failure>
+  ) -> Deferred<Publishers.Aggregate<(Output, A, B, C), Failure>> {
+    Deferred {
+      Publishers.Aggregate<(Output, A, B, C), Failure>(
+        strategy: .combineLatest)
+      {
+        $0.add(self)
+        $0.add(p1)
+        $0.add(p2)
+        $0.add(p3)
+      } aggregationBlock: {
+        ($0[0] as! Output, $0[1] as! A, $0[2] as! B, $0[3] as! C)
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C, NewOutput>(
+    _ p1: some DeferredPublisherProtocol<A, Failure>,
+    _ p2: some DeferredPublisherProtocol<B, Failure>,
+    _ p3: some DeferredPublisherProtocol<C, Failure>,
+    _ transform: @escaping (Output, A, B, C) -> NewOutput
+  ) -> Deferred<Publishers.Aggregate<NewOutput, Failure>> {
+    Deferred {
+      Publishers.Aggregate<NewOutput, Failure>(
+        strategy: .combineLatest)
+      {
+        $0.add(self)
+        $0.add(p1)
+        $0.add(p2)
+        $0.add(p3)
+      } aggregationBlock: {
+        transform($0[0] as! Output, $0[1] as! A, $0[2] as! B, $0[3] as! C)
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C, D>(
+    _ p1: some DeferredPublisherProtocol<A, Failure>,
+    _ p2: some DeferredPublisherProtocol<B, Failure>,
+    _ p3: some DeferredPublisherProtocol<C, Failure>,
+    _ p4: some DeferredPublisherProtocol<D, Failure>
+  ) -> Deferred<Publishers.Aggregate<(Output, A, B, C, D), Failure>> {
+    Deferred {
+      Publishers.Aggregate<(Output, A, B, C, D), Failure>(
+        strategy: .combineLatest)
+      {
+        $0.add(self)
+        $0.add(p1)
+        $0.add(p2)
+        $0.add(p3)
+        $0.add(p4)
+      } aggregationBlock: {
+        ($0[0] as! Output, $0[1] as! A, $0[2] as! B, $0[3] as! C, $0[4] as! D)
+      }
+    }
+  }
+
+  @_disfavoredOverload
+  func combineLatest<A, B, C, D, E>(
+    _ p1: some DeferredPublisherProtocol<A, Failure>,
+    _ p2: some DeferredPublisherProtocol<B, Failure>,
+    _ p3: some DeferredPublisherProtocol<C, Failure>,
+    _ p4: some DeferredPublisherProtocol<D, Failure>,
+    _ p5: some DeferredPublisherProtocol<E, Failure>
+  ) -> Deferred<Publishers.Aggregate<(Output, A, B, C, D, E), Failure>> {
+    Deferred {
+      Publishers.Aggregate<(Output, A, B, C, D, E), Failure>(
+        strategy: .combineLatest)
+      {
+        $0.add(self)
+        $0.add(p1)
+        $0.add(p2)
+        $0.add(p3)
+        $0.add(p4)
+        $0.add(p5)
+      } aggregationBlock: {
+        ($0[0] as! Output, $0[1] as! A, $0[2] as! B, $0[3] as! C, $0[4] as! D, $0[5] as! E)
+      }
     }
   }
 }
