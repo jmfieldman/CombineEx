@@ -55,4 +55,23 @@ public class AnyDeferredPublisher<Output, Failure: Error>: DeferredPublisherProt
   public var createPublisher: () -> WrappedPublisher {
     deferredPublisher.createPublisher
   }
+
+  public func eraseToAnyDeferredPublisher() -> AnyDeferredPublisher<Output, Failure> {
+    self
+  }
+
+  @_disfavoredOverload
+  public static func empty() -> AnyDeferredPublisher<Output, Failure> {
+    Deferred { Empty(outputType: Output.self, failureType: Failure.self) }.eraseToAnyDeferredPublisher()
+  }
+
+  @_disfavoredOverload
+  public static func just(_ value: Output) -> AnyDeferredPublisher<Output, Failure> {
+    Deferred { Just(value).setFailureType(to: Failure.self) }.eraseToAnyDeferredPublisher()
+  }
+
+  @_disfavoredOverload
+  public static func fail(_ failure: Failure) -> AnyDeferredPublisher<Output, Failure> {
+    Deferred { Fail(outputType: Output.self, failure: failure) }.eraseToAnyDeferredPublisher()
+  }
 }

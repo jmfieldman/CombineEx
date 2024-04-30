@@ -157,3 +157,35 @@ public extension DeferredPublisherProtocol {
     deferredLift { $0.switchToLatest() }
   }
 }
+
+// MARK: Handling Errors
+
+public extension DeferredPublisherProtocol {
+  func `catch`<P>(
+    _ handler: @escaping (WrappedPublisher.Failure) -> P
+  ) -> Deferred<Publishers.Catch<WrappedPublisher, P>> where P: Publisher, WrappedPublisher.Output == P.Output {
+    deferredLift { $0.catch(handler) }
+  }
+}
+
+// MARK: Debugging
+
+public extension DeferredPublisherProtocol {
+  func handleEvents(
+    receiveSubscription: ((any Subscription) -> Void)? = nil,
+    receiveOutput: ((WrappedPublisher.Output) -> Void)? = nil,
+    receiveCompletion: ((Subscribers.Completion<WrappedPublisher.Failure>) -> Void)? = nil,
+    receiveCancel: (() -> Void)? = nil,
+    receiveRequest: ((Subscribers.Demand) -> Void)? = nil
+  ) -> Deferred<Publishers.HandleEvents<WrappedPublisher>> where WrappedPublisher: Publisher {
+    deferredLift {
+      $0.handleEvents(
+        receiveSubscription: receiveSubscription,
+        receiveOutput: receiveOutput,
+        receiveCompletion: receiveCompletion,
+        receiveCancel: receiveCancel,
+        receiveRequest: receiveRequest
+      )
+    }
+  }
+}

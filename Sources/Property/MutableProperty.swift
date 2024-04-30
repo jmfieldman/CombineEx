@@ -42,7 +42,7 @@ public final class MutableProperty<Output>: ComposableMutablePropertyProtocol {
   private var cancellable: AnyCancellable? = nil
 
   /// Initializes a MutableProperty with an initial value.
-  public init(value: Output) {
+  public init(_ value: Output) {
     self._value = value
     self.captured = nil
     self.cancellable = nil

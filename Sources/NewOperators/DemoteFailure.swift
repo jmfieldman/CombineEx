@@ -17,7 +17,7 @@ public extension Publisher {
 
 public extension DeferredPublisherProtocol {
   @_disfavoredOverload
-  func demoteFailure() -> Deferred<Publishers.Catch<WrappedPublisher, Empty<Output, Never>>> where WrappedPublisher: Publisher, WrappedPublisher.Failure == Never {
-    deferredLift { $0.ignoreFailure() }
+  func demoteFailure() -> Deferred<Publishers.Catch<WrappedPublisher, Empty<Output, Never>>> where WrappedPublisher: Publisher {
+    deferredLift { $0.demoteFailure() }
   }
 }
