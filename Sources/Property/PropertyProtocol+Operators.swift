@@ -165,3 +165,104 @@ public extension PropertyProtocol {
     lift { $0.combineLatest(pA, pB, pC, pD, pE, pF, pG, pH, pI) }
   }
 }
+
+public extension PropertyProtocol {
+  static func combineLatest<A, B>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>
+  ) -> Property<(A, B)> {
+    pA.combineLatest(pB)
+  }
+
+  static func combineLatest<A, B, C>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>
+  ) -> Property<(A, B, C)> {
+    pA.combineLatest(pB, pC)
+  }
+
+  static func combineLatest<A, B, C, D>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>
+  ) -> Property<(A, B, C, D)> {
+    pA.combineLatest(pB, pC, pD)
+  }
+
+  static func combineLatest<A, B, C, D, E>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>
+  ) -> Property<(A, B, C, D, E)> {
+    pA.combineLatest(pB, pC, pD, pE)
+  }
+
+  static func combineLatest<A, B, C, D, E, F>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>,
+    _ pF: some PropertyProtocol<F>
+  ) -> Property<(A, B, C, D, E, F)> {
+    pA.combineLatest(pB, pC, pD, pE, pF)
+  }
+
+  static func combineLatest<A, B, C, D, E, F, G>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>,
+    _ pF: some PropertyProtocol<F>,
+    _ pG: some PropertyProtocol<G>
+  ) -> Property<(A, B, C, D, E, F, G)> {
+    pA.combineLatest(pB, pC, pD, pE, pF, pG)
+  }
+
+  static func combineLatest<A, B, C, D, E, F, G, H>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>,
+    _ pF: some PropertyProtocol<F>,
+    _ pG: some PropertyProtocol<G>,
+    _ pH: some PropertyProtocol<H>
+  ) -> Property<(A, B, C, D, E, F, G, H)> {
+    pA.combineLatest(pB, pC, pD, pE, pF, pG, pH)
+  }
+
+  static func combineLatest<A, B, C, D, E, F, G, H, I>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>,
+    _ pF: some PropertyProtocol<F>,
+    _ pG: some PropertyProtocol<G>,
+    _ pH: some PropertyProtocol<H>,
+    _ pI: some PropertyProtocol<I>
+  ) -> Property<(A, B, C, D, E, F, G, H, I)> {
+    pA.combineLatest(pB, pC, pD, pE, pF, pG, pH, pI)
+  }
+
+  static func combineLatest<A, B, C, D, E, F, G, H, I, J>(
+    _ pA: some PropertyProtocol<A>,
+    _ pB: some PropertyProtocol<B>,
+    _ pC: some PropertyProtocol<C>,
+    _ pD: some PropertyProtocol<D>,
+    _ pE: some PropertyProtocol<E>,
+    _ pF: some PropertyProtocol<F>,
+    _ pG: some PropertyProtocol<G>,
+    _ pH: some PropertyProtocol<H>,
+    _ pI: some PropertyProtocol<I>,
+    _ pJ: some PropertyProtocol<J>
+  ) -> Property<(A, B, C, D, E, F, G, H, I, J)> {
+    pA.combineLatest(pB, pC, pD, pE, pF, pG, pH, pI, pJ)
+  }
+}
