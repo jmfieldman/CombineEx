@@ -21,12 +21,16 @@ final class SinkTests: XCTestCase {
   func testSinkDuringLifetimeReleases() {
     let subject = CurrentValueSubject<Int, TestError>(1)
     var accumulator: [Int] = []
+    var cancel = false
 
     autoreleasepool {
       let lifetime = LifetimeClass()
       subject
         .handleValue { accumulator.append($0) }
-        .sink(duringLifetimeOf: lifetime)
+        .sink(
+          duringLifetimeOf: lifetime,
+          receiveCancel: { cancel = true }
+        )
 
       subject.send(2)
       Thread.sleep(forTimeInterval: 0.01)
@@ -39,6 +43,7 @@ final class SinkTests: XCTestCase {
     Thread.sleep(forTimeInterval: 0.01)
     subject.send(5)
     XCTAssertEqual(accumulator, [1, 2, 3, 4])
+    XCTAssertEqual(cancel, true)
   }
 
   func testSinkDuringLifetimeOperatesOnSet() {
