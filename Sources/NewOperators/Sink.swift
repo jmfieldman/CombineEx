@@ -27,7 +27,7 @@ private func __AnyObjectCancellableLock(_ object: AnyObject) -> NSLock {
   return lock
 }
 
-private func __AnyObjectCancellableStorage(_ object: AnyObject) -> NSMutableSet {
+func __AnyObjectCancellableStorage(_ object: AnyObject) -> NSMutableSet {
   objc_sync_enter(object)
   defer { objc_sync_exit(object) }
 
