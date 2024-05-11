@@ -46,10 +46,11 @@ private func __AnyObjectCancellableStorage(_ object: AnyObject) -> NSMutableSet 
 }
 
 private class CancellableBox {
-  var cancellable: AnyCancellable?
+  weak var cancellable: AnyCancellable?
 }
 
 public extension Publisher {
+  @discardableResult
   func sink(
     duringLifetimeOf object: AnyObject,
     receiveSubscription: ((any Subscription) -> Void)? = nil,
@@ -64,10 +65,12 @@ public extension Publisher {
       guard let object, let cancellable = cancellableBox.cancellable else { return }
       __AnyObjectCancellableLock(object).withLock {
         __AnyObjectCancellableStorage(object).remove(cancellable)
+        cancellable.cancel()
+        cancellableBox.cancellable = nil
       }
     }
 
-    cancellableBox.cancellable = handleEvents(
+    let cancellable = handleEvents(
       receiveSubscription: receiveSubscription,
       receiveCancel: {
         receiveCancel?()
@@ -81,6 +84,11 @@ public extension Publisher {
       receiveValue?(value)
     })
 
-    return cancellableBox.cancellable
+    cancellableBox.cancellable = cancellable
+    __AnyObjectCancellableLock(object).withLock {
+      __AnyObjectCancellableStorage(object).add(cancellable)
+    }
+
+    return cancellable
   }
 }
