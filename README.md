@@ -14,7 +14,13 @@ ReactiveSwift so great:
 ### Hot vs Cold
 
 One important missing aspect of Combine publishers is the notion of type-based Hot
-vs. Cold.
+vs. Cold. Specifically, Combine typically erases all publishers to `AnyPublisher` at
+API boundaries, making it difficult to intuit if a publisher is hot or cold. 
+
+With CombineEx: 
+* You continue to use `Publisher` and `AnyPublisher` for unspecified/hot publishers.
+* You can use `DeferredPublisher` and `AnyDeferredPublisher` for cold publishers.
+* You can use `DeferredFuture` and `AnyDeferredFuture` for cold singles. 
 
 ##### Hot
 
@@ -70,3 +76,55 @@ These new types are all `Publisher`, so any operator works on them. New operator
 to keep their Deferred nature, as long as it makes sense.  e.g. `DeferredFuture` has an override
 to flatMap into another `DeferredFuture` (and keep the output a `DeferredFuture`), but flatMapping
 into a `DeferredPublisher` would only emit a `DeferredPublisher`. 
+
+### Property and MutableProperty
+
+Combine only offers a single subject that guarantees that it has a current value: `CurrentValueSubject`.
+This subject has two drawbacks: First, it has no write-protection (anyone can update its value). Second,
+it can receive an error, which means that it can stop emitting values forever.
+
+`Property` and `MutableProperty` (implementing PropertyProtocol) solve these problems:
+
+* The only generic parameter is the value. These types always use `Never` as their error.
+* APIs can expose `Property` in their protocols, and use `MutableProperty` in internal implementations. This
+allows internal implementations to be the only source of truth for the exposed `Property`.
+
+The `MutableProperty` implementation also has the benefit of guaranteeing thread safety when imperatively
+accessing/modifying the internal value.
+
+### Action class
+
+ReactiveSwift introduced the concept of an `Action`.  Think of an `Action` as a cold publisher factory.
+Each call to `apply` constructs a cold publisher with the input.  
+
+These constructed cold publishers:
+* Cannot run in parallel. Starting a new publisher will interrupt a previous one, or return an immediate error
+that a previous publisher was running.
+* The execution state (whether or not one is in flight, and observing all of the values/errors) can be
+tracking by the parent Action.
+
+This makes Actions great for hooking up to UI.  i.e. pressing a UIButton can build and run an Action's publisher,
+and the button's loading spinner can reflect the in-flight execution state of the publisher.
+
+### Quality of Life Extensions
+
+##### Sink
+
+There is a new powerful override of `sink`:
+
+```swift
+func sink(
+  duringLifetimeOf object: AnyObject,
+  receiveSubscription: ((any Subscription) -> Void)? = nil,
+  receiveValue: ((Self.Output) -> Void)? = nil,
+  receiveCompletion: ((Subscribers.Completion<Self.Failure>) -> Void)? = nil,
+  receiveCancel: (() -> Void)? = nil,
+  receiveRequest: ((Subscribers.Demand) -> Void)? = nil
+) -> AnyCancellable?
+```
+
+This `sink` automatically binds the cancellable to the lifetime of the specified object, with automatic garbage collection
+that removes the cancellable from the object if the cancellable completes before the object is deallocated.
+
+This is useful when starting publishers from within the lifetime of longer-lived objects such as UIViewControllers or
+Services/Managers, and not needing to explicitly deal with collections of AnyCancellable.
