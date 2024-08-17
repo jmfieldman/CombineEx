@@ -28,9 +28,8 @@ final class DeferredFutureTests: XCTestCase {
     let p2 = t2.eraseToAnyPublisher()
     XCTAssertNotNil(p2)
 
-    /// Ensure that `mapDeferredFuture` can be chained into `eraseToAnyPublisher` to
-    /// explicitly return an `AnyDeferredFuture`.
-    let t3: AnyDeferredFuture = future.mapDeferredFuture { $0 + 1 }.eraseToAnyPublisher()
+    /// Ensure that `mapDeferredFuture` can be chained into `eraseToAnyPublisher`
+    let t3: AnyPublisher = future.mapDeferredFuture { $0 + 1 }.eraseToAnyPublisher()
     let p3 = t3.eraseToAnyPublisher()
     XCTAssertNotNil(p3)
 
@@ -39,6 +38,11 @@ final class DeferredFutureTests: XCTestCase {
     let t4 = future.map { $0 + 1 }.eraseToAnyDeferredFuture()
     let p4 = t4.eraseToAnyPublisher()
     XCTAssertNotNil(p4)
+
+    /// Ensure that ambiguous `map` can be used with eraseToAnyPublisher
+    let t5: AnyPublisher = future.map { $0 + 1 }.eraseToAnyPublisher()
+    let p5 = t5.eraseToAnyPublisher()
+    XCTAssertNotNil(p5)
   }
 
   // MARK: - Basic

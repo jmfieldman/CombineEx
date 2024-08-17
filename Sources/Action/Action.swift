@@ -90,7 +90,7 @@ public final class Action<Input, Output, Failure: Error> {
       } else {
         promise(isExecuting.value == false ? .success(()) : .failure(.disabled))
       }
-    }.eraseToAnyDeferredFuture()
+    }.eraseToAnyDeferredPublisher()
   }
 }
 

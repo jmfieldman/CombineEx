@@ -11,11 +11,12 @@ public protocol DeferredFutureProtocol<Output, Failure>: Publisher {
   associatedtype WrappedFuture = Future<Output, Failure>
   var attemptToFulfill: (@escaping Future<Output, Failure>.Promise) -> Void { get }
   func eraseToAnyDeferredFuture() -> AnyDeferredFuture<Output, Failure>
+  func eraseToAnyDeferredPublisher() -> AnyDeferredPublisher<Output, Failure>
 }
 
 // MARK: DeferredFuture
 
-public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, DeferredPublisherProtocol {
+public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Publisher {
   public typealias WrappedFuture = Future<Output, Failure>
   public let attemptToFulfill: (@escaping WrappedFuture.Promise) -> Void
   let wrappedDeferredFuture: Deferred<WrappedFuture>
@@ -43,8 +44,12 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, De
     wrappedDeferredFuture.createPublisher
   }
 
-  public func eraseToAnyPublisher() -> AnyDeferredFuture<Output, Failure> {
-    AnyDeferredFuture(self)
+  public func eraseToAnyPublisher() -> AnyPublisher<Output, Failure> {
+    AnyPublisher(self)
+  }
+
+  public func eraseToAnyDeferredPublisher() -> AnyDeferredPublisher<Output, Failure> {
+    AnyDeferredPublisher(wrappedDeferredFuture)
   }
 
   public func eraseToAnyDeferredFuture() -> AnyDeferredFuture<Output, Failure> {
@@ -64,7 +69,7 @@ public extension DeferredFuture {
 
 // MARK: AnyDeferredFuture
 
-public class AnyDeferredFuture<Output, Failure: Error>: AnyDeferredPublisher<Output, Failure>, DeferredFutureProtocol {
+public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
   public typealias WrappedDeferredFuture = DeferredFuture<Output, Failure>
   private let wrappedDeferredFuture: DeferredFuture<Output, Failure>
 
@@ -72,7 +77,6 @@ public class AnyDeferredFuture<Output, Failure: Error>: AnyDeferredPublisher<Out
     _ deferredFuture: DeferredFuture<Output, Failure>
   ) {
     self.wrappedDeferredFuture = deferredFuture
-    super.init(wrappedDeferredFuture.wrappedDeferredFuture)
   }
 
   public convenience init(
@@ -81,7 +85,7 @@ public class AnyDeferredFuture<Output, Failure: Error>: AnyDeferredPublisher<Out
     self.init(DeferredFuture(attemptToFulfill))
   }
 
-  override public func receive<S>(
+  public func receive<S>(
     subscriber: S
   ) where
     S: Subscriber,
@@ -95,7 +99,7 @@ public class AnyDeferredFuture<Output, Failure: Error>: AnyDeferredPublisher<Out
     wrappedDeferredFuture.attemptToFulfill
   }
 
-  override public var createPublisher: () -> AnyDeferredPublisher<Output, Failure>.WrappedPublisher {
+  private var createPublisher: () -> AnyDeferredPublisher<Output, Failure>.WrappedPublisher {
     let wrapped = wrappedDeferredFuture
     return {
       wrapped.createPublisher().eraseToAnyPublisher()
@@ -104,5 +108,9 @@ public class AnyDeferredFuture<Output, Failure: Error>: AnyDeferredPublisher<Out
 
   public func eraseToAnyDeferredFuture() -> AnyDeferredFuture<Output, Failure> {
     self
+  }
+
+  public func eraseToAnyDeferredPublisher() -> AnyDeferredPublisher<Output, Failure> {
+    AnyDeferredPublisher(createPublisher: createPublisher)
   }
 }
