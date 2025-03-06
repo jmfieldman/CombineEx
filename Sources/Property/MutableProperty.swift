@@ -81,7 +81,7 @@ public final class MutableProperty<Output>: ComposableMutablePropertyProtocol {
       }
       isModifying = true
       block(&_value)
-      subject.send(value)
+      subject.send(_value)
       isModifying = false
     }
   }
