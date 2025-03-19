@@ -1,6 +1,6 @@
 //
 //  Exports.swift
-//  Copyright © 2023 Jason Fieldman.
+//  Copyright © 2025 Jason Fieldman.
 //
 
 @_exported import Combine

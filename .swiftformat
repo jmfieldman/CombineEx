@@ -2,7 +2,7 @@
 --allman false
 --elseposition same-line
 --patternlet hoist
---indent 2
+--indent 4 
 --indentcase false
 --ifdef no-indent
 --xcodeindentation false

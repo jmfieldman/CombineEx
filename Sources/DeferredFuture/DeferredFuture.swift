@@ -1,6 +1,6 @@
 //
 //  DeferredFuture.swift
-//  Copyright © 2024 Jason Fieldman.
+//  Copyright © 2025 Jason Fieldman.
 //
 
 import Combine
@@ -15,24 +15,23 @@ import Combine
 /// must define how they publish values and errors, and how to erase
 /// themselves to an `AnyDeferredFuture` or `AnyDeferredPublisher`.
 public protocol DeferredFutureProtocol<Output, Failure>: Publisher {
-    
     /// A convenience type alias for the underlying `Future`.
     associatedtype WrappedFuture = Future<Output, Failure>
-    
+
     /// The closure that attempts to fulfill the `Future`'s promise.
     ///
     /// This closure is typically called once a subscriber requests values,
     /// allowing you to provide the eventual result (`.success`) or error
     /// (`.failure`).
     var attemptToFulfill: (@escaping Future<Output, Failure>.Promise) -> Void { get }
-    
+
     /// Erases the concrete deferred future type, returning an
     /// `AnyDeferredFuture` that hides the implementation details.
     ///
     /// This is useful for returning a type-erased deferred future
     /// from a library or API.
     func eraseToAnyDeferredFuture() -> AnyDeferredFuture<Output, Failure>
-    
+
     /// Erases the concrete publisher type, returning an
     /// `AnyDeferredPublisher` that hides the implementation details.
     ///
@@ -74,22 +73,21 @@ public protocol DeferredFutureProtocol<Output, Failure>: Publisher {
 ///             receiveValue: { print("Value: \($0)") }
 ///         )
 public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Publisher {
-    
     /// A convenience type alias for the underlying `Future` that
     /// delivers `Output` or fails with `Failure`.
     public typealias WrappedFuture = Future<Output, Failure>
-    
+
     /// The closure that attempts to fulfill the `Future`'s promise.
     /// This closure is executed once a subscriber requests values.
     ///
     /// - Parameter promise: A closure that you must call with either
     ///   `.success(Output)` or `.failure(Failure)` to resolve the future.
     public let attemptToFulfill: (@escaping WrappedFuture.Promise) -> Void
-    
+
     /// The internal `Deferred` that wraps the `Future`. The `Future`
     /// is only created when this `Deferred` is subscribed to.
     let wrappedDeferredFuture: Deferred<WrappedFuture>
-    
+
     /// Creates a new deferred future using a closure that attempts to
     /// fulfill the promise when a subscriber demands values.
     ///
@@ -104,9 +102,9 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
             Future(attemptToFulfill)
         }
     }
-    
+
     // MARK: - Publisher Conformance
-    
+
     /// Subscribes the specified subscriber to this publisher.
     ///
     /// Once subscribed, `DeferredFuture` will create its underlying
@@ -124,7 +122,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     {
         wrappedDeferredFuture.receive(subscriber: subscriber)
     }
-    
+
     // MARK: - DeferredFutureProtocol Conformance
 
     /// Exposes the factory closure for creating the underlying
@@ -171,7 +169,6 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
 // MARK: - DeferredFuture Extension
 
 public extension DeferredFuture {
-    
     /// Creates a deferred future that immediately succeeds with a given value.
     ///
     /// This is convenient when you want a future that yields a known,
@@ -208,14 +205,13 @@ public extension DeferredFuture {
 /// exposing its actual type in your API, allowing for flexibility
 /// in future implementation changes.
 public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
-    
     /// A convenience alias for the concrete `DeferredFuture` type
     /// wrapped by this class.
     public typealias WrappedDeferredFuture = DeferredFuture<Output, Failure>
-    
+
     /// The concrete `DeferredFuture` being type-erased.
     private let wrappedDeferredFuture: DeferredFuture<Output, Failure>
-    
+
     /// Creates a new type-erased deferred future by wrapping
     /// the provided concrete `DeferredFuture`.
     ///
@@ -225,7 +221,7 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
     ) {
         self.wrappedDeferredFuture = deferredFuture
     }
-    
+
     /// A convenience initializer allowing you to create an
     /// `AnyDeferredFuture` from a closure that attempts to fulfill
     /// the wrapped future’s promise.
@@ -237,9 +233,9 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
     ) {
         self.init(DeferredFuture(attemptToFulfill))
     }
-    
+
     // MARK: - Publisher Conformance
-    
+
     /// Subscribes the given subscriber to this deferred future.
     ///
     /// Once subscribed, the wrapped `DeferredFuture` begins its
@@ -257,23 +253,23 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
     {
         wrappedDeferredFuture.receive(subscriber: subscriber)
     }
-    
+
     /// The closure that attempts to fulfill the underlying future’s promise.
     ///
     /// This simply forwards to the wrapped deferred future.
     public var attemptToFulfill: (@escaping Future<Output, Failure>.Promise) -> Void {
         wrappedDeferredFuture.attemptToFulfill
     }
-    
+
     // MARK: - Type Erasure
-    
+
     /// Returns `self`, as this instance is already type-erased.
     ///
     /// - Returns: This `AnyDeferredFuture`.
     public func eraseToAnyDeferredFuture() -> AnyDeferredFuture<Output, Failure> {
         self
     }
-    
+
     /// Erases the "Future" nature of this class to a generic deferred publisher
     /// type, returning an `AnyDeferredPublisher`.
     ///
