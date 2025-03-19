@@ -265,17 +265,6 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
         wrappedDeferredFuture.attemptToFulfill
     }
     
-    /// A closure that creates an `AnyDeferredPublisher` wrapping
-    /// the underlying publisher.
-    ///
-    /// This is used by `eraseToAnyDeferredPublisher()`.
-    private var createPublisher: () -> AnyDeferredPublisher<Output, Failure>.WrappedPublisher {
-        let wrapped = wrappedDeferredFuture
-        return {
-            wrapped.createPublisher().eraseToAnyPublisher()
-        }
-    }
-    
     // MARK: - Type Erasure
     
     /// Returns `self`, as this instance is already type-erased.
@@ -285,11 +274,14 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
         self
     }
     
-    /// Erases the concrete publisher type, returning an
-    /// `AnyDeferredPublisher` that hides implementation details.
+    /// Erases the "Future" nature of this class to a generic deferred publisher
+    /// type, returning an `AnyDeferredPublisher`.
     ///
-    /// - Returns: A type-erased publisher for this deferred future.
+    /// - Returns: A type-erased deferred publisher for this deferred future.
     public func eraseToAnyDeferredPublisher() -> AnyDeferredPublisher<Output, Failure> {
-        AnyDeferredPublisher(createPublisher: createPublisher)
+        let wrapped = wrappedDeferredFuture
+        return AnyDeferredPublisher(createPublisher: {
+            wrapped.createPublisher().eraseToAnyPublisher()
+        })
     }
 }
