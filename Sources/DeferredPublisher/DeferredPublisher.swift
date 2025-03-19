@@ -69,7 +69,7 @@ public class AnyDeferredPublisher<Output, Failure: Error>: DeferredPublisherProt
     public init(
         _ deferredPublisher: Deferred<some Publisher<Output, Failure>>
     ) {
-        // Wrap the incoming `Deferred`, erasing it to `AnyPublisher<Output, Failure>`.
+        // Lift the internal publisher out of the parameter
         self.deferredPublisher = Deferred {
             deferredPublisher
                 .createPublisher()
