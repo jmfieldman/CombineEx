@@ -24,11 +24,8 @@ public final class Action<Input, Output, Failure: Error> {
     }
 
     public func apply(_ input: Input) -> AnyDeferredPublisher<Output, ActionError<Failure>> {
-        Deferred { [weak self] in
-            guard let self else {
-                return AnyDeferredPublisher<Output, ActionError<Failure>>.fail(.disabled)
-            }
-
+        // Explicitly hold self - The Action will live as long as its applied children.
+        Deferred { [self] in
             var canBegin: Bool = false
             mutableIsExecuting.modify { isExecuting in
                 if !isExecuting {

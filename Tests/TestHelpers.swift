@@ -32,3 +32,7 @@ extension Publisher {
         }, receiveValue: receiveValue)
     }
 }
+
+class Countable {
+    var count: Int = 0
+}
