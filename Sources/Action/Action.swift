@@ -23,6 +23,11 @@ public final class Action<Input, Output, Failure: Error> {
         self.publisherBuilder = builder
     }
 
+    /// Applies the action with the given input and returns a deferred publisher.
+    /// Note that no work begins until the publisher is subscribed to.
+    ///
+    ///  - Parameter input: The input to be used by the action's publisher builder.
+    ///  - Returns: A deferred publisher that emits the result of the action or an `ActionError`.
     public func apply(_ input: Input) -> AnyDeferredPublisher<Output, ActionError<Failure>> {
         // Explicitly hold self - The Action will live as long as its applied children.
         Deferred { [self] in
@@ -62,13 +67,15 @@ public final class Action<Input, Output, Failure: Error> {
         }.eraseToAnyDeferredPublisher()
     }
 
-    /// The same as `apply`, but if the action is in-flight and would return .disabled
-    /// this just flatMaps to an 'empty'.  Otherwise it surfaces the internal failure
-    /// so you don't need to unbox the ActionError manually.
+    /// Applies the action with the given input, but suppresses `.disabled` errors.
     ///
-    /// This is great for times when you don't care about the .disabled error, like when
-    /// your UI element that triggers the action is already disabled while the action
-    /// is executing.
+    ///  If the action is already executing and would return `.disabled`, this method returns an empty publisher instead.
+    ///  Otherwise, it surfaces the internal failure directly without needing to unbox `ActionError`.
+    ///
+    ///  This is useful for UI elements that automatically disable while the action is executing.
+    ///
+    ///  - Parameter input: The input to be used by the action's publisher builder.
+    ///  - Returns: A deferred publisher that emits the result of the action or a direct failure.
     public func applyIfPossible(_ input: Input) -> AnyDeferredPublisher<Output, Failure> {
         apply(input)
             .catch { actionError -> AnyDeferredPublisher<Output, Failure> in
