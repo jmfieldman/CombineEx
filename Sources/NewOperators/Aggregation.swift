@@ -188,6 +188,12 @@ public extension Publishers {
                         }
                     }
                     _ = subscriber.receive(nextValue)
+
+                    lock.withLock {
+                        if demand != .unlimited, demand > 0 {
+                            demand -= 1
+                        }
+                    }
                 }
             }
 
