@@ -6,22 +6,51 @@
 import Combine
 import Foundation
 
+/// A protocol for aggregating publishers.
 public protocol AggregatePublisherAggregator<AggregateFailure> {
     associatedtype AggregateFailure: Error
+
+    /// Adds a publisher to be aggregated.
+    ///
+    /// - Parameter publisher: The publisher to add.
     func add(_ publisher: some Publisher<some Any, AggregateFailure>)
 }
 
 public extension Publishers {
     struct Aggregate<Output, Failure: Error>: Publisher {
+        /// The strategy used to combine the values from sub-publishers.
         public enum Strategy {
+            /// Emits an event whenever any of the source publishers emit a value, containing the
+            /// most recent value of each publisher.
             case combineLatest
+
+            /// Emits an i-th event when all of the source publishers have emitted at least i values.
             case zip
         }
 
-        let strategy: Strategy
-        let componentBuilder: (any AggregatePublisherAggregator<Failure>) -> Void
-        let aggregationBlock: ([Any]) -> Output
+        private let strategy: Strategy
+        private let componentBuilder: (any AggregatePublisherAggregator<Failure>) -> Void
+        private let aggregationBlock: ([Any]) -> Output
 
+        /// Creates a new `Aggregate` publisher.
+        ///
+        /// - Parameters:
+        ///   - strategy: The strategy used to combine the values from sub-publishers.
+        ///   - componentBuilder: A closure that is called with an aggregator object, allowing you to add publishers.
+        ///   - aggregationBlock: A block that takes an array of values and returns a single output value.
+        public init(
+            strategy: Strategy,
+            componentBuilder: @escaping (any AggregatePublisherAggregator<Failure>) -> Void,
+            aggregationBlock: @escaping ([Any]) -> Output
+        ) {
+            self.strategy = strategy
+            self.componentBuilder = componentBuilder
+            self.aggregationBlock = aggregationBlock
+        }
+
+        /// Connects the specified subscriber to this publisher.
+        ///
+        /// - Parameter subscriber: The subscriber to attach to this publisher.
         public func receive<S: Subscriber>(subscriber: S) where S.Input == Output, S.Failure == Failure {
             let subscription = AggregateSubscription(
                 subscriber: subscriber,
@@ -33,25 +62,33 @@ public extension Publishers {
             subscription.start()
         }
 
+        /// A private class that manages the subscription and aggregation logic.
         public final class AggregateSubscription<S: Subscriber>: Subscription, AggregatePublisherAggregator where S.Input == Output, S.Failure == Failure {
             public typealias AggregateFailure = Failure
             public typealias Input = Output
 
-            var subscriber: S?
-            var isCancelled = false
-            var demand: Subscribers.Demand = .unlimited
+            private var subscriber: S?
+            private var isCancelled = false
+            private var demand: Subscribers.Demand = .unlimited
 
-            let strategy: Strategy
-            let componentBuilder: (AggregateSubscription) -> Void
-            let aggregationBlock: ([Any]) -> Output
+            private let strategy: Strategy
+            private let componentBuilder: (AggregateSubscription) -> Void
+            private let aggregationBlock: ([Any]) -> Output
 
-            var lock = NSLock()
-            var startBlocks: [() -> Void] = []
-            var values: ContiguousArray<[Any]> = []
-            var finished: ContiguousArray<Bool> = []
-            var countWithValues = 0
-            var cancellables: [AnyCancellable] = []
+            private var lock = NSLock()
+            private var startBlocks: [() -> Void] = []
+            private var values: ContiguousArray<[Any]> = []
+            private var finished: ContiguousArray<Bool> = []
+            private var countWithValues = 0
+            private var cancellables: [AnyCancellable] = []
 
+            /// Initializes a new `AggregateSubscription`.
+            ///
+            /// - Parameters:
+            ///   - subscriber: The subscriber to attach to this subscription.
+            ///   - strategy: The strategy used to combine the values from sub-publishers.
+            ///   - componentBuilder: A closure that is called with an aggregator object, allowing you to add publishers.
+            ///   - aggregationBlock: A block that takes an array of values and returns a single output value.
             init(
                 subscriber: S,
                 strategy: Strategy,
@@ -68,18 +105,25 @@ public extension Publishers {
                 self.finished = ContiguousArray(repeating: false, count: startBlocks.count)
             }
 
+            /// Request a specified number of values from the publisher.
+            ///
+            /// - Parameter demand: The amount of values requested.
             public func request(_ demand: Subscribers.Demand) {
                 lock.withLock {
                     self.demand = demand
                 }
             }
 
+            /// Cancel the subscription, stopping delivery of further events.
             public func cancel() {
                 subscriber = nil
                 isCancelled = true
                 cancellables = []
             }
 
+            /// Adds a publisher to be aggregated.
+            ///
+            /// - Parameter publisher: The publisher to add.
             public func add(_ publisher: some Publisher<some Any, Failure>) {
                 let index = startBlocks.count
                 startBlocks.append { [weak self] in
@@ -87,6 +131,11 @@ public extension Publishers {
                 }
             }
 
+            /// Attaches a publisher to be aggregated and starts receiving values.
+            ///
+            /// - Parameters:
+            ///   - publisher: The publisher to attach.
+            ///   - index: The index at which the publisher is stored.
             private func attach(_ publisher: some Publisher<some Any, Failure>, index: Int) {
                 publisher.sink { [weak self] completion in
                     switch completion {
@@ -104,6 +153,11 @@ public extension Publishers {
                 startBlocks.forEach { $0() }
             }
 
+            /// Processes a new value received from one of the publishers
+            ///
+            /// - Parameters:
+            ///   - index: The index of the publisher that sent the value.
+            ///   - value: The received value.
             private func onValue(index: Int, value: some Any) {
                 lock.withLock {
                     if values[index].isEmpty {
@@ -137,6 +191,12 @@ public extension Publishers {
                 }
             }
 
+            /// Processes an error received from one of the publishers; this
+            /// cancels the publisher.
+            ///
+            /// - Parameters:
+            ///   - index: The index of the publisher that sent the error.
+            ///   - error: The error.
             private func onError(index: Int, error: Failure) {
                 lock.withLock {
                     subscriber?.receive(completion: .failure(error))
@@ -144,6 +204,9 @@ public extension Publishers {
                 }
             }
 
+            /// Processes the completion event of one of the publishers.
+            ///
+            /// - Parameter index: The index of the publisher that completed.
             private func onFinish(index: Int) {
                 lock.withLock {
                     finished[index] = true
