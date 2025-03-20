@@ -103,6 +103,24 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
         }
     }
 
+    /// Create a `DeferredFuture` that attempts to execute an async function
+    /// and returns its value (or thrown error as a failure).
+    ///
+    /// - Parameter task: An async function whose return value is emitted as
+    ///   the value of the future, or whose thrown error is emitted as the
+    ///   failure.
+    public static func withTask(_ task: @escaping () async throws(Failure) -> Output) -> Self {
+        .init { promise in
+            Task {
+                do throws(Failure) {
+                    try await promise(.success(task()))
+                } catch {
+                    promise(.failure(error))
+                }
+            }
+        }
+    }
+
     // MARK: - Publisher Conformance
 
     /// Subscribes the specified subscriber to this publisher.
