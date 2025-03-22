@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "CombineEx",
-    platforms: [.iOS(.v16), .macOS(.v13), .tvOS(.v17), .watchOS(.v7)],
+    platforms: [.iOS(.v16), .macOS(.v14), .tvOS(.v17), .watchOS(.v7)],
     products: [
         .library(name: "CombineEx", targets: ["CombineEx"]),
     ],
