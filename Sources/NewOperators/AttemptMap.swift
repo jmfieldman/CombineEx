@@ -83,9 +83,41 @@ private extension Publishers.AttemptMap {
 }
 
 public extension Publisher {
+    /// Maps each element of the publisher using a transformation that returns a `Result` type.
+    ///
+    /// - Parameter transform: A closure that takes an element and returns a `Result` containing the transformed value or a failure.
+    /// - Returns: A `Publishers.AttemptMap` instance that applies the transformation to each element.
     func attemptMap<NewOutput>(
         _ transform: @escaping (Output) -> Result<NewOutput, Failure>
     ) -> Publishers.AttemptMap<Self, NewOutput> {
         Publishers.AttemptMap(upstream: self, transform: transform)
+    }
+}
+
+public extension DeferredPublisherProtocol {
+    /// Maps each element of the deferred publisher using a transformation that returns a `Result` type.
+    ///
+    /// - Parameter transform: A closure that takes an element and returns a `Result` containing the transformed value or a failure.
+    /// - Returns: A `Deferred<Publishers.AttemptMap<WrappedPublisher, NewOutput>>` instance that applies the transformation to each element.
+    @_disfavoredOverload
+    func attemptMap<NewOutput>(
+        _ transform: @escaping (WrappedPublisher.Output) -> Result<NewOutput, Failure>
+    ) -> Deferred<Publishers.AttemptMap<WrappedPublisher, NewOutput>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.attemptMap(transform) }
+    }
+}
+
+public extension DeferredFutureProtocol {
+    /// Maps the output of the deferred future using a transformation that returns a `Result` type.
+    ///
+    /// - Parameter transform: A closure that takes an output and returns a `Result` containing the transformed value or a failure.
+    /// - Returns: A `DeferredFuture<NewOutput, Failure>` instance that applies the transformation to the output.
+    @_disfavoredOverload
+    func attemptMap<NewOutput>(
+        _ transform: @escaping (Output) -> Result<NewOutput, Failure>
+    ) -> DeferredFuture<NewOutput, Failure> {
+        futureLiftOutput { outerResult, innerPromise in
+            innerPromise(transform(outerResult))
+        }
     }
 }
