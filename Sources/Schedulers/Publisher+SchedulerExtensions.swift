@@ -36,7 +36,7 @@ public extension Publisher {
     /// has finished processing (e.g. it will wait until the user finishes scrolling.)
     ///
     /// - Returns: A `Publishers.ReceiveOn` instance that receives values on the main run loop.
-    func receiveOnMainRunloop() -> Publishers.ReceiveOn<Self, RunLoop> {
+    func receiveOnMainRunLoop() -> Publishers.ReceiveOn<Self, RunLoop> {
         receive(on: RunLoop.main)
     }
 }

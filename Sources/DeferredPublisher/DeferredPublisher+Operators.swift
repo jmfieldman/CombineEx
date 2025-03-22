@@ -234,7 +234,7 @@ public extension DeferredPublisherProtocol {
     ///
     /// - Returns: A `Publishers.ReceiveOn` instance that receives values on the main run loop.
     @_disfavoredOverload
-    func receiveOnMainRunloop() -> Deferred<Publishers.ReceiveOn<WrappedPublisher, RunLoop>> where WrappedPublisher.Failure == Failure {
+    func receiveOnMainRunLoop() -> Deferred<Publishers.ReceiveOn<WrappedPublisher, RunLoop>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.receive(on: RunLoop.main) }
     }
 }

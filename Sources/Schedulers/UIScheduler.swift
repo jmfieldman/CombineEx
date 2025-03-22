@@ -39,6 +39,10 @@ public struct UIScheduler: Scheduler, Sendable {
     public var now: SchedulerTimeType { DispatchQueue.main.now }
     public var minimumTolerance: SchedulerTimeType.Stride { DispatchQueue.main.minimumTolerance }
 
+    public func onMainThread() -> Bool {
+        DispatchQueue.getSpecific(key: key) == value
+    }
+
     public func schedule(options: SchedulerOptions? = nil, _ action: @escaping () -> Void) {
         if DispatchQueue.getSpecific(key: key) == value {
             action()

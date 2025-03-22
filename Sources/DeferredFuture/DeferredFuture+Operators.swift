@@ -434,6 +434,57 @@ public extension DeferredFutureProtocol {
     }
 }
 
+// MARK: - Specifying Schedulers
+
+public extension DeferredFutureProtocol {
+    /// Configures the future to receive values on the main thread using `UIScheduler`.
+    /// `UIScheduler` will receive synchronously on the main thread if the upstream publisher
+    /// emits on the main thread, otherwise it will dispatch to main asynchronously.
+    ///
+    /// - Returns: A `DeferredFuture` instance that receives values on the main UI thread.
+    @_disfavoredOverload
+    func receiveOnMain() -> DeferredFuture<Output, Failure> {
+        futureLiftOutput { outerOutput, innerPromise in
+            guard UIScheduler.shared.onMainThread() else {
+                DispatchQueue.main.async {
+                    innerPromise(.success(outerOutput))
+                }
+                return
+            }
+
+            innerPromise(.success(outerOutput))
+        }
+    }
+
+    /// Configures the future to receive values on the main thread using `DispatchQueue`.
+    /// Unlike `receiveOnMain`, this will always dispatch asynchronously to the main queue,
+    /// even if the upstream future emits on the main thread.
+    ///
+    /// - Returns: A `DeferredFuture` instance that receives values on the main thread.
+    @_disfavoredOverload
+    func receiveOnMainAsync() -> DeferredFuture<Output, Failure> {
+        futureLiftOutput { outerOutput, innerPromise in
+            DispatchQueue.main.async {
+                innerPromise(.success(outerOutput))
+            }
+        }
+    }
+
+    /// Configures the future to receive values on the main run loop using `RunLoop`.
+    /// This will only schedule the future to receive events when the current RunLoop
+    /// has finished processing (e.g. it will wait until the user finishes scrolling.)
+    ///
+    /// - Returns: A `DeferredFuture` instance that receives values on the main run loop.
+    @_disfavoredOverload
+    func receiveOnMainRunLoop() -> DeferredFuture<Output, Failure> {
+        futureLiftOutput { outerOutput, innerPromise in
+            RunLoop.main.schedule {
+                innerPromise(.success(outerOutput))
+            }
+        }
+    }
+}
+
 // MARK: - Deferred Operator Aliases
 
 // These can be used to return DeferredFutures in a non-ambiguous manner.
