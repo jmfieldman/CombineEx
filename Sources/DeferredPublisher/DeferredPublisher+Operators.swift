@@ -175,6 +175,92 @@ public extension DeferredPublisherProtocol {
     }
 }
 
+// MARK: Controlling Timing
+
+public extension DeferredPublisherProtocol {
+    /// Measures the interval between elements emitted by the publisher, using the specified scheduler and options.
+    ///
+    /// - Parameters:
+    ///   - scheduler: The scheduler to use for measuring the interval.
+    ///   - options: Optional scheduler-specific options.
+    /// - Returns: A `Deferred` publisher that wraps a `Publishers.MeasureInterval` operator.
+    @_disfavoredOverload
+    func measureInterval<S>(
+        using scheduler: S,
+        options: S.SchedulerOptions? = nil
+    ) -> Deferred<Publishers.MeasureInterval<WrappedPublisher, S>> where S: Scheduler {
+        deferredLift { $0.measureInterval(using: scheduler, options: options) }
+    }
+
+    /// Debounces the publisher, delaying delivery of elements until a specified time interval has passed with no new elements.
+    ///
+    /// - Parameters:
+    ///   - dueTime: The time interval to wait for new elements before delivering the last received element.
+    ///   - scheduler: The scheduler to use for managing the due time.
+    ///   - options: Optional scheduler-specific options.
+    /// - Returns: A `Deferred` publisher that wraps a `Publishers.Debounce` operator.
+    @_disfavoredOverload
+    func debounce<S>(
+        for dueTime: S.SchedulerTimeType.Stride,
+        scheduler: S,
+        options: S.SchedulerOptions? = nil
+    ) -> Deferred<Publishers.Debounce<WrappedPublisher, S>> where S: Scheduler {
+        deferredLift { $0.debounce(for: dueTime, scheduler: scheduler, options: options) }
+    }
+
+    /// Delays the delivery of elements by a specified time interval.
+    ///
+    /// - Parameters:
+    ///   - interval: The time interval to delay the delivery of each element.
+    ///   - tolerance: An optional amount of variability, in seconds, that is acceptable either side of the specified interval.
+    ///   - scheduler: The scheduler to use for managing the delay.
+    ///   - options: Optional scheduler-specific options.
+    /// - Returns: A `Deferred` publisher that wraps a `Publishers.Delay` operator.
+    @_disfavoredOverload
+    func delay<S>(
+        for interval: S.SchedulerTimeType.Stride,
+        tolerance: S.SchedulerTimeType.Stride? = nil,
+        scheduler: S,
+        options: S.SchedulerOptions? = nil
+    ) -> Deferred<Publishers.Delay<WrappedPublisher, S>> where S: Scheduler {
+        deferredLift { $0.delay(for: interval, tolerance: tolerance, scheduler: scheduler, options: options) }
+    }
+
+    /// Throttles the publisher, ensuring that no more than one element is emitted in a specified time interval.
+    ///
+    /// - Parameters:
+    ///   - interval: The maximum interval at which to emit elements.
+    ///   - scheduler: The scheduler to use for managing the throttle interval.
+    ///   - latest: A Boolean value indicating whether the latest element should be emitted if multiple elements are received during the interval.
+    /// - Returns: A `Deferred` publisher that wraps a `Publishers.Throttle` operator.
+    @_disfavoredOverload
+    func throttle<S>(
+        for interval: S.SchedulerTimeType.Stride,
+        scheduler: S,
+        latest: Bool
+    ) -> Deferred<Publishers.Throttle<WrappedPublisher, S>> where S: Scheduler {
+        deferredLift { $0.throttle(for: interval, scheduler: scheduler, latest: latest) }
+    }
+
+    /// Terminates the publisher if it does not receive an element within a specified time interval.
+    ///
+    /// - Parameters:
+    ///   - interval: The maximum interval to wait for an element before terminating the publisher.
+    ///   - scheduler: The scheduler to use for managing the timeout interval.
+    ///   - options: Optional scheduler-specific options.
+    ///   - customError: A closure that returns a custom error to emit if the timeout occurs.
+    /// - Returns: A `Deferred` publisher that wraps a `Publishers.Timeout` operator.
+    @_disfavoredOverload
+    func timeout<S>(
+        _ interval: S.SchedulerTimeType.Stride,
+        scheduler: S,
+        options: S.SchedulerOptions? = nil,
+        customError: (() -> WrappedPublisher.Failure)? = nil
+    ) -> Deferred<Publishers.Timeout<WrappedPublisher, S>> where S: Scheduler {
+        deferredLift { $0.timeout(interval, scheduler: scheduler, options: options, customError: customError) }
+    }
+}
+
 // MARK: Specifying Schedulers
 
 public extension DeferredPublisherProtocol {
