@@ -60,6 +60,29 @@ final class DeferredFutureTests: XCTestCase {
         }
     }
 
+    /// This test shows the general danger of Futures, in that they execute
+    /// their internal promise closure immediately on construction, and then simply
+    /// republish the result. They are neither warm or cold.
+    func testUnderlyingPremise() {
+        var futureCount = 0
+        let future = Future<Int, TestError> { promise in
+            futureCount += 1
+            promise(.success(futureCount))
+        }
+
+        XCTAssertEqual(futureCount, 1)
+
+        future
+            .handleValue { XCTAssertEqual($0, 1) }
+            .sink(duringLifetimeOf: self)
+        future
+            .handleValue { XCTAssertEqual($0, 1) }
+            .sink(duringLifetimeOf: self)
+
+        // The work inside the future is not triggered by the subscription
+        XCTAssertEqual(futureCount, 1)
+    }
+
     // MARK: - Mapping Elements
 
     func testMap() {

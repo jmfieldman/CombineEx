@@ -35,7 +35,7 @@ private func __AnyObjectCancellableLock(_ object: AnyObject) -> NSLock {
 ///
 /// - Parameter object: The object to associate the mutable set with.
 /// - Returns: An `NSMutableSet` instance associated with the given object.
-private func __AnyObjectCancellableStorage(_ object: AnyObject) -> NSMutableSet {
+func __AnyObjectCancellableStorage(_ object: AnyObject) -> NSMutableSet {
     objc_sync_enter(object)
     defer { objc_sync_exit(object) }
 
