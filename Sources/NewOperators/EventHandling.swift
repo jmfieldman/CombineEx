@@ -8,18 +8,30 @@ import Combine
 // MARK: - Publisher
 
 public extension Publisher {
+    /// Configures the publisher to handle subscription events.
+    ///
+    /// - Parameter receiveSubscription: A closure that is called when the publisher receives a subscription.
+    /// - Returns: A `Publishers.HandleEvents` instance with the specified subscription handler.
     func handleSubscription(
         _ receiveSubscription: (() -> Void)? = nil
     ) -> Publishers.HandleEvents<Self> {
         handleEvents(receiveSubscription: { _ in receiveSubscription?() })
     }
 
+    /// Configures the publisher to handle value events.
+    ///
+    /// - Parameter receiveValue: A closure that is called when the publisher receives a value.
+    /// - Returns: A `Publishers.HandleEvents` instance with the specified value handler.
     func handleValue(
         _ receiveValue: ((Output) -> Void)? = nil
     ) -> Publishers.HandleEvents<Self> {
         handleEvents(receiveOutput: { receiveValue?($0) })
     }
 
+    /// Configures the publisher to handle error events.
+    ///
+    /// - Parameter receiveError: A closure that is called when the publisher receives an error.
+    /// - Returns: A `Publishers.HandleEvents` instance with the specified error handler.
     func handleError(
         _ receiveError: ((Failure) -> Void)? = nil
     ) -> Publishers.HandleEvents<Self> {
@@ -33,6 +45,10 @@ public extension Publisher {
         })
     }
 
+    /// Configures the publisher to handle finished events.
+    ///
+    /// - Parameter receiveFinished: A closure that is called when the publisher finishes.
+    /// - Returns: A `Publishers.HandleEvents` instance with the specified finished handler.
     func handleFinished(
         _ receiveFinished: (() -> Void)? = nil
     ) -> Publishers.HandleEvents<Self> {
@@ -46,12 +62,20 @@ public extension Publisher {
         })
     }
 
+    /// Configures the publisher to handle completion events.
+    ///
+    /// - Parameter receiveCompletion: A closure that is called when the publisher receives a completion event.
+    /// - Returns: A `Publishers.HandleEvents` instance with the specified completion handler.
     func handleCompletion(
         _ receiveCompletion: ((Subscribers.Completion<Failure>) -> Void)? = nil
     ) -> Publishers.HandleEvents<Self> {
         handleEvents(receiveCompletion: { receiveCompletion?($0) })
     }
 
+    /// Configures the publisher to handle cancellation events.
+    ///
+    /// - Parameter receiveCancel: A closure that is called when the publisher receives a cancellation.
+    /// - Returns: A `Publishers.HandleEvents` instance with the specified cancellation handler.
     func handleCancel(
         _ receiveCancel: (() -> Void)? = nil
     ) -> Publishers.HandleEvents<Self> {
@@ -62,6 +86,10 @@ public extension Publisher {
 // MARK: - DeferredPublisherProtocol
 
 public extension DeferredPublisherProtocol {
+    /// Configures the deferred publisher to handle subscription events.
+    ///
+    /// - Parameter receiveSubscription: A closure that is called when the publisher receives a subscription.
+    /// - Returns: A `Deferred<Publishers.HandleEvents<WrappedPublisher>>` instance with the specified subscription handler.
     @_disfavoredOverload
     func handleSubscription(
         _ receiveSubscription: (() -> Void)? = nil
@@ -69,6 +97,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.handleSubscription(receiveSubscription) }
     }
 
+    /// Configures the deferred publisher to handle value events.
+    ///
+    /// - Parameter receiveValue: A closure that is called when the publisher receives a value.
+    /// - Returns: A `Deferred<Publishers.HandleEvents<WrappedPublisher>>` instance with the specified value handler.
     @_disfavoredOverload
     func handleValue(
         _ receiveValue: ((Output) -> Void)? = nil
@@ -76,6 +108,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.handleValue(receiveValue) }
     }
 
+    /// Configures the deferred publisher to handle error events.
+    ///
+    /// - Parameter receiveError: A closure that is called when the publisher receives an error.
+    /// - Returns: A `Deferred<Publishers.HandleEvents<WrappedPublisher>>` instance with the specified error handler.
     @_disfavoredOverload
     func handleError(
         _ receiveError: ((Failure) -> Void)? = nil
@@ -83,6 +119,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.handleError(receiveError) }
     }
 
+    /// Configures the deferred publisher to handle finished events.
+    ///
+    /// - Parameter receiveFinished: A closure that is called when the publisher finishes.
+    /// - Returns: A `Deferred<Publishers.HandleEvents<WrappedPublisher>>` instance with the specified finished handler.
     @_disfavoredOverload
     func handleFinished(
         _ receiveFinished: (() -> Void)? = nil
@@ -90,6 +130,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.handleFinished(receiveFinished) }
     }
 
+    /// Configures the deferred publisher to handle completion events.
+    ///
+    /// - Parameter receiveCompletion: A closure that is called when the publisher receives a completion event.
+    /// - Returns: A `Deferred<Publishers.HandleEvents<WrappedPublisher>>` instance with the specified completion handler.
     @_disfavoredOverload
     func handleCompletion(
         _ receiveCompletion: ((Subscribers.Completion<Failure>) -> Void)? = nil
@@ -97,6 +141,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.handleCompletion(receiveCompletion) }
     }
 
+    /// Configures the deferred publisher to handle cancellation events.
+    ///
+    /// - Parameter receiveCancel: A closure that is called when the publisher receives a cancellation.
+    /// - Returns: A `Deferred<Publishers.HandleEvents<WrappedPublisher>>` instance with the specified cancellation handler.
     @_disfavoredOverload
     func handleCancel(
         _ receiveCancel: (() -> Void)? = nil
@@ -108,6 +156,10 @@ public extension DeferredPublisherProtocol {
 // MARK: - DeferredFutureProtocol
 
 public extension DeferredFutureProtocol {
+    /// Configures the deferred future to handle subscription events.
+    ///
+    /// - Parameter receiveSubscription: A closure that is called when the future receives a subscription.
+    /// - Returns: A `DeferredFuture<Output, Failure>` instance with the specified subscription handler.
     @_disfavoredOverload
     func handleSubscription(
         _ receiveSubscription: (() -> Void)? = nil
@@ -121,6 +173,10 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Configures the deferred future to handle value events.
+    ///
+    /// - Parameter receiveOutput: A closure that is called when the future receives a value.
+    /// - Returns: A `DeferredFuture<Output, Failure>` instance with the specified value handler.
     @_disfavoredOverload
     func handleValue(
         _ receiveOutput: ((Output) -> Void)? = nil
@@ -131,6 +187,10 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Configures the deferred future to handle error events.
+    ///
+    /// - Parameter receiveError: A closure that is called when the future receives an error.
+    /// - Returns: A `DeferredFuture<Output, Failure>` instance with the specified error handler.
     @_disfavoredOverload
     func handleError(
         _ receiveError: ((Failure) -> Void)? = nil
@@ -141,6 +201,10 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Configures the deferred future to handle finished events.
+    ///
+    /// - Parameter receiveFinished: A closure that is called when the future finishes.
+    /// - Returns: A `DeferredFuture<Output, Failure>` instance with the specified finished handler.
     @_disfavoredOverload
     func handleFinished(
         _ receiveFinished: (() -> Void)? = nil
@@ -151,6 +215,10 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Configures the deferred future to handle completion events.
+    ///
+    /// - Parameter receiveCompletion: A closure that is called when the future receives a completion event.
+    /// - Returns: A `DeferredFuture<Output, Failure>` instance with the specified completion handler.
     @_disfavoredOverload
     func handleCompletion(
         _ receiveCompletion: ((Result<Output, Failure>) -> Void)? = nil
