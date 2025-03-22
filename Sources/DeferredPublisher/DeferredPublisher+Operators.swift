@@ -165,9 +165,37 @@ public extension DeferredPublisherProtocol {
     }
 }
 
+// MARK: Encoding and Decoding
+
+public extension DeferredPublisherProtocol {
+    /// Encodes the elements of the publisher into a specific format using the provided encoder.
+    ///
+    /// - Parameter encoder: The encoder to use for encoding the elements of the publisher.
+    /// - Returns: A `Deferred` publisher that wraps a `Publishers.Encode` operator.
+    @_disfavoredOverload
+    func encode<Coder>(encoder: Coder) -> Deferred<Publishers.Encode<WrappedPublisher, Coder>> where Coder: TopLevelEncoder {
+        deferredLift { $0.encode(encoder: encoder) }
+    }
+
+    /// Decodes the elements of the publisher from a specific format using the provided decoder.
+    ///
+    /// - Parameters:
+    ///   - type: The type to decode the elements into.
+    ///   - decoder: The decoder to use for decoding the elements of the publisher.
+    /// - Returns: A `Deferred` publisher that wraps a `Publishers.Decode` operator.
+    @_disfavoredOverload
+    func decode<Item, Coder>(
+        type: Item.Type,
+        decoder: Coder
+    ) -> Deferred<Publishers.Decode<WrappedPublisher, Item, Coder>> where Item: Decodable, Coder: TopLevelDecoder, WrappedPublisher.Output == Coder.Input {
+        deferredLift { $0.decode(type: type, decoder: decoder) }
+    }
+}
+
 // MARK: Handling Errors
 
 public extension DeferredPublisherProtocol {
+    @_disfavoredOverload
     func `catch`<P>(
         _ handler: @escaping (WrappedPublisher.Failure) -> P
     ) -> Deferred<Publishers.Catch<WrappedPublisher, P>> where P: Publisher, WrappedPublisher.Output == P.Output {
