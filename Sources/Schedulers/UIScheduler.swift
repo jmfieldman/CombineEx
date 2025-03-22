@@ -77,5 +77,5 @@ public struct UIScheduler: Scheduler, Sendable {
     }
 }
 
-private let key = DispatchSpecificKey<UInt64>()
-private let value: UInt64 = 0x1234_5678_90AB_CDEF
+private let key = DispatchSpecificKey<UInt8>()
+private let value: UInt8 = 0
