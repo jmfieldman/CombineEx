@@ -444,15 +444,15 @@ public extension DeferredFutureProtocol {
     /// - Returns: A `DeferredFuture` instance that receives values on the main UI thread.
     @_disfavoredOverload
     func receiveOnMain() -> DeferredFuture<Output, Failure> {
-        futureLiftOutput { outerOutput, innerPromise in
+        futureLiftResult { outerResult, innerPromise in
             guard UIScheduler.shared.onMainThread() else {
                 DispatchQueue.main.async {
-                    innerPromise(.success(outerOutput))
+                    innerPromise(outerResult)
                 }
                 return
             }
 
-            innerPromise(.success(outerOutput))
+            innerPromise(outerResult)
         }
     }
 
@@ -463,9 +463,9 @@ public extension DeferredFutureProtocol {
     /// - Returns: A `DeferredFuture` instance that receives values on the main thread.
     @_disfavoredOverload
     func receiveOnMainAsync() -> DeferredFuture<Output, Failure> {
-        futureLiftOutput { outerOutput, innerPromise in
+        futureLiftResult { outerResult, innerPromise in
             DispatchQueue.main.async {
-                innerPromise(.success(outerOutput))
+                innerPromise(outerResult)
             }
         }
     }
@@ -477,9 +477,9 @@ public extension DeferredFutureProtocol {
     /// - Returns: A `DeferredFuture` instance that receives values on the main run loop.
     @_disfavoredOverload
     func receiveOnMainRunLoop() -> DeferredFuture<Output, Failure> {
-        futureLiftOutput { outerOutput, innerPromise in
+        futureLiftResult { outerResult, innerPromise in
             RunLoop.main.schedule {
-                innerPromise(.success(outerOutput))
+                innerPromise(outerResult)
             }
         }
     }
