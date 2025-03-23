@@ -262,12 +262,12 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.tryPrefix(while: predicate) }
     }
 
-    /// Emits elements from the upstream publisher until a specified number of elements are emitted or an element fails to satisfy a predicate.
+    /// Returns a publisher that republishes elements until the specified publisher emits an element.
     ///
     /// - Parameters:
-    ///   - maxLength: The maximum number of elements to emit.
-    ///   - predicate: A closure that determines whether the elements should be emitted.
-    /// - Returns: A deferred publisher that emits a specified number of elements while they satisfy the predicate test, then finishes.
+    ///   - publisher: A publisher that, when it emits an element, causes the prefix publisher to finish.
+    ///
+    /// - Returns: A `Deferred` publisher that wraps a `Publishers.PrefixUntilOutput` instance.
     @_disfavoredOverload
     func prefix<P>(
         untilOutputFrom publisher: P
