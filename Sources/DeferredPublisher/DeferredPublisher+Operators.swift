@@ -84,6 +84,62 @@ public extension DeferredPublisherProtocol {
     }
 }
 
+// MARK: Selecting Specific Elements
+
+public extension DeferredPublisherProtocol {
+    @_disfavoredOverload
+    func first() -> Deferred<Publishers.First<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.first() }
+    }
+
+    @_disfavoredOverload
+    func first(
+        where predicate: @escaping (WrappedPublisher.Output) -> Bool
+    ) -> Deferred<Publishers.FirstWhere<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.first(where: predicate) }
+    }
+
+    @_disfavoredOverload
+    func tryFirst(
+        where predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
+    ) -> Deferred<Publishers.TryFirstWhere<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.tryFirst(where: predicate) }
+    }
+
+    @_disfavoredOverload
+    func last() -> Deferred<Publishers.Last<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.last() }
+    }
+
+    @_disfavoredOverload
+    func last(
+        where predicate: @escaping (WrappedPublisher.Output) -> Bool
+    ) -> Deferred<Publishers.LastWhere<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.last(where: predicate) }
+    }
+
+    @_disfavoredOverload
+    func tryLast(
+        where predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
+    ) -> Deferred<Publishers.TryLastWhere<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.tryLast(where: predicate) }
+    }
+
+    @_disfavoredOverload
+    func output(
+        at index: Int
+    ) -> Deferred<Publishers.Output<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.output(at: index) }
+    }
+
+    @_disfavoredOverload
+    func output<R>(
+        in range: R
+    ) -> Deferred<Publishers.Output<WrappedPublisher>> where WrappedPublisher.Failure == Failure, R: RangeExpression, R.Bound == Int {
+        deferredLift { $0.output(in: range) }
+    }
+}
+
 // MARK: Republishing Elements by Subscribing to New Publishers
 
 public extension DeferredPublisherProtocol {
