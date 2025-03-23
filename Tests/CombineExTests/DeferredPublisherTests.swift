@@ -26,6 +26,61 @@ final class DeferredPublisherTests: XCTestCase {
         XCTAssertNotNil(anyDeferredPublisher)
     }
 
+    // MARK: Retention
+
+    /// Verify that the AnyDeferredPublisher lifecycles do not affect the
+    /// resolution of their subscribed inner publishers.
+    func testRetention() {
+        var capturedCancellable: AnyCancellable?
+
+        weak var weakFuture1: AnyDeferredPublisher<Int, Never>?
+        weak var weakFuture2: AnyDeferredPublisher<Int, Never>?
+
+        var response1: Int? = nil
+        var response2: Int? = nil
+
+        let expectation = XCTestExpectation(description: "wait")
+
+        autoreleasepool {
+            let def1 = DeferredFuture<Int, Never> { promise in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    promise(.success(1))
+                }
+            }.eraseToAnyDeferredPublisher()
+
+            let def2 = DeferredFuture<Int, Never> { promise in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    promise(.success(10))
+                }
+            }.eraseToAnyDeferredPublisher()
+
+            weakFuture1 = def1
+            weakFuture2 = def2
+
+            // This will be terminated because it has no surviving cancellable
+            _ = weakFuture1?
+                .map { $0 + 1 }
+                .sink { response1 = $0 }
+
+            // This will not be terminated because it has a surviving cancellable
+            capturedCancellable = weakFuture2?
+                .map { $0 + 1 }
+                .sink {
+                    response2 = $0
+                    expectation.fulfill()
+                }
+        }
+
+        XCTAssertNil(weakFuture1)
+        XCTAssertNil(weakFuture2)
+
+        wait(for: [expectation], timeout: 2)
+
+        XCTAssertNotNil(capturedCancellable)
+        XCTAssertNil(response1)
+        XCTAssertEqual(response2, 11)
+    }
+
     // MARK: Map
 
     /// Make sure there are no compiler issues type-checking multiple stacked functions

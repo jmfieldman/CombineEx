@@ -264,6 +264,61 @@ final class DeferredFutureTests: XCTestCase {
 
         XCTAssertEqual(accumulation.value, 3)
     }
+
+    // MARK: - Retention
+
+    /// Verify that the AnyDeferredFuture lifecycles do not affect the
+    /// resolution of their subscribed inner publishers.
+    func testRetention() {
+        var capturedCancellable: AnyCancellable?
+
+        weak var weakFuture1: AnyDeferredFuture<Int, Never>?
+        weak var weakFuture2: AnyDeferredFuture<Int, Never>?
+
+        var response1: Int? = nil
+        var response2: Int? = nil
+
+        let expectation = XCTestExpectation(description: "wait")
+
+        autoreleasepool {
+            let def1 = DeferredFuture<Int, Never> { promise in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    promise(.success(1))
+                }
+            }.eraseToAnyDeferredFuture()
+
+            let def2 = DeferredFuture<Int, Never> { promise in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    promise(.success(10))
+                }
+            }.eraseToAnyDeferredFuture()
+
+            weakFuture1 = def1
+            weakFuture2 = def2
+
+            // This will be terminated because it has no surviving cancellable
+            _ = weakFuture1?
+                .map { $0 + 1 }
+                .sink { response1 = $0 }
+
+            // This will not be terminated because it has a surviving cancellable
+            capturedCancellable = weakFuture2?
+                .map { $0 + 1 }
+                .sink {
+                    response2 = $0
+                    expectation.fulfill()
+                }
+        }
+
+        XCTAssertNil(weakFuture1)
+        XCTAssertNil(weakFuture2)
+
+        wait(for: [expectation], timeout: 2)
+
+        XCTAssertNotNil(capturedCancellable)
+        XCTAssertNil(response1)
+        XCTAssertEqual(response2, 11)
+    }
 }
 
 // MARK: - Utils
