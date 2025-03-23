@@ -28,6 +28,43 @@ final class DeferredPublisherTests: XCTestCase {
 
     // MARK: Map
 
+    /// Make sure there are no compiler issues type-checking multiple stacked functions
+    /// that are potentially ambiguous between deferred or not.
+    func testAmbiguousMap() {
+        var t1 = 0
+        let testDeferredCanMap1 = Deferred { Just(1) }
+            .map { $0 + 1 }
+            .map { $0 + 1 }
+            .map { $0 + 1 }
+
+        let _ = testDeferredCanMap1.sink(receiveValue: { t1 = $0 })
+        XCTAssertEqual(t1, 4)
+
+        var t2 = 0
+        let testDeferredCanMap2 = Deferred { Just(1).setFailureType(to: TestError.self) }
+            .map { $0 + 1 }
+            .map { $0 + 1 }
+            .map { $0 + 1 }
+            .map { $0 + 1 }
+            .map { $0 + 1 }
+            .map { $0 + 1 }
+            .eraseToAnyDeferredPublisher()
+
+        let _ = testDeferredCanMap2.sink(receiveCompletion: { _ in }, receiveValue: { t2 = $0 })
+        XCTAssertEqual(t2, 7)
+
+        var t3 = 0
+        let testDeferredCanMap3 = Deferred { Just(1).setFailureType(to: TestError.self) }
+            .map { $0 + 1 }
+            .map { $0 + 1 }
+            .map { $0 + 1 }
+            .map { $0 + 1 }
+            .eraseToAnyPublisher()
+
+        let _ = testDeferredCanMap3.sink(receiveCompletion: { _ in }, receiveValue: { t3 = $0 })
+        XCTAssertEqual(t3, 5)
+    }
+
     func testMapSingle() {
         basicSingleFutureTest(input: 1, output: 2) { $0.map { $0 + 1 }.eraseToAnyDeferredPublisher() }
         basicSingleFutureTest(input: "Hello", output: "HelloHello") { $0.map { $0 + $0 }.eraseToAnyDeferredPublisher() }
