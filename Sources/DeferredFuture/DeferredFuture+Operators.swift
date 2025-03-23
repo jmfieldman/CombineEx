@@ -5,6 +5,7 @@
 
 import Combine
 import Foundation
+import os
 
 public extension DeferredFutureProtocol {
     /// Maps an output from the receiving DeferredFuture into the `lift` tuple.
@@ -429,6 +430,46 @@ public extension DeferredFutureProtocol {
                 options: options
             ) {
                 innerPromise(outerResult)
+            }
+        }
+    }
+
+    /// Times out the fulfillment of this `DeferredFuture` if it takes longer than a specified interval.
+    ///
+    /// - Parameters:
+    ///   - interval: The time interval after which the fulfillment times out.
+    ///   - scheduler: The scheduler on which to perform the timeout check.
+    ///   - options: Scheduler-specific options. Defaults to `nil`.
+    ///   - customError: A closure that returns a custom error if the fulfillment times out. Defaults to `nil`.
+    /// - Returns: A new `DeferredFuture` that fails with a timeout error if the fulfillment takes too long.
+    func timeout<S>(
+        _ interval: S.SchedulerTimeType,
+        scheduler: S,
+        options: S.SchedulerOptions? = nil,
+        customError: (() -> Self.Failure)? = nil
+    ) -> DeferredFuture<Output, Failure> where S: Scheduler {
+        let outerAttempt = attemptToFulfill
+        return DeferredFuture { innerPromise in
+            let lock = OSAllocatedUnfairLock(initialState: false)
+            scheduler.schedule(
+                after: interval,
+                tolerance: scheduler.minimumTolerance,
+                options: options
+            ) {
+                lock.withLock { hasFinished in
+                    if !hasFinished, let error = customError?() {
+                        hasFinished = true
+                        innerPromise(.failure(error))
+                    }
+                }
+            }
+            outerAttempt { outerResult in
+                lock.withLock { hasFinished in
+                    if !hasFinished {
+                        hasFinished = true
+                        innerPromise(outerResult)
+                    }
+                }
             }
         }
     }
