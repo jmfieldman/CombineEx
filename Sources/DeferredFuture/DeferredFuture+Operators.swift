@@ -563,6 +563,45 @@ public extension DeferredFutureProtocol {
 // MARK: - Specifying Schedulers
 
 public extension DeferredFutureProtocol {
+    /// Subscribes to the fulfillment of this `DeferredFuture` on a specified scheduler.
+    ///
+    /// - Parameters:
+    ///   - scheduler: The scheduler on which to perform the subscription.
+    ///   - options: Scheduler-specific options. Defaults to `nil`.
+    /// - Returns: A new `DeferredFuture` that is fulfilled on the specified scheduler.
+    @_disfavoredOverload
+    func subscribe<S>(
+        on scheduler: S,
+        options: S.SchedulerOptions? = nil
+    ) -> DeferredFuture<Output, Failure> where S: Scheduler {
+        let outerAttempt = attemptToFulfill
+        return DeferredFuture { innerPromise in
+            scheduler.schedule(options: options) {
+                outerAttempt { outerResult in
+                    innerPromise(outerResult)
+                }
+            }
+        }
+    }
+
+    /// Receives the result of this `DeferredFuture` on a specified scheduler.
+    ///
+    /// - Parameters:
+    ///   - scheduler: The scheduler on which to receive the result.
+    ///   - options: Scheduler-specific options. Defaults to `nil`.
+    /// - Returns: A new `DeferredFuture` that receives the result on the specified scheduler.
+    @_disfavoredOverload
+    func receive<S>(
+        on scheduler: S,
+        options: S.SchedulerOptions? = nil
+    ) -> DeferredFuture<Output, Failure> where S: Scheduler {
+        futureLiftResult { outerResult, innerPromise in
+            scheduler.schedule(options: options) {
+                innerPromise(outerResult)
+            }
+        }
+    }
+
     /// Configures the future to receive values on the main thread using `UIScheduler`.
     /// `UIScheduler` will receive synchronously on the main thread if the upstream publisher
     /// emits on the main thread, otherwise it will dispatch to main asynchronously.
