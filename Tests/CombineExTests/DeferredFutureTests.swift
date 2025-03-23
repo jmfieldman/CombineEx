@@ -28,11 +28,6 @@ final class DeferredFutureTests: XCTestCase {
         let p2 = t2.eraseToAnyPublisher()
         XCTAssertNotNil(p2)
 
-        /// Ensure that `mapDeferredFuture` can be chained into `eraseToAnyPublisher`
-        let t3: AnyPublisher = future.mapDeferredFuture { $0 + 1 }.eraseToAnyPublisher()
-        let p3 = t3.eraseToAnyPublisher()
-        XCTAssertNotNil(p3)
-
         /// Ensure that using `eraseToAnyDeferredFuture` works after the ambiguous
         /// `map` call.
         let t4 = future.map { $0 + 1 }.eraseToAnyDeferredFuture()
@@ -123,7 +118,7 @@ final class DeferredFutureTests: XCTestCase {
             attemptables: [future]
         ) {
             $0.flatMap { outer in
-                TestableDeferredFuture(emission: outer * 2, delay: 0.1).flatMapDeferredFuture { inner in
+                TestableDeferredFuture(emission: outer * 2, delay: 0.1).flatMap { inner in
                     TestableDeferredFuture(emission: inner - 50, delay: 0.0).map { $0 + 25 }
                 }
             }.eraseToAnyDeferredFuture()
