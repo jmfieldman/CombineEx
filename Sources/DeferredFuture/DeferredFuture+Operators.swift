@@ -134,6 +134,10 @@ private class CombineLatestAccumulator<Output, Failure: Error> {
 // MARK: - Mapping Elements
 
 public extension DeferredFutureProtocol {
+    /// Transforms the output of this `DeferredFuture` using a given transformation function.
+    ///
+    /// - Parameter transform: The transformation function to apply to the output.
+    /// - Returns: A new `DeferredFuture` that contains the transformed output.
     @_disfavoredOverload
     func map<NewOutput>(
         _ transform: @escaping (Output) -> NewOutput
@@ -143,6 +147,10 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Transforms the output of this `DeferredFuture` using a given throwing transformation function.
+    ///
+    /// - Parameter transform: The transformation function to apply to the output, which may throw.
+    /// - Returns: A new `DeferredFuture` that contains the transformed output or an error if thrown.
     @_disfavoredOverload
     func tryMap<NewOutput>(
         _ transform: @escaping (Output) throws -> NewOutput
@@ -157,6 +165,10 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Transforms the failure of this `DeferredFuture` using a given transformation function.
+    ///
+    /// - Parameter transform: The transformation function to apply to the failure.
+    /// - Returns: A new `DeferredFuture` that contains the transformed failure.
     @_disfavoredOverload
     func mapError<NewFailure: Error>(
         _ transform: @escaping (Failure) -> NewFailure
@@ -166,6 +178,10 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Replaces `nil` output with a specified value.
+    ///
+    /// - Parameter output: The value to use in place of `nil`.
+    /// - Returns: A new `DeferredFuture` that contains the specified value if the output is `nil`.
     @_disfavoredOverload
     func replaceNil<NewOutput>(
         with output: NewOutput
@@ -173,6 +189,10 @@ public extension DeferredFutureProtocol {
         map { $0 ?? output }
     }
 
+    /// Transforms the output of this `DeferredFuture` using a given transformation function that returns another `DeferredFuture`.
+    ///
+    /// - Parameter transform: The transformation function to apply to the output, which returns a new `DeferredFuture`.
+    /// - Returns: A new `DeferredFuture` that contains the output of the transformed `DeferredFuture`.
     @_disfavoredOverload
     func flatMap<NewOutput>(
         _ transform: @escaping (Output) -> some DeferredFutureProtocol<NewOutput, Failure>
@@ -189,6 +209,10 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Transforms the failure of this `DeferredFuture` using a given transformation function that returns another `DeferredFuture`.
+    ///
+    /// - Parameter transform: The transformation function to apply to the failure, which returns a new `DeferredFuture`.
+    /// - Returns: A new `DeferredFuture` that contains the output of the transformed `DeferredFuture`.
     @_disfavoredOverload
     func flatMapError<NewFailure>(
         _ transform: @escaping (Failure) -> some DeferredFutureProtocol<Output, NewFailure>
@@ -205,6 +229,10 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Sets a new failure type for this `DeferredFuture` that never fails.
+    ///
+    /// - Parameter failureType: The type of the new failure.
+    /// - Returns: A new `DeferredFuture` with the specified failure type.
     @_disfavoredOverload
     func setFailureType<NewFailure>(
         to failureType: NewFailure.Type
