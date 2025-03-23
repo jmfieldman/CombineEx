@@ -87,11 +87,13 @@ public extension DeferredPublisherProtocol {
 // MARK: Selecting Specific Elements
 
 public extension DeferredPublisherProtocol {
+    /// Returns a publisher that emits the first element of the upstream publisher, if it exists.
     @_disfavoredOverload
     func first() -> Deferred<Publishers.First<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.first() }
     }
 
+    /// Returns a publisher that emits the first element of the upstream publisher that satisfies the predicate.
     @_disfavoredOverload
     func first(
         where predicate: @escaping (WrappedPublisher.Output) -> Bool
@@ -99,6 +101,7 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.first(where: predicate) }
     }
 
+    /// Returns a publisher that emits the first element of the upstream publisher that satisfies the predicate, throwing an error if the predicate throws.
     @_disfavoredOverload
     func tryFirst(
         where predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
@@ -106,11 +109,13 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.tryFirst(where: predicate) }
     }
 
+    /// Returns a publisher that emits the last element of the upstream publisher, if it exists.
     @_disfavoredOverload
     func last() -> Deferred<Publishers.Last<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.last() }
     }
 
+    /// Returns a publisher that emits the last element of the upstream publisher that satisfies the predicate.
     @_disfavoredOverload
     func last(
         where predicate: @escaping (WrappedPublisher.Output) -> Bool
@@ -118,6 +123,7 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.last(where: predicate) }
     }
 
+    /// Returns a publisher that emits the last element of the upstream publisher that satisfies the predicate, throwing an error if the predicate throws.
     @_disfavoredOverload
     func tryLast(
         where predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
@@ -125,6 +131,7 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.tryLast(where: predicate) }
     }
 
+    /// Returns a publisher that emits the element at the specified index of the upstream publisher.
     @_disfavoredOverload
     func output(
         at index: Int
@@ -132,6 +139,7 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.output(at: index) }
     }
 
+    /// Returns a publisher that emits the elements at the specified range of indices from the upstream publisher.
     @_disfavoredOverload
     func output<R>(
         in range: R
