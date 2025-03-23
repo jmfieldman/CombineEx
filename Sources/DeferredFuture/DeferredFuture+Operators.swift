@@ -379,6 +379,10 @@ public extension DeferredFutureProtocol {
 // MARK: - Encoding and Decoding
 
 public extension DeferredFutureProtocol {
+    /// Encodes the output of this `DeferredFuture` using a given encoder.
+    ///
+    /// - Parameter encoder: The encoder to use for encoding the output.
+    /// - Returns: A new `DeferredFuture` that contains the encoded data.
     @_disfavoredOverload
     func encode<Coder: TopLevelEncoder>(
         encoder: Coder
@@ -393,6 +397,12 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Decodes the output of this `DeferredFuture` into a specified type using a given decoder.
+    ///
+    /// - Parameters:
+    ///   - item: The type to which the output should be decoded.
+    ///   - decoder: The decoder to use for decoding the output.
+    /// - Returns: A new `DeferredFuture` that contains the decoded item.
     @_disfavoredOverload
     func decode<Item: Decodable, Coder: TopLevelDecoder>(
         item: Item.Type,
@@ -412,12 +422,22 @@ public extension DeferredFutureProtocol {
 // MARK: - Keypath Mapping
 
 public extension DeferredFutureProtocol {
+    /// Maps the result of this `DeferredFuture` using a given key path.
+    ///
+    /// - Parameter keyPath: The key path to extract the desired value from the output.
+    /// - Returns: A new `DeferredFuture` that contains the extracted value.
     func map<T>(
         _ keyPath: KeyPath<Output, T>
     ) -> DeferredFuture<T, Failure> {
         map { $0[keyPath: keyPath] }
     }
 
+    /// Maps the result of this `DeferredFuture` using two given key paths.
+    ///
+    /// - Parameters:
+    ///   - keyPath0: The first key path to extract a value from the output.
+    ///   - keyPath1: The second key path to extract another value from the output.
+    /// - Returns: A new `DeferredFuture` that contains a tuple of the extracted values.
     func map<T0, T1>(
         _ keyPath0: KeyPath<Self.Output, T0>,
         _ keyPath1: KeyPath<Self.Output, T1>
@@ -425,6 +445,13 @@ public extension DeferredFutureProtocol {
         map { ($0[keyPath: keyPath0], $0[keyPath: keyPath1]) }
     }
 
+    /// Maps the result of this `DeferredFuture` using three given key paths.
+    ///
+    /// - Parameters:
+    ///   - keyPath0: The first key path to extract a value from the output.
+    ///   - keyPath1: The second key path to extract another value from the output.
+    ///   - keyPath2: The third key path to extract yet another value from the output.
+    /// - Returns: A new `DeferredFuture` that contains a tuple of the extracted values.
     func map<T0, T1, T2>(
         _ keyPath0: KeyPath<Self.Output, T0>,
         _ keyPath1: KeyPath<Self.Output, T1>,
