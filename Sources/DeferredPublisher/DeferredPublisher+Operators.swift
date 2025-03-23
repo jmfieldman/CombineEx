@@ -116,6 +116,108 @@ public extension DeferredPublisherProtocol {
     }
 }
 
+// MARK: Applying Sequence Operations to Elements
+
+public extension DeferredPublisherProtocol {
+    @_disfavoredOverload
+    func drop<P>(
+        untilOutputFrom publisher: P
+    ) -> Deferred<Publishers.DropUntilOutput<WrappedPublisher, P>> where P: Publisher, WrappedPublisher.Failure == P.Failure {
+        deferredLift { $0.drop(untilOutputFrom: publisher) }
+    }
+
+    @_disfavoredOverload
+    func dropFirst(
+        _ count: Int = 1
+    ) -> Deferred<Publishers.Drop<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.dropFirst(count) }
+    }
+
+    @_disfavoredOverload
+    func drop(
+        while predicate: @escaping (WrappedPublisher.Output) -> Bool
+    ) -> Deferred<Publishers.DropWhile<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.drop(while: predicate) }
+    }
+
+    @_disfavoredOverload
+    func tryDrop(
+        while predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
+    ) -> Deferred<Publishers.TryDropWhile<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.tryDrop(while: predicate) }
+    }
+
+    @_disfavoredOverload
+    func append(
+        _ elements: WrappedPublisher.Output...
+    ) -> Deferred<Publishers.Concatenate<WrappedPublisher, Publishers.Sequence<[WrappedPublisher.Output], WrappedPublisher.Failure>>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.append(elements) }
+    }
+
+    @_disfavoredOverload
+    func append<S>(
+        _ elements: S
+    ) -> Deferred<Publishers.Concatenate<WrappedPublisher, Publishers.Sequence<S, WrappedPublisher.Failure>>> where S: Sequence, WrappedPublisher.Output == S.Element {
+        deferredLift { $0.append(elements) }
+    }
+
+    @_disfavoredOverload
+    func append<P>(
+        _ publisher: P
+    ) -> Deferred<Publishers.Concatenate<WrappedPublisher, P>> where P: Publisher, WrappedPublisher.Failure == P.Failure, WrappedPublisher.Output == P.Output {
+        deferredLift { $0.append(publisher) }
+    }
+
+    @_disfavoredOverload
+    func prepend(
+        _ elements: WrappedPublisher.Output...
+    ) -> Deferred<Publishers.Concatenate<Publishers.Sequence<[WrappedPublisher.Output], WrappedPublisher.Failure>, WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.prepend(elements) }
+    }
+
+    @_disfavoredOverload
+    func prepend<S>(
+        _ elements: S
+    ) -> Deferred<Publishers.Concatenate<Publishers.Sequence<S, WrappedPublisher.Failure>, WrappedPublisher>> where S: Sequence, WrappedPublisher.Output == S.Element {
+        deferredLift { $0.prepend(elements) }
+    }
+
+    @_disfavoredOverload
+    func prepend<P>(
+        _ publisher: P
+    ) -> Deferred<Publishers.Concatenate<P, WrappedPublisher>> where P: Publisher, WrappedPublisher.Failure == P.Failure, WrappedPublisher.Output == P.Output {
+        deferredLift { $0.prepend(publisher) }
+    }
+
+    @_disfavoredOverload
+    func prefix(
+        _ maxLength: Int
+    ) -> Deferred<Publishers.Output<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.prefix(maxLength) }
+    }
+
+    @_disfavoredOverload
+    func prefix(
+        while predicate: @escaping (WrappedPublisher.Output) -> Bool
+    ) -> Deferred<Publishers.PrefixWhile<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.prefix(while: predicate) }
+    }
+
+    @_disfavoredOverload
+    func tryPrefix(
+        while predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
+    ) -> Deferred<Publishers.TryPrefixWhile<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.tryPrefix(while: predicate) }
+    }
+
+    @_disfavoredOverload
+    func prefix<P>(
+        untilOutputFrom publisher: P
+    ) -> Deferred<Publishers.PrefixUntilOutput<WrappedPublisher, P>> where P: Publisher {
+        deferredLift { $0.prefix(untilOutputFrom: publisher) }
+    }
+}
+
 // MARK: Selecting Specific Elements
 
 public extension DeferredPublisherProtocol {
