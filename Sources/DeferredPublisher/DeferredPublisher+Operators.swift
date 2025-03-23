@@ -32,6 +32,10 @@ public extension DeferredPublisherProtocol {
 // MARK: Mapping Elements
 
 public extension DeferredPublisherProtocol {
+    /// Transforms the output of the upstream publisher using the provided closure.
+    ///
+    /// - Parameter transform: A closure that takes the upstream publisher's output and returns a new value.
+    /// - Returns: A deferred publisher that emits the transformed values.
     @_disfavoredOverload
     func map<T>(
         _ transform: @escaping (WrappedPublisher.Output) -> T
@@ -39,6 +43,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.map(transform) }
     }
 
+    /// Transforms the output of the upstream publisher using the provided throwing closure.
+    ///
+    /// - Parameter transform: A throwing closure that takes the upstream publisher's output and returns a new value.
+    /// - Returns: A deferred publisher that emits the transformed values or fails if an error is thrown.
     @_disfavoredOverload
     func tryMap<T>(
         _ transform: @escaping (WrappedPublisher.Output) throws -> T
@@ -46,6 +54,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.tryMap(transform) }
     }
 
+    /// Transforms the failure of the upstream publisher using the provided closure.
+    ///
+    /// - Parameter transform: A closure that takes the upstream publisher's failure and returns a new error.
+    /// - Returns: A deferred publisher that emits errors transformed by the provided closure.
     @_disfavoredOverload
     func mapError<E>(
         _ transform: @escaping (WrappedPublisher.Failure) -> E
@@ -53,6 +65,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.mapError(transform) }
     }
 
+    /// Replaces nil values from the upstream publisher with a specified output value.
+    ///
+    /// - Parameter output: The output value to replace nil values with.
+    /// - Returns: A deferred publisher that emits non-nil values or the specified output value in place of nil.
     @_disfavoredOverload
     func replaceNil<T>(
         with output: T
@@ -60,6 +76,12 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.replaceNil(with: output) }
     }
 
+    /// Accumulates the output of the upstream publisher using the provided closure.
+    ///
+    /// - Parameters:
+    ///   - initialResult: The initial result to start the accumulation.
+    ///   - nextPartialResult: A closure that combines the current accumulated value and a new upstream element.
+    /// - Returns: A deferred publisher that emits the accumulated values.
     @_disfavoredOverload
     func scan<T>(
         _ initialResult: T,
@@ -68,6 +90,12 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.scan(initialResult, nextPartialResult) }
     }
 
+    /// Accumulates the output of the upstream publisher using the provided throwing closure.
+    ///
+    /// - Parameters:
+    ///   - initialResult: The initial result to start the accumulation.
+    ///   - nextPartialResult: A throwing closure that combines the current accumulated value and a new upstream element.
+    /// - Returns: A deferred publisher that emits the accumulated values or fails if an error is thrown.
     @_disfavoredOverload
     func tryScan<T>(
         _ initialResult: T,
@@ -76,6 +104,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.tryScan(initialResult, nextPartialResult) }
     }
 
+    /// Sets the failure type of a publisher that never fails to a specified error type.
+    ///
+    /// - Parameter failureType: The new failure type.
+    /// - Returns: A deferred publisher with the updated failure type.
     @_disfavoredOverload
     func setFailureType<E>(
         to failureType: E.Type
@@ -87,13 +119,15 @@ public extension DeferredPublisherProtocol {
 // MARK: Selecting Specific Elements
 
 public extension DeferredPublisherProtocol {
-    /// Returns a publisher that emits the first element of the upstream publisher, if it exists.
+    /// Returns a publisher that emits the first element of the upstream publisher,
+    /// if it exists.
     @_disfavoredOverload
     func first() -> Deferred<Publishers.First<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.first() }
     }
 
-    /// Returns a publisher that emits the first element of the upstream publisher that satisfies the predicate.
+    /// Returns a publisher that emits the first element of the upstream publisher
+    /// that satisfies the predicate.
     @_disfavoredOverload
     func first(
         where predicate: @escaping (WrappedPublisher.Output) -> Bool
@@ -101,7 +135,8 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.first(where: predicate) }
     }
 
-    /// Returns a publisher that emits the first element of the upstream publisher that satisfies the predicate, throwing an error if the predicate throws.
+    /// Returns a publisher that emits the first element of the upstream publisher that
+    /// satisfies the predicate, throwing an error if the predicate throws.
     @_disfavoredOverload
     func tryFirst(
         where predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
@@ -109,13 +144,15 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.tryFirst(where: predicate) }
     }
 
-    /// Returns a publisher that emits the last element of the upstream publisher, if it exists.
+    /// Returns a publisher that emits the last element of the upstream publisher, if
+    /// it exists.
     @_disfavoredOverload
     func last() -> Deferred<Publishers.Last<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.last() }
     }
 
-    /// Returns a publisher that emits the last element of the upstream publisher that satisfies the predicate.
+    /// Returns a publisher that emits the last element of the upstream publisher that
+    /// satisfies the predicate.
     @_disfavoredOverload
     func last(
         where predicate: @escaping (WrappedPublisher.Output) -> Bool
@@ -123,7 +160,8 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.last(where: predicate) }
     }
 
-    /// Returns a publisher that emits the last element of the upstream publisher that satisfies the predicate, throwing an error if the predicate throws.
+    /// Returns a publisher that emits the last element of the upstream publisher that
+    /// satisfies the predicate, throwing an error if the predicate throws.
     @_disfavoredOverload
     func tryLast(
         where predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
@@ -131,7 +169,8 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.tryLast(where: predicate) }
     }
 
-    /// Returns a publisher that emits the element at the specified index of the upstream publisher.
+    /// Returns a publisher that emits the element at the specified index of the
+    /// upstream publisher.
     @_disfavoredOverload
     func output(
         at index: Int
@@ -139,7 +178,8 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.output(at: index) }
     }
 
-    /// Returns a publisher that emits the elements at the specified range of indices from the upstream publisher.
+    /// Returns a publisher that emits the elements at the specified range of indices
+    /// from the upstream publisher.
     @_disfavoredOverload
     func output<R>(
         in range: R
