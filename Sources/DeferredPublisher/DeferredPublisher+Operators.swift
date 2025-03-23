@@ -119,6 +119,10 @@ public extension DeferredPublisherProtocol {
 // MARK: Applying Sequence Operations to Elements
 
 public extension DeferredPublisherProtocol {
+    /// Drops elements from the upstream publisher until an element is received from another publisher.
+    ///
+    /// - Parameter publisher: A publisher that signals when to stop dropping elements.
+    /// - Returns: A deferred publisher that drops the initial elements until an element is received from the provided publisher.
     @_disfavoredOverload
     func drop<P>(
         untilOutputFrom publisher: P
@@ -126,6 +130,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.drop(untilOutputFrom: publisher) }
     }
 
+    /// Drops the first `count` elements of the upstream publisher.
+    ///
+    /// - Parameter count: The number of elements to drop at the start of the upstream publisher’s output.
+    /// - Returns: A deferred publisher that skips the first `count` elements and delivers all subsequent elements.
     @_disfavoredOverload
     func dropFirst(
         _ count: Int = 1
@@ -133,6 +141,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.dropFirst(count) }
     }
 
+    /// Drops elements from the upstream publisher, until an element fails to satisfy a predicate.
+    ///
+    /// - Parameter predicate: A closure that determines whether the elements should be dropped.
+    /// - Returns: A deferred publisher that drops initial elements until an element fails the predicate test.
     @_disfavoredOverload
     func drop(
         while predicate: @escaping (WrappedPublisher.Output) -> Bool
@@ -140,6 +152,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.drop(while: predicate) }
     }
 
+    /// Drops elements from the upstream publisher, until an element fails to satisfy a throwing predicate.
+    ///
+    /// - Parameter predicate: A throwing closure that determines whether the elements should be dropped.
+    /// - Returns: A deferred publisher that drops initial elements until an element fails the predicate test, throwing if the predicate throws.
     @_disfavoredOverload
     func tryDrop(
         while predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
@@ -147,6 +163,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.tryDrop(while: predicate) }
     }
 
+    /// Appends the specified elements to the output of this publisher.
+    ///
+    /// - Parameter elements: Elements to append at the end of the upstream publisher’s output.
+    /// - Returns: A deferred publisher that appends the specified elements after the upstream publisher finishes.
     @_disfavoredOverload
     func append(
         _ elements: WrappedPublisher.Output...
@@ -154,6 +174,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.append(elements) }
     }
 
+    /// Appends the specified sequence of elements to the output of this publisher.
+    ///
+    /// - Parameter elements: A sequence of elements to append at the end of the upstream publisher’s output.
+    /// - Returns: A deferred publisher that appends the specified sequence of elements after the upstream publisher finishes.
     @_disfavoredOverload
     func append<S>(
         _ elements: S
@@ -161,6 +185,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.append(elements) }
     }
 
+    /// Appends the elements of another publisher to this publisher.
+    ///
+    /// - Parameter publisher: Another publisher whose output is appended after the upstream publisher finishes.
+    /// - Returns: A deferred publisher that appends the elements of another publisher after the upstream publisher finishes.
     @_disfavoredOverload
     func append<P>(
         _ publisher: P
@@ -168,6 +196,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.append(publisher) }
     }
 
+    /// Prepends the specified elements to the output of this publisher.
+    ///
+    /// - Parameter elements: Elements to prepend at the start of the upstream publisher’s output.
+    /// - Returns: A deferred publisher that prepends the specified elements before the upstream publisher starts emitting.
     @_disfavoredOverload
     func prepend(
         _ elements: WrappedPublisher.Output...
@@ -175,6 +207,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.prepend(elements) }
     }
 
+    /// Prepends the specified sequence of elements to the output of this publisher.
+    ///
+    /// - Parameter elements: A sequence of elements to prepend at the start of the upstream publisher’s output.
+    /// - Returns: A deferred publisher that prepends the specified sequence of elements before the upstream publisher starts emitting.
     @_disfavoredOverload
     func prepend<S>(
         _ elements: S
@@ -182,6 +218,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.prepend(elements) }
     }
 
+    /// Prepends the elements of another publisher to this publisher.
+    ///
+    /// - Parameter publisher: Another publisher whose output is prepended before the upstream publisher starts emitting.
+    /// - Returns: A deferred publisher that prepends the elements of another publisher before the upstream publisher starts emitting.
     @_disfavoredOverload
     func prepend<P>(
         _ publisher: P
@@ -189,6 +229,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.prepend(publisher) }
     }
 
+    /// Emits a specified number of elements from the start, then finishes.
+    ///
+    /// - Parameter maxLength: The maximum number of elements to emit from the start.
+    /// - Returns: A deferred publisher that emits a specified number of elements from the upstream publisher’s output, then finishes.
     @_disfavoredOverload
     func prefix(
         _ maxLength: Int
@@ -196,6 +240,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.prefix(maxLength) }
     }
 
+    /// Emits elements from the upstream publisher until an element fails to satisfy a predicate.
+    ///
+    /// - Parameter predicate: A closure that determines whether the elements should be emitted.
+    /// - Returns: A deferred publisher that emits initial elements while they satisfy the predicate test, then finishes.
     @_disfavoredOverload
     func prefix(
         while predicate: @escaping (WrappedPublisher.Output) -> Bool
@@ -203,6 +251,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.prefix(while: predicate) }
     }
 
+    /// Emits elements from the upstream publisher until an element fails to satisfy a throwing predicate.
+    ///
+    /// - Parameter predicate: A throwing closure that determines whether the elements should be emitted.
+    /// - Returns: A deferred publisher that emits initial elements while they satisfy the predicate test, throwing if the predicate throws, then finishes.
     @_disfavoredOverload
     func tryPrefix(
         while predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
@@ -210,6 +262,12 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.tryPrefix(while: predicate) }
     }
 
+    /// Emits elements from the upstream publisher until a specified number of elements are emitted or an element fails to satisfy a predicate.
+    ///
+    /// - Parameters:
+    ///   - maxLength: The maximum number of elements to emit.
+    ///   - predicate: A closure that determines whether the elements should be emitted.
+    /// - Returns: A deferred publisher that emits a specified number of elements while they satisfy the predicate test, then finishes.
     @_disfavoredOverload
     func prefix<P>(
         untilOutputFrom publisher: P
