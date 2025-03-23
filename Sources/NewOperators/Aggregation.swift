@@ -5,6 +5,7 @@
 
 import Combine
 import Foundation
+import os
 
 /// A protocol for aggregating publishers.
 public protocol AggregatePublisherAggregator<AggregateFailure> {
@@ -75,7 +76,7 @@ public extension Publishers {
             private let componentBuilder: (AggregateSubscription) -> Void
             private let aggregationBlock: ([Any]) -> Output
 
-            private var lock = NSLock()
+            private let lock = OSAllocatedUnfairLock()
             private var startBlocks: [() -> Void] = []
             private var values: ContiguousArray<[Any]> = []
             private var finished: ContiguousArray<Bool> = []

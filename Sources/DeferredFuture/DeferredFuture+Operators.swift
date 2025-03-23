@@ -84,7 +84,7 @@ public extension DeferredFutureProtocol {
 private class CombineLatestAccumulator<Output, Failure: Error> {
     private var values: [Any]
     private var nextIndex = 0
-    private let lock = NSLock()
+    private let lock = OSAllocatedUnfairLock()
     private var onAccumulated: (([Any]) -> Output)?
     private var outerPromise: (Future<Output, Failure>.Promise)?
     private var retainer: CombineLatestAccumulator?
