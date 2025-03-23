@@ -404,6 +404,36 @@ public extension DeferredFutureProtocol {
     }
 }
 
+// MARK: - Handling Timing
+
+public extension DeferredFutureProtocol {
+    /// Delays the fulfillment of this `DeferredFuture` by a specified interval.
+    ///
+    /// - Parameters:
+    ///   - interval: The time interval to delay the fulfillment.
+    ///   - tolerance: The allowed tolerance for the delay. Defaults to `nil`.
+    ///   - scheduler: The scheduler on which to perform the delay.
+    ///   - options: Scheduler-specific options. Defaults to `nil`.
+    /// - Returns: A new `DeferredFuture` that is fulfilled after the specified delay.
+    @_disfavoredOverload
+    func delay<S>(
+        for interval: S.SchedulerTimeType,
+        tolerance: S.SchedulerTimeType.Stride? = nil,
+        scheduler: S,
+        options: S.SchedulerOptions? = nil
+    ) -> DeferredFuture<Output, Failure> where S: Scheduler {
+        futureLiftResult { outerResult, innerPromise in
+            scheduler.schedule(
+                after: interval,
+                tolerance: tolerance ?? scheduler.minimumTolerance,
+                options: options
+            ) {
+                innerPromise(outerResult)
+            }
+        }
+    }
+}
+
 // MARK: - Encoding and Decoding
 
 public extension DeferredFutureProtocol {
