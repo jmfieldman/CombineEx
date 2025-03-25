@@ -109,31 +109,34 @@ private class CombineLatestAccumulator<Output, Failure: Error> {
         self.retainer = self
     }
 
+    func add(_ future: some DeferredFutureProtocol<some Any, Failure>) {
+        let index = nextIndex
+        nextIndex += 1
+        future.attemptToFulfill { [weak self] result in
+            self?.lock.withLock { [weak self] in
+                self?.handleOuterResult(result, index: index)
+            }
+        }
+    }
+
+    private func handleOuterResult(_ result: Result<some Any, Failure>, index: Int) {
+        switch result {
+        case let .success(value):
+            values[index] = value
+            remaining -= 1
+            if remaining == 0, let onAccumulated {
+                notify(.success(onAccumulated(values)))
+            }
+        case let .failure(error):
+            notify(.failure(error))
+        }
+    }
+
     private func notify(_ result: Result<Output, Failure>) {
         outerPromise?(result)
         onAccumulated = nil
         outerPromise = nil
         retainer = nil
-    }
-
-    func add(_ future: some DeferredFutureProtocol<some Any, Failure>) {
-        let index = nextIndex
-        nextIndex += 1
-        future.attemptToFulfill { [weak self] result in
-            guard let self else { return }
-            lock.withLock { [self] in
-                switch result {
-                case let .success(value):
-                    values[index] = value
-                    remaining -= 1
-                    if remaining == 0, let onAccumulated {
-                        notify(.success(onAccumulated(values)))
-                    }
-                case let .failure(error):
-                    notify(.failure(error))
-                }
-            }
-        }
     }
 }
 
