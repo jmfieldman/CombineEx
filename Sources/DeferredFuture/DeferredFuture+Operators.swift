@@ -258,6 +258,12 @@ public extension DeferredFutureProtocol {
 // MARK: - Combining Elements
 
 public extension DeferredFutureProtocol {
+    /// Combines the output of this deferred future with another deferred future and emits a tuple of their outputs.
+    ///
+    /// - Parameters:
+    ///   - other: Another deferred future to combine with this one.
+    ///
+    /// - Returns: A `DeferredFuture` that emits a tuple of the outputs from this and the other deferred future.
     @_disfavoredOverload
     func combineLatest<P>(
         _ other: some DeferredFutureProtocol<P, Failure>
@@ -271,6 +277,13 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Combines the output of this deferred future with another deferred future and applies a transformation to their outputs.
+    ///
+    /// - Parameters:
+    ///   - other: Another deferred future to combine with this one.
+    ///   - transform: A closure that takes the outputs of this and the other deferred future and returns a transformed value.
+    ///
+    /// - Returns: A `DeferredFuture` that emits the transformed value from the closure.
     @_disfavoredOverload
     func combineLatest<P, T>(
         _ other: some DeferredFutureProtocol<P, Failure>,
@@ -285,6 +298,13 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Combines the output of this deferred future with two other deferred futures and emits a tuple of their outputs.
+    ///
+    /// - Parameters:
+    ///   - publisher1: The first deferred future to combine with this one.
+    ///   - publisher2: The second deferred future to combine with this one.
+    ///
+    /// - Returns: A `DeferredFuture` that emits a tuple of the outputs from this and the two other deferred futures.
     @_disfavoredOverload
     func combineLatest<P, Q>(
         _ publisher1: some DeferredFutureProtocol<P, Failure>,
@@ -300,6 +320,14 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Combines the output of this deferred future with two other deferred futures and applies a transformation to their outputs.
+    ///
+    /// - Parameters:
+    ///   - publisher1: The first deferred future to combine with this one.
+    ///   - publisher2: The second deferred future to combine with this one.
+    ///   - transform: A closure that takes the outputs of this and the two other deferred futures and returns a transformed value.
+    ///
+    /// - Returns: A `DeferredFuture` that emits the transformed value from the closure.
     @_disfavoredOverload
     func combineLatest<P, Q, T>(
         _ publisher1: some DeferredFutureProtocol<P, Failure>,
@@ -316,6 +344,14 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Combines the output of this deferred future with three other deferred futures and emits a tuple of their outputs.
+    ///
+    /// - Parameters:
+    ///   - publisher1: The first deferred future to combine with this one.
+    ///   - publisher2: The second deferred future to combine with this one.
+    ///   - publisher3: The third deferred future to combine with this one.
+    ///
+    /// - Returns: A `DeferredFuture` that emits a tuple of the outputs from this and the three other deferred futures.
     @_disfavoredOverload
     func combineLatest<P, Q, R>(
         _ publisher1: some DeferredFutureProtocol<P, Failure>,
@@ -333,6 +369,15 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Combines the output of this deferred future with three other deferred futures and applies a transformation to their outputs.
+    ///
+    /// - Parameters:
+    ///   - publisher1: The first deferred future to combine with this one.
+    ///   - publisher2: The second deferred future to combine with this one.
+    ///   - publisher3: The third deferred future to combine with this one.
+    ///   - transform: A closure that takes the outputs of this and the three other deferred futures and returns a transformed value.
+    ///
+    /// - Returns: A `DeferredFuture` that emits the transformed value from the closure.
     @_disfavoredOverload
     func combineLatest<P, Q, R, T>(
         _ publisher1: some DeferredFutureProtocol<P, Failure>,
