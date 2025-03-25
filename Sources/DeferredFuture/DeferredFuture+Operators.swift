@@ -85,10 +85,17 @@ private class CombineLatestAccumulator<Output, Failure: Error> {
     private var values: [Any]
     private var nextIndex = 0
     private let lock = OSAllocatedUnfairLock()
+    private var remaining: Int
+
+    // While onAccumulated and outerPromise are guaranteed at init,
+    // we keep them optional so that we can nullify them after the
+    // first notification (just for safety).
     private var onAccumulated: (([Any]) -> Output)?
     private var outerPromise: (Future<Output, Failure>.Promise)?
+
+    // Our futures gaurantee their output -- so we retain ourselves
+    // until they all emit. This is a potential
     private var retainer: CombineLatestAccumulator?
-    private var remaining: Int
 
     init(
         _ outerPromise: @escaping Future<Output, Failure>.Promise,
@@ -102,9 +109,10 @@ private class CombineLatestAccumulator<Output, Failure: Error> {
         self.retainer = self
     }
 
-    private func notify() {
-        guard let onAccumulated else { return }
-        outerPromise?(.success(onAccumulated(values)))
+    private func notify(_ result: Result<Output, Failure>) {
+        outerPromise?(result)
+        onAccumulated = nil
+        outerPromise = nil
         retainer = nil
     }
 
@@ -113,19 +121,16 @@ private class CombineLatestAccumulator<Output, Failure: Error> {
         nextIndex += 1
         future.attemptToFulfill { [weak self] result in
             guard let self else { return }
-            lock.withLock {
+            lock.withLock { [self] in
                 switch result {
                 case let .success(value):
-                    self.values[index] = value
-                    self.remaining -= 1
-                    if self.remaining == 0 {
-                        self.notify()
+                    values[index] = value
+                    remaining -= 1
+                    if remaining == 0, let onAccumulated {
+                        notify(.success(onAccumulated(values)))
                     }
                 case let .failure(error):
-                    self.outerPromise?(.failure(error))
-                    self.onAccumulated = nil
-                    self.outerPromise = nil
-                    self.retainer = nil
+                    notify(.failure(error))
                 }
             }
         }
