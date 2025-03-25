@@ -355,6 +355,12 @@ public extension DeferredFutureProtocol {
 // MARK: - Handling Errors
 
 public extension DeferredFutureProtocol {
+    /// Catches errors emitted by the publisher and attempts to fulfill the promise using a transformed deferred future.
+    ///
+    /// - Parameters:
+    ///   - transform: A closure that takes a failure and returns a new deferred future.
+    ///
+    /// - Returns: A `DeferredFuture` that attempts to fulfill based on the transformed deferred future.
     @_disfavoredOverload
     func `catch`(
         _ transform: @escaping (Failure) -> some DeferredFutureProtocol<Output, Failure>
@@ -371,6 +377,12 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Catches errors emitted by the publisher and attempts to fulfill the promise using a transformed deferred future, with error handling.
+    ///
+    /// - Parameters:
+    ///   - transform: A throwing closure that takes a failure and returns a new deferred future.
+    ///
+    /// - Returns: A `DeferredFuture` that attempts to fulfill based on the transformed deferred future.
     @_disfavoredOverload
     func tryCatch(
         _ transform: @escaping (Failure) throws -> some DeferredFutureProtocol<Output, Failure>
@@ -391,6 +403,12 @@ public extension DeferredFutureProtocol {
         }
     }
 
+    /// Retries the deferred future a specified number of times upon failure.
+    ///
+    /// - Parameters:
+    ///   - retries: The maximum number of retry attempts.
+    ///
+    /// - Returns: A `DeferredFuture` that retries the operation up to the specified number of times.
     @_disfavoredOverload
     func retry(
         _ retries: Int
