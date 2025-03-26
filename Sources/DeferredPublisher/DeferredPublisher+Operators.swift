@@ -49,7 +49,7 @@ public extension DeferredPublisherProtocol {
     /// - Returns: A deferred publisher that emits the transformed values or fails if an error is thrown.
     @_disfavoredOverload
     func tryMap<T>(
-        _ transform: @escaping (WrappedPublisher.Output) throws -> T
+        _ transform: @escaping (WrappedPublisher.Output) throws(Failure) -> T
     ) -> Deferred<Publishers.TryMap<WrappedPublisher, T>> {
         deferredLift { $0.tryMap(transform) }
     }
@@ -99,7 +99,7 @@ public extension DeferredPublisherProtocol {
     @_disfavoredOverload
     func tryScan<T>(
         _ initialResult: T,
-        _ nextPartialResult: @escaping (T, WrappedPublisher.Output) throws -> T
+        _ nextPartialResult: @escaping (T, WrappedPublisher.Output) throws(Failure) -> T
     ) -> Deferred<Publishers.TryScan<WrappedPublisher, T>> {
         deferredLift { $0.tryScan(initialResult, nextPartialResult) }
     }
@@ -138,8 +138,8 @@ public extension DeferredPublisherProtocol {
     /// - Returns: A deferred publisher that emits only the elements that satisfy the predicate, or fails if an error is thrown.
     @_disfavoredOverload
     func tryFilter(
-        _ isIncluded: @escaping (WrappedPublisher.Output) throws -> Bool
-    ) -> Deferred<Publishers.TryFilter<WrappedPublisher>> where WrappedPublisher.Failure == Error {
+        _ isIncluded: @escaping (WrappedPublisher.Output) throws(Failure) -> Bool
+    ) -> Deferred<Publishers.TryFilter<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.tryFilter(isIncluded) }
     }
 
@@ -414,8 +414,8 @@ public extension DeferredPublisherProtocol {
     /// - Returns: A deferred publisher that emits a Boolean value indicating whether any element satisfied the predicate, or fails if an error is thrown.
     @_disfavoredOverload
     func tryContains(
-        where predicate: @escaping (WrappedPublisher.Output) throws -> Bool
-    ) -> Deferred<Publishers.TryContainsWhere<WrappedPublisher>> where WrappedPublisher.Failure == Error {
+        where predicate: @escaping (WrappedPublisher.Output) throws(Failure) -> Bool
+    ) -> Deferred<Publishers.TryContainsWhere<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.tryContains(where: predicate) }
     }
 
@@ -438,8 +438,8 @@ public extension DeferredPublisherProtocol {
     /// - Returns: A deferred publisher that emits a Boolean value indicating whether all elements satisfied the predicate, or fails if an error is thrown.
     @_disfavoredOverload
     func tryAllSatisfy(
-        _ predicate: @escaping (WrappedPublisher.Output) throws -> Bool
-    ) -> Deferred<Publishers.TryAllSatisfy<WrappedPublisher>> where WrappedPublisher.Failure == Error {
+        _ predicate: @escaping (WrappedPublisher.Output) throws(Failure) -> Bool
+    ) -> Deferred<Publishers.TryAllSatisfy<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.tryAllSatisfy(predicate) }
     }
 }
@@ -609,6 +609,8 @@ public extension DeferredPublisherProtocol {
 public extension DeferredPublisherProtocol {
     /// Returns a publisher that emits the first element of the upstream publisher,
     /// if it exists.
+    ///
+    /// - Returns: A `Deferred` wrapping a `Publishers.First` instance.
     @_disfavoredOverload
     func first() -> Deferred<Publishers.First<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.first() }
@@ -616,6 +618,10 @@ public extension DeferredPublisherProtocol {
 
     /// Returns a publisher that emits the first element of the upstream publisher
     /// that satisfies the predicate.
+    ///
+    /// - Parameter predicate: A closure that takes an element and returns a Boolean value
+    ///   indicating whether the element satisfies the condition.
+    /// - Returns: A `Deferred` wrapping a `Publishers.FirstWhere` instance.
     @_disfavoredOverload
     func first(
         where predicate: @escaping (WrappedPublisher.Output) -> Bool
@@ -625,6 +631,10 @@ public extension DeferredPublisherProtocol {
 
     /// Returns a publisher that emits the first element of the upstream publisher that
     /// satisfies the predicate, throwing an error if the predicate throws.
+    ///
+    /// - Parameter predicate: A closure that takes an element and returns a Boolean value
+    ///   indicating whether the element satisfies the condition, or throws an error.
+    /// - Returns: A `Deferred` wrapping a `Publishers.TryFirstWhere` instance.
     @_disfavoredOverload
     func tryFirst(
         where predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
@@ -634,6 +644,8 @@ public extension DeferredPublisherProtocol {
 
     /// Returns a publisher that emits the last element of the upstream publisher, if
     /// it exists.
+    ///
+    /// - Returns: A `Deferred` wrapping a `Publishers.Last` instance.
     @_disfavoredOverload
     func last() -> Deferred<Publishers.Last<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.last() }
@@ -641,6 +653,10 @@ public extension DeferredPublisherProtocol {
 
     /// Returns a publisher that emits the last element of the upstream publisher that
     /// satisfies the predicate.
+    ///
+    /// - Parameter predicate: A closure that takes an element and returns a Boolean value
+    ///   indicating whether the element satisfies the condition.
+    /// - Returns: A `Deferred` wrapping a `Publishers.LastWhere` instance.
     @_disfavoredOverload
     func last(
         where predicate: @escaping (WrappedPublisher.Output) -> Bool
@@ -650,6 +666,10 @@ public extension DeferredPublisherProtocol {
 
     /// Returns a publisher that emits the last element of the upstream publisher that
     /// satisfies the predicate, throwing an error if the predicate throws.
+    ///
+    /// - Parameter predicate: A closure that takes an element and returns a Boolean value
+    ///   indicating whether the element satisfies the condition, or throws an error.
+    /// - Returns: A `Deferred` wrapping a `Publishers.TryLastWhere` instance.
     @_disfavoredOverload
     func tryLast(
         where predicate: @escaping (WrappedPublisher.Output) throws(WrappedPublisher.Failure) -> Bool
@@ -659,6 +679,9 @@ public extension DeferredPublisherProtocol {
 
     /// Returns a publisher that emits the element at the specified index of the
     /// upstream publisher.
+    ///
+    /// - Parameter index: The index of the element to emit.
+    /// - Returns: A `Deferred` wrapping a `Publishers.Output` instance.
     @_disfavoredOverload
     func output(
         at index: Int
@@ -668,6 +691,9 @@ public extension DeferredPublisherProtocol {
 
     /// Returns a publisher that emits the elements at the specified range of indices
     /// from the upstream publisher.
+    ///
+    /// - Parameter range: The range of indices of elements to emit.
+    /// - Returns: A `Deferred` wrapping a `Publishers.Output` instance.
     @_disfavoredOverload
     func output<R>(
         in range: R
@@ -679,6 +705,13 @@ public extension DeferredPublisherProtocol {
 // MARK: Republishing Elements by Subscribing to New Publishers
 
 public extension DeferredPublisherProtocol {
+    /// Returns a publisher that transforms each element from the upstream publisher to a new
+    /// publisher and flattens the result.
+    ///
+    /// - Parameters:
+    ///   - maxPublishers: The maximum number of publishers that can be concurrently subscribed to.
+    ///   - transform: A closure that takes an element and returns a new publisher.
+    /// - Returns: A `Deferred` wrapping a `Publishers.FlatMap` instance.
     @_disfavoredOverload
     func flatMap<T, P>(
         maxPublishers: Subscribers.Demand = .unlimited,
@@ -691,6 +724,14 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.flatMap(maxPublishers: maxPublishers, transform) }
     }
 
+    /// Returns a publisher that transforms each element from the upstream publisher to a new
+    /// publisher and flattens the result, setting the failure type of the wrapped publisher to
+    /// match the new publisher's failure type.
+    ///
+    /// - Parameters:
+    ///   - maxPublishers: The maximum number of publishers that can be concurrently subscribed to.
+    ///   - transform: A closure that takes an element and returns a new publisher.
+    /// - Returns: A `Deferred` wrapping a `Publishers.FlatMap` instance.
     @_disfavoredOverload
     func flatMap<P>(
         maxPublishers: Subscribers.Demand = .unlimited,
@@ -701,6 +742,13 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.flatMap(maxPublishers: maxPublishers, transform) }
     }
 
+    /// Returns a publisher that transforms each element from the upstream publisher to a new
+    /// publisher and flattens the result, where the new publisher has no failure type.
+    ///
+    /// - Parameters:
+    ///   - maxPublishers: The maximum number of publishers that can be concurrently subscribed to.
+    ///   - transform: A closure that takes an element and returns a new publisher with no failure type.
+    /// - Returns: A `Deferred` wrapping a `Publishers.FlatMap` instance.
     @_disfavoredOverload
     func flatMap<P>(
         maxPublishers: Subscribers.Demand = .unlimited,
@@ -712,6 +760,14 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.flatMap(maxPublishers: maxPublishers, transform) }
     }
 
+    /// Returns a publisher that transforms each element from the upstream publisher to a new
+    /// publisher and flattens the result, setting the failure type of the wrapped publisher to
+    /// match the new publisher's failure type, where the new publisher has no failure type.
+    ///
+    /// - Parameters:
+    ///   - maxPublishers: The maximum number of publishers that can be concurrently subscribed to.
+    ///   - transform: A closure that takes an element and returns a new publisher with no failure type.
+    /// - Returns: A `Deferred` wrapping a `Publishers.FlatMap` instance.
     @_disfavoredOverload
     func flatMap<P>(
         maxPublishers: Subscribers.Demand = .unlimited,
@@ -723,6 +779,9 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.flatMap(maxPublishers: maxPublishers, transform) }
     }
 
+    /// Returns a publisher that publishes elements received from the most recent publisher sequence.
+    ///
+    /// - Returns: A `Deferred` wrapping a `Publishers.SwitchToLatest` instance.
     @_disfavoredOverload
     func switchToLatest() -> Deferred<Publishers.SwitchToLatest<Output, WrappedPublisher>> where
         Output: Publisher,
@@ -731,6 +790,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.switchToLatest() }
     }
 
+    /// Returns a publisher that publishes elements received from the most recent publisher sequence,
+    /// setting the failure type of the wrapped publisher to match the new publisher's failure type.
+    ///
+    /// - Returns: A `Deferred` wrapping a `Publishers.SwitchToLatest` instance.
     @_disfavoredOverload
     func switchToLatest() -> Deferred<Publishers.SwitchToLatest<Output, Publishers.SetFailureType<WrappedPublisher, Output.Failure>>> where
         Output: Publisher,
@@ -739,6 +802,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.switchToLatest() }
     }
 
+    /// Returns a publisher that publishes elements received from the most recent publisher sequence,
+    /// setting the failure type of both the output and wrapped publishers to match.
+    ///
+    /// - Returns: A `Deferred` wrapping a `Publishers.SwitchToLatest` instance.
     @_disfavoredOverload
     func switchToLatest() -> Deferred<Publishers.SwitchToLatest<Publishers.SetFailureType<Output, Failure>, Publishers.Map<WrappedPublisher, Publishers.SetFailureType<WrappedPublisher.Output, Failure>>>> where
         Output: Publisher,
@@ -747,6 +814,10 @@ public extension DeferredPublisherProtocol {
         deferredLift { $0.switchToLatest() }
     }
 
+    /// Returns a publisher that publishes elements received from the most recent publisher sequence,
+    /// where both the wrapped and output publishers have no failure type.
+    ///
+    /// - Returns: A `Deferred` wrapping a `Publishers.SwitchToLatest` instance.
     @_disfavoredOverload
     func switchToLatest() -> Deferred<Publishers.SwitchToLatest<Output, WrappedPublisher>> where
         Output: Publisher,
