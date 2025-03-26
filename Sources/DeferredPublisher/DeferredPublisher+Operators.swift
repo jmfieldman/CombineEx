@@ -116,6 +116,82 @@ public extension DeferredPublisherProtocol {
     }
 }
 
+// MARK: Reducing Elements
+
+public extension DeferredPublisherProtocol {
+    /// Collects all received elements into an array and emits the array when the upstream publisher finishes.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Returns: A deferred publisher that emits an array of all received elements.
+    @_disfavoredOverload
+    func collect() -> Deferred<Publishers.Collect<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.collect() }
+    }
+
+    /// Collects elements into arrays of a specified count and emits each array.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter count: The number of elements each array should contain.
+    /// - Returns: A deferred publisher that emits arrays of the specified count.
+    @_disfavoredOverload
+    func collect(
+        _ count: Int
+    ) -> Deferred<Publishers.CollectByCount<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.collect(count) }
+    }
+
+    /// Collects elements into arrays based on the specified time strategy and emits each array.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter strategy: The time grouping strategy to use for collecting elements.
+    /// - Parameter options: Options specific to the scheduler's behavior.
+    /// - Returns: A deferred publisher that emits arrays of elements based on the specified time strategy.
+    @_disfavoredOverload
+    func collect<S>(
+        _ strategy: Publishers.TimeGroupingStrategy<S>,
+        options: S.SchedulerOptions? = nil
+    ) -> Deferred<Publishers.CollectByTime<WrappedPublisher, S>> where WrappedPublisher.Failure == Failure, S: Scheduler {
+        deferredLift { $0.collect(strategy, options: options) }
+    }
+
+    /// Ignores all output from the upstream publisher and emits a completion event when the upstream publisher finishes.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Returns: A deferred publisher that ignores all output and emits a completion event.
+    @_disfavoredOverload
+    func ignoreOutput() -> Deferred<Publishers.IgnoreOutput<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.ignoreOutput() }
+    }
+
+    /// Accumulates elements received from the upstream publisher into a single value using a closure, starting with an initial result.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter initialResult: The initial value to start the accumulation.
+    /// - Parameter nextPartialResult: A closure that combines the accumulated result and a new element into a new accumulated result.
+    /// - Returns: A deferred publisher that emits the final accumulated value.
+    @_disfavoredOverload
+    func reduce<T>(
+        _ initialResult: T,
+        _ nextPartialResult: @escaping (T, WrappedPublisher.Output) -> T
+    ) -> Deferred<Publishers.Reduce<WrappedPublisher, T>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.reduce(initialResult, nextPartialResult) }
+    }
+
+    /// Accumulates elements received from the upstream publisher into a single value using a throwing closure, starting with an initial result.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter initialResult: The initial value to start the accumulation.
+    /// - Parameter nextPartialResult: A throwing closure that combines the accumulated result and a new element into a new accumulated result.
+    /// - Returns: A deferred publisher that emits the final accumulated value, or fails if an error is thrown.
+    @_disfavoredOverload
+    func tryReduce<T>(
+        _ initialResult: T,
+        _ nextPartialResult: @escaping (T, WrappedPublisher.Output) throws(Failure) -> T
+    ) -> Deferred<Publishers.TryReduce<WrappedPublisher, T>> where WrappedPublisher.Failure == Error {
+        deferredLift { $0.tryReduce(initialResult, nextPartialResult) }
+    }
+}
+
 // MARK: Applying Mathematical Operations on Elements
 
 public extension DeferredPublisherProtocol {
