@@ -855,14 +855,108 @@ public extension DeferredPublisherProtocol {
     }
 }
 
+// MARK: Identifying Properties with Key Paths
+
+public extension DeferredPublisherProtocol {
+    /// Maps each element of the publisher to a new value by applying a key path.
+    ///
+    /// - Parameter keyPath: The key path used to extract the new value from each element.
+    ///
+    /// - Returns: A `Deferred` publisher that wraps a `MapKeyPath` operator.
+    @_disfavoredOverload
+    func map<T>(
+        _ keyPath: KeyPath<Self.Output, T>
+    ) -> Deferred<Publishers.MapKeyPath<WrappedPublisher, T>> where WrappedPublisher.Output == Self.Output {
+        deferredLift { $0.map(keyPath) }
+    }
+
+    /// Maps each element of the publisher to a tuple of values by applying two key paths.
+    ///
+    /// - Parameters:
+    ///   - keyPath0: The first key path used to extract the first value from each element.
+    ///   - keyPath1: The second key path used to extract the second value from each element.
+    ///
+    /// - Returns: A `Deferred` publisher that wraps a `MapKeyPath2` operator.
+    @_disfavoredOverload
+    func map<T0, T1>(
+        _ keyPath0: KeyPath<Self.Output, T0>,
+        _ keyPath1: KeyPath<Self.Output, T1>
+    ) -> Deferred<Publishers.MapKeyPath2<WrappedPublisher, T0, T1>> where WrappedPublisher.Output == Self.Output {
+        deferredLift { $0.map(keyPath0, keyPath1) }
+    }
+
+    /// Maps each element of the publisher to a tuple of three values by applying three key paths.
+    ///
+    /// - Parameters:
+    ///   - keyPath0: The first key path used to extract the first value from each element.
+    ///   - keyPath1: The second key path used to extract the second value from each element.
+    ///   - keyPath2: The third key path used to extract the third value from each element.
+    ///
+    /// - Returns: A `Deferred` publisher that wraps a `MapKeyPath3` operator.
+    @_disfavoredOverload
+    func map<T0, T1, T2>(
+        _ keyPath0: KeyPath<Self.Output, T0>,
+        _ keyPath1: KeyPath<Self.Output, T1>,
+        _ keyPath2: KeyPath<Self.Output, T2>
+    ) -> Deferred<Publishers.MapKeyPath3<WrappedPublisher, T0, T1, T2>> where WrappedPublisher.Output == Self.Output {
+        deferredLift { $0.map(keyPath0, keyPath1, keyPath2) }
+    }
+}
+
 // MARK: Handling Errors
 
 public extension DeferredPublisherProtocol {
+    /// Asserts that the publisher does not fail, with an optional prefix for error messages.
+    ///
+    /// - Parameters:
+    ///   - prefix: A string to prepend to error messages for debugging purposes.
+    ///   - file: The file in which the method was called, defaults to the current file.
+    ///   - line: The line in which the method was called, defaults to the current line.
+    ///
+    /// - Returns: A `Deferred` publisher that wraps an `AssertNoFailure` operator.
+    @_disfavoredOverload
+    func assertNoFailure(
+        _ prefix: String = "",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) -> Deferred<Publishers.AssertNoFailure<WrappedPublisher>> where WrappedPublisher.Failure == Never {
+        deferredLift { $0.assertNoFailure(prefix, file: file, line: line) }
+    }
+
+    /// Catches errors from the upstream publisher and replaces them with elements from another publisher.
+    ///
+    /// - Parameter handler: A closure that takes the error and returns a new publisher to continue with.
+    ///
+    /// - Returns: A `Deferred` publisher that wraps a `Catch` operator.
     @_disfavoredOverload
     func `catch`<P>(
         _ handler: @escaping (WrappedPublisher.Failure) -> P
     ) -> Deferred<Publishers.Catch<WrappedPublisher, P>> where P: Publisher, WrappedPublisher.Output == P.Output {
         deferredLift { $0.catch(handler) }
+    }
+
+    /// Attempts to catch errors from the upstream publisher and replace them with elements from another publisher, allowing throwing.
+    ///
+    /// - Parameter handler: A closure that takes the error and returns a new publisher to continue with, may throw.
+    ///
+    /// - Returns: A `Deferred` publisher that wraps a `TryCatch` operator.
+    @_disfavoredOverload
+    func tryCatch<P>(
+        _ handler: @escaping (WrappedPublisher.Failure) throws -> P
+    ) -> Deferred<Publishers.TryCatch<WrappedPublisher, P>> where P: Publisher, WrappedPublisher.Output == P.Output {
+        deferredLift { $0.tryCatch(handler) }
+    }
+
+    /// Retries the subscription to the upstream publisher a specified number of times upon failure.
+    ///
+    /// - Parameter retries: The maximum number of retry attempts.
+    ///
+    /// - Returns: A `Deferred` publisher that wraps a `Retry` operator.
+    @_disfavoredOverload
+    func retry(
+        _ retries: Int
+    ) -> Deferred<Publishers.Retry<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.retry(retries) }
     }
 }
 
