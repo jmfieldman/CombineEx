@@ -116,6 +116,70 @@ public extension DeferredPublisherProtocol {
     }
 }
 
+// MARK: Applying Matching Criteria to Elements
+
+public extension DeferredPublisherProtocol {
+    /// Returns a publisher that emits a single true Boolean value if the upstream publisher contains an element equal to the specified output, or false otherwise.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter output: The element to search for in the upstream publisher's elements.
+    /// - Returns: A deferred publisher that emits a Boolean value indicating whether the specified output was found.
+    @_disfavoredOverload
+    func contains(
+        _ output: WrappedPublisher.Output
+    ) -> Deferred<Publishers.Contains<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.contains(output) }
+    }
+
+    /// Returns a publisher that emits a single true Boolean value if the upstream publisher contains an element that satisfies the specified predicate, or false otherwise.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter predicate: A closure that takes an element of the upstream publisher and returns a Boolean value.
+    /// - Returns: A deferred publisher that emits a Boolean value indicating whether any element satisfied the predicate.
+    @_disfavoredOverload
+    func contains(
+        where predicate: @escaping (WrappedPublisher.Output) -> Bool
+    ) -> Deferred<Publishers.ContainsWhere<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.contains(where: predicate) }
+    }
+
+    /// Returns a publisher that emits a single true Boolean value if the upstream publisher contains an element that satisfies the specified predicate, or false otherwise.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to. The predicate can throw an error.
+    ///
+    /// - Parameter predicate: A closure that takes an element of the upstream publisher and returns a Boolean value, or throws an error.
+    /// - Returns: A deferred publisher that emits a Boolean value indicating whether any element satisfied the predicate, or fails if an error is thrown.
+    @_disfavoredOverload
+    func tryContains(
+        where predicate: @escaping (WrappedPublisher.Output) throws -> Bool
+    ) -> Deferred<Publishers.TryContainsWhere<WrappedPublisher>> where WrappedPublisher.Failure == Error {
+        deferredLift { $0.tryContains(where: predicate) }
+    }
+
+    /// Returns a publisher that emits a single true Boolean value if all elements received from the upstream publisher satisfy the specified predicate, or false otherwise.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter predicate: A closure that takes an element of the upstream publisher and returns a Boolean value.
+    /// - Returns: A deferred publisher that emits a Boolean value indicating whether all elements satisfied the predicate.
+    @_disfavoredOverload
+    func allSatisfy(
+        _ predicate: @escaping (WrappedPublisher.Output) -> Bool
+    ) -> Deferred<Publishers.AllSatisfy<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.allSatisfy(predicate) }
+    }
+
+    /// Returns a publisher that emits a single true Boolean value if all elements received from the upstream publisher satisfy the specified predicate, or false otherwise.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to. The predicate can throw an error.
+    ///
+    /// - Parameter predicate: A closure that takes an element of the upstream publisher and returns a Boolean value, or throws an error.
+    /// - Returns: A deferred publisher that emits a Boolean value indicating whether all elements satisfied the predicate, or fails if an error is thrown.
+    @_disfavoredOverload
+    func tryAllSatisfy(
+        _ predicate: @escaping (WrappedPublisher.Output) throws -> Bool
+    ) -> Deferred<Publishers.TryAllSatisfy<WrappedPublisher>> where WrappedPublisher.Failure == Error {
+        deferredLift { $0.tryAllSatisfy(predicate) }
+    }
+}
+
 // MARK: Applying Sequence Operations to Elements
 
 public extension DeferredPublisherProtocol {
