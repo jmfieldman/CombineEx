@@ -116,6 +116,85 @@ public extension DeferredPublisherProtocol {
     }
 }
 
+// MARK: Applying Mathematical Operations on Elements
+
+public extension DeferredPublisherProtocol {
+    /// Returns a publisher that emits the total count of elements received from the upstream publisher.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Returns: A deferred publisher that emits the total count of elements.
+    @_disfavoredOverload
+    func count() -> Deferred<Publishers.Count<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.count() }
+    }
+
+    /// Returns a publisher that emits the maximum element received from the upstream publisher.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Returns: A deferred publisher that emits the maximum element.
+    @_disfavoredOverload
+    func max() -> Deferred<Publishers.Comparison<WrappedPublisher>> where WrappedPublisher.Failure == Failure, WrappedPublisher.Output: Comparable {
+        deferredLift { $0.max() }
+    }
+
+    /// Returns a publisher that emits the maximum element received from the upstream publisher, using the specified comparison predicate.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter areInIncreasingOrder: A closure that returns true if its first argument should be ordered before the second.
+    /// - Returns: A deferred publisher that emits the maximum element based on the specified predicate.
+    @_disfavoredOverload
+    func max(
+        by areInIncreasingOrder: @escaping (WrappedPublisher.Output, WrappedPublisher.Output) -> Bool
+    ) -> Deferred<Publishers.Comparison<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.max(by: areInIncreasingOrder) }
+    }
+
+    /// Returns a publisher that emits the maximum element received from the upstream publisher, using the specified throwing comparison predicate.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter areInIncreasingOrder: A throwing closure that returns true if its first argument should be ordered before the second.
+    /// - Returns: A deferred publisher that emits the maximum element based on the specified predicate, or fails if an error is thrown.
+    @_disfavoredOverload
+    func tryMax(
+        by areInIncreasingOrder: @escaping (WrappedPublisher.Output, WrappedPublisher.Output) throws(Failure) -> Bool
+    ) -> Deferred<Publishers.TryComparison<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.tryMax(by: areInIncreasingOrder) }
+    }
+
+    /// Returns a publisher that emits the minimum element received from the upstream publisher.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Returns: A deferred publisher that emits the minimum element.
+    @_disfavoredOverload
+    func min() -> Deferred<Publishers.Comparison<WrappedPublisher>> where WrappedPublisher.Failure == Failure, WrappedPublisher.Output: Comparable {
+        deferredLift { $0.min() }
+    }
+
+    /// Returns a publisher that emits the minimum element received from the upstream publisher, using the specified comparison predicate.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter areInIncreasingOrder: A closure that returns true if its first argument should be ordered before the second.
+    /// - Returns: A deferred publisher that emits the minimum element based on the specified predicate.
+    @_disfavoredOverload
+    func min(
+        by areInIncreasingOrder: @escaping (WrappedPublisher.Output, WrappedPublisher.Output) -> Bool
+    ) -> Deferred<Publishers.Comparison<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.min(by: areInIncreasingOrder) }
+    }
+
+    /// Returns a publisher that emits the minimum element received from the upstream publisher, using the specified throwing comparison predicate.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter areInIncreasingOrder: A throwing closure that returns true if its first argument should be ordered before the second.
+    /// - Returns: A deferred publisher that emits the minimum element based on the specified predicate, or fails if an error is thrown.
+    @_disfavoredOverload
+    func tryMin(
+        by areInIncreasingOrder: @escaping (WrappedPublisher.Output, WrappedPublisher.Output) throws(Failure) -> Bool
+    ) -> Deferred<Publishers.TryComparison<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.tryMin(by: areInIncreasingOrder) }
+    }
+}
+
 // MARK: Applying Matching Criteria to Elements
 
 public extension DeferredPublisherProtocol {
