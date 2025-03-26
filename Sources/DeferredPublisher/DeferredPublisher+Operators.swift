@@ -116,6 +116,115 @@ public extension DeferredPublisherProtocol {
     }
 }
 
+// MARK: Filtering Elements
+
+public extension DeferredPublisherProtocol {
+    /// Filters the received elements to only those that satisfy the specified predicate.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter isIncluded: A closure that determines whether an element should be included in the output.
+    /// - Returns: A deferred publisher that emits only the elements that satisfy the predicate.
+    @_disfavoredOverload
+    func filter(
+        _ isIncluded: @escaping (WrappedPublisher.Output) -> Bool
+    ) -> Deferred<Publishers.Filter<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.filter(isIncluded) }
+    }
+
+    /// Filters the received elements using a throwing predicate.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter isIncluded: A throwing closure that determines whether an element should be included in the output.
+    /// - Returns: A deferred publisher that emits only the elements that satisfy the predicate, or fails if an error is thrown.
+    @_disfavoredOverload
+    func tryFilter(
+        _ isIncluded: @escaping (WrappedPublisher.Output) throws -> Bool
+    ) -> Deferred<Publishers.TryFilter<WrappedPublisher>> where WrappedPublisher.Failure == Error {
+        deferredLift { $0.tryFilter(isIncluded) }
+    }
+
+    /// Transforms each element of the upstream publisher with a provided closure and emits non-nil results.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter transform: A closure that takes an element and returns an optional transformed value.
+    /// - Returns: A deferred publisher that emits the non-nil results of transforming each element.
+    @_disfavoredOverload
+    func compactMap<T>(
+        _ transform: @escaping (WrappedPublisher.Output) -> T?
+    ) -> Deferred<Publishers.CompactMap<WrappedPublisher, T>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.compactMap(transform) }
+    }
+
+    /// Transforms each element of the upstream publisher with a provided throwing closure and emits non-nil results.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter transform: A throwing closure that takes an element and returns an optional transformed value.
+    /// - Returns: A deferred publisher that emits the non-nil results of transforming each element, or fails if an error is thrown.
+    @_disfavoredOverload
+    func tryCompactMap<T>(
+        _ transform: @escaping (WrappedPublisher.Output) throws(Failure) -> T?
+    ) -> Deferred<Publishers.TryCompactMap<WrappedPublisher, T>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.tryCompactMap(transform) }
+    }
+
+    /// Removes consecutive duplicate elements that are equal.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Returns: A deferred publisher that emits elements only when they change from the previous element.
+    @_disfavoredOverload
+    func removeDuplicates() -> Deferred<Publishers.RemoveDuplicates<WrappedPublisher>> where WrappedPublisher.Failure == Failure, WrappedPublisher.Output: Equatable {
+        deferredLift { $0.removeDuplicates() }
+    }
+
+    /// Removes consecutive duplicate elements based on the specified predicate.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter predicate: A closure that determines whether two consecutive elements are equal.
+    /// - Returns: A deferred publisher that emits elements only when they change from the previous element based on the predicate.
+    @_disfavoredOverload
+    func removeDuplicates(
+        by predicate: @escaping (WrappedPublisher.Output, WrappedPublisher.Output) -> Bool
+    ) -> Deferred<Publishers.RemoveDuplicates<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.removeDuplicates(by: predicate) }
+    }
+
+    /// Removes consecutive duplicate elements based on the specified throwing predicate.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter predicate: A throwing closure that determines whether two consecutive elements are equal.
+    /// - Returns: A deferred publisher that emits elements only when they change from the previous element based on the predicate, or fails if an error is thrown.
+    @_disfavoredOverload
+    func tryRemoveDuplicates(
+        by predicate: @escaping (WrappedPublisher.Output, WrappedPublisher.Output) throws(Failure) -> Bool
+    ) -> Deferred<Publishers.TryRemoveDuplicates<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.tryRemoveDuplicates(by: predicate) }
+    }
+
+    /// Replaces empty completion with a specified output value.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter output: The value to emit if the upstream publisher completes without any values.
+    /// - Returns: A deferred publisher that emits a specified value if the upstream publisher completes without any values.
+    @_disfavoredOverload
+    func replaceEmpty(
+        with output: WrappedPublisher.Output
+    ) -> Deferred<Publishers.ReplaceEmpty<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.replaceEmpty(with: output) }
+    }
+
+    /// Replaces any failure with the specified output value.
+    /// This version is deferred and will not subscribe to the upstream publisher until it is itself subscribed to.
+    ///
+    /// - Parameter output: The value to emit if the upstream publisher fails.
+    /// - Returns: A deferred publisher that emits a specified value if the upstream publisher fails.
+    @_disfavoredOverload
+    func replaceError(
+        with output: WrappedPublisher.Output
+    ) -> Deferred<Publishers.ReplaceError<WrappedPublisher>> where WrappedPublisher.Failure == Error {
+        deferredLift { $0.replaceError(with: output) }
+    }
+}
+
 // MARK: Reducing Elements
 
 public extension DeferredPublisherProtocol {
