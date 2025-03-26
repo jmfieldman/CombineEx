@@ -118,32 +118,3 @@ public enum ActionError<Failure: Error>: Error {
     case disabled
     case publisherFailure(Failure)
 }
-
-// A AnyAction is a convenience container for Actions that do not
-// care about the value/failure of the wrapped action. It can be
-// used in UI scenarios where you only want UI to trigger an action
-// while other side effects are handled elsewhere.
-public final class AnyAction<Input> {
-    public let isExecuting: Property<Bool>
-    public let applyAnonymous: (Input) -> AnyDeferredPublisher<Void, Never>
-
-    public init(_ internalAction: Action<Input, some Any, some Any>) {
-        self.isExecuting = internalAction.isExecuting
-        self.applyAnonymous = { input in
-            internalAction.applyIfPossible(input)
-                .demoteFailure()
-                .map { _ in () }
-                .eraseToAnyDeferredPublisher()
-        }
-    }
-
-    public static func immediate(_ block: @escaping (Input) -> Void) -> AnyAction<Input> {
-        Action<Input, Void, Never>.immediate(block).asAnyAction
-    }
-}
-
-public extension Action {
-    var asAnyAction: AnyAction<Input> {
-        AnyAction(self)
-    }
-}
