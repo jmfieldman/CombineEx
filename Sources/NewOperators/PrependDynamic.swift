@@ -34,3 +34,16 @@ public extension Publisher {
         Publishers.PrependDynamic(upstream: self, initialValue: initialValue)
     }
 }
+
+public extension DeferredPublisherProtocol {
+    /// Prepends a dynamically generated initial value to the output of this publisher.
+    ///
+    /// - Parameter initialValue: A closure that generates the initial value to prepend.
+    /// - Returns: A new publisher that emits the initial value followed by values from the upstream publisher.
+    @_disfavoredOverload
+    func prependDynamic(
+        _ initialValue: @escaping () -> WrappedPublisher.Output
+    ) -> Deferred<Publishers.PrependDynamic<WrappedPublisher>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.prependDynamic(initialValue) }
+    }
+}

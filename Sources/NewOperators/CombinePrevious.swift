@@ -51,8 +51,8 @@ public extension DeferredPublisherProtocol {
     /// - Returns: A `Deferred` publisher that emits tuples of `(previousValue, currentValue)`.
     @_disfavoredOverload
     func combinePrevious(
-        _ initialValue: Output
-    ) -> Deferred<Publishers.Scan<WrappedPublisher, (Output, Output)>> where WrappedPublisher.Output == Output, WrappedPublisher.Failure == Failure {
+        _ initialValue: WrappedPublisher.Output
+    ) -> Deferred<Publishers.Scan<WrappedPublisher, (WrappedPublisher.Output, WrappedPublisher.Output)>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.combinePrevious(initialValue) }
     }
 
@@ -61,7 +61,7 @@ public extension DeferredPublisherProtocol {
     ///
     /// - Returns: A `Deferred` publisher that emits tuples of `(previousValue, currentValue)`.
     @_disfavoredOverload
-    func combinePrevious<T>() -> Deferred<Publishers.CompactMap<Publishers.Scan<WrappedPublisher, (Output, Output)?>, (Output, Output)>> where WrappedPublisher.Output == Output, WrappedPublisher.Failure == Failure, Output == T? {
+    func combinePrevious<T>() -> Deferred<Publishers.CompactMap<Publishers.Scan<WrappedPublisher, (WrappedPublisher.Output, WrappedPublisher.Output)?>, (WrappedPublisher.Output, WrappedPublisher.Output)>> where WrappedPublisher.Failure == Failure, WrappedPublisher.Output == T? {
         deferredLift { $0.combinePrevious() }
     }
 }
