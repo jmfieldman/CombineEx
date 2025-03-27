@@ -1,26 +1,33 @@
 # CombineEx
 
-> CombineEx is a WIP, it is not ready for production. I can use your help
+> CombineEx is still a WIP, and may not be ready for production. I can use your help
 > to fill out the complete suite of functionality and tests.
 
-CombineEx is a Swift Combine extension library that fills the gaps which made
-ReactiveSwift so great:
+CombineEx is a Swift Combine extension library that fills significant usabliliy gaps:
 
-* Explicit publisher types for Hot vs. Cold
-* Property (and MutableProperty) for error-free, read-only CurrentValueSubject
-* Action class
-* Quality-of-life extensions for Publisher
+* Explicit Hot vs. Cold Publisher types
+* Explicit Cold Future type
+* Property (and MutableProperty) for Failureless CurrentValueSubject with read-only semantics.
+* Action support
+* UIScheduler
+* Quality-of-life Publisher extensions and @Observable integrations
 
 ### Hot vs Cold
 
-One important missing aspect of Combine publishers is the notion of type-based Hot
-vs. Cold. Specifically, Combine typically erases all publishers to `AnyPublisher` at
-API boundaries, making it difficult to intuit if a publisher is hot or cold. 
+One fundamental missing piece in Combine is the lack of semantics around hot vs. cold publishers. 
 
-With CombineEx: 
-* You continue to use `Publisher` and `AnyPublisher` for unspecified/hot publishers.
-* You can use `DeferredPublisher` and `AnyDeferredPublisher` for cold publishers.
-* You can use `DeferredFuture` and `AnyDeferredFuture` for cold singles. 
+If you are unfamiliar with the distinction:
+
+* A *hot publisher* is usually attached to emissions from a shared resource, and the act of subscribing does not typically fire off a new unit of work.
+  * An example might be something like `currentLocation` that emits values returned from a `CLLocationManagerDelegate` callback. `currentLocation` might be backed by a `CurrentValueSubject`, and subscribing simply listens to changes in this subject. Multiple subscribers will all receive the same values from the each update.
+* A *cold publisher* kicks off a new, distinct unit of work for every subscription, and the emissions of the publisher are unique to that subscription.
+  * An example of this is `URLSession.shared.dataTaskPublisher(for: url)` -- each subscription kicks off a distinct call to the URL, and the results of that request are only sent to the subscription that initiated it.
+
+In Combine, when the above use cases are exposed through an API, they are both represented by `AnyPublisher`. This provides no mental signposting for how to think about the way a publisher acts when it is subscribed to.
+
+CombineEx defines an opinated semantic that `Deferred` is reserved for *cold publishers*. By extension, an API can provide the new `AnyDeferredPublisher` to establish at the API layer that the vended publisher is *cold* and will kick off a distinct stream of values backed by a distinct workstream for each subscription.
+
+APIs can continue to vend `AnyPublisher` for hot/ambiguous publishers.
 
 ##### Hot
 
