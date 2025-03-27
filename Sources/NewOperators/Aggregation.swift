@@ -66,7 +66,7 @@ public extension Publishers {
         }
 
         /// A private class that manages the subscription and aggregation logic.
-        public final class AggregateSubscription<S: Subscriber>: Subscription, AggregatePublisherAggregator where S.Input == Output, S.Failure == Failure {
+        private final class AggregateSubscription<S: Subscriber>: Subscription, AggregatePublisherAggregator where S.Input == Output, S.Failure == Failure {
             public typealias AggregateFailure = Failure
             public typealias Input = Output
 
