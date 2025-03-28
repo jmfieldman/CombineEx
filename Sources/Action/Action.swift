@@ -1,6 +1,6 @@
 //
 //  Action.swift
-//  Copyright © 2025 Jason Fieldman.
+//  Copyright © 2024 Jason Fieldman.
 //
 
 import Combine
@@ -31,7 +31,7 @@ public final class Action<Input, Output, Failure: Error> {
     public func apply(_ input: Input) -> AnyDeferredPublisher<Output, ActionError<Failure>> {
         // Explicitly hold self - The Action will live as long as its applied children.
         Deferred { [self] in
-            var canBegin: Bool = false
+            var canBegin = false
             mutableIsExecuting.modify { isExecuting in
                 if !isExecuting {
                     isExecuting = true

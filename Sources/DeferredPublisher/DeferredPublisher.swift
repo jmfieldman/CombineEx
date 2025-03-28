@@ -1,6 +1,6 @@
 //
 //  DeferredPublisher.swift
-//  Copyright © 2025 Jason Fieldman.
+//  Copyright © 2024 Jason Fieldman.
 //
 
 import Combine
