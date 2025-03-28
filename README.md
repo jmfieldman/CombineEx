@@ -12,9 +12,9 @@ CombineEx is a Swift Combine extension library that fills significant usabliliy 
 * UIScheduler
 * Quality-of-life Publisher extensions and @Observable integrations
 
-### Hot vs Cold
+## Hot vs Cold
 
-One fundamental missing piece in Combine is the lack of semantics around hot vs. cold publishers. 
+Combine lacks native semantics around hot vs. cold Publisher types. 
 
 If you are unfamiliar with the distinction:
 
@@ -23,99 +23,80 @@ If you are unfamiliar with the distinction:
 * A *cold publisher* kicks off a new, distinct unit of work for every subscription, and the emissions of the publisher are unique to that subscription.
   * An example of this is `URLSession.shared.dataTaskPublisher(for: url)` -- each subscription kicks off a distinct call to the URL, and the results of that request are only sent to the subscription that initiated it.
 
-In Combine, when the above use cases are exposed through an API, they are both represented by `AnyPublisher`. This provides no mental signposting for how to think about the way a publisher acts when it is subscribed to.
+In Combine, when the above use cases are exposed through an API, they are both represented by `AnyPublisher`. This provides no semantic guide to the way that publisher acts when it is subscribed to.
 
-CombineEx defines an opinated semantic that `Deferred` is reserved for *cold publishers*. By extension, an API can provide the new `AnyDeferredPublisher` to establish at the API layer that the vended publisher is *cold* and will kick off a distinct stream of values backed by a distinct workstream for each subscription.
+CombineEx is opinionated that `Deferred` is the preferred keyword for *cold publishers*. An API can provide the new erased type `AnyDeferredPublisher` to establish at the API layer that the vended publisher is *cold* and will kick off a distinct stream of values backed by a distinct workstream for each subscription.
+
+In addition, all publisher functions are overloaded for `AnyDeferredPublisher` to return a new `Deferred` Publisher, allowing you to retain the deferred semantics even after you perform publisher operations like `map`, `first`, `filter`, etc.
 
 APIs can continue to vend `AnyPublisher` for hot/ambiguous publishers.
 
-##### Hot
+## Future
 
-A hot publisher emits values from some existing resource. Consider conceptual hot publishers:
+The Combine `Future` is an interesting Publisher; it is neither hot nor cold. It executes the provided block immediately upon instantiation, without waiting for a subscriber. It then forwards the single result to all subscribers for the remainder of its lifetime.  
 
-* `TemperatureSensor.temperature: Publisher<Double, Never>` 
-* `NetworkManager.connectivityState: Publisher<ConnectionState, Never>`
-* `BookDBTable.rowCount: Publisher<Int, Never>`
+This can cause severe ambiguity if a `Future` is provided through an API as an `AnyPublisher`. The caller cannot be sure if the returned `AnyPublisher` will perform new work on each subscription or not.
 
-When these publishers are started, they perform no additional work other than latching
-onto these existing resources and emitting updates when they change. A hot publisher does
-not guarantee that the current state is emitted when it is subscribed to.
+Instead, CombineEx offers a new `DeferredFuture` struct that unambiguously ensures that each subscription triggers the work inside the `Future` on each subscription. This can be returned through an API by erasing it to `AnyDeferredFuture`.
 
-Hot publishers often use `Never` as their error, since they report on a resource
-that always exists and indefinitely emits some value. Error states are usually reported on a
-separate hot publisher, or rolled into an umbrella enum that is used as the value type (e.g. the
-`ConnectionState` enum contains a 'notConnected' case.)
+`DeferredFuture` and `AnyDeferredFuture` only overload operators that make sense for single-value publishers. If you'd like to use other operators, you can use `eraseToAnyDeferredPublisher` to switch
+to multi-value publisher operators while still guaranteeing the Publisher is cold.
 
-Another common aspect of hot publishers is that multiple subscriptions all observe the
-same fundamental underlying resource. Ten subscribers to `TemperatureSensor.temperature` will
-typically all be updated with the same `Double` when the underlying sensor updates.
-In combine, because there are no guaratees about underlying Publisher behavior, we should
-assume that any `Publisher`/`AnyPublisher` objects are *hot*.
+## Property and MutableProperty
 
-##### Cold
-
-A cold publisher is different from a hot publisher, in that a cold publisher is assumed
-to perform some unique additional work for each subscription, and each separate subscription
-is likely to get a unique stream of data.
-
-Consider conceptual cold publishers:
-
-* `NetworkManager.httpFetchBooks: DeferredPublisher<BooksResult, NetworkError>`
-* `DatabaseManager.queryBookCount: DeferredPublisher<Int, DatabaseError>` 
-
-These publishers perform some action when subscribed (a network query, or a database query, etc)
-and emits values unique to that work. It is understood that separate subscribers all perform
-their own unique work and received their own unique values.
-
-In combine, the mechanism for this is with a `Deferred` publisher. The problem with combine
-is that the type-erasure system wipes `Deferred` publishers into `AnyPublisher` at API/module boundaries,
-which removes any type-based inferrence about whether or not the publisher is hot or cold.
-
-CombineEx introduces new first-class types: 
-
-* `DeferredPublisher: struct` and its corresponding `AnyDeferredPublisher: class`
-* `DeferredFuture: struct` and its corresponding `AnyDeferredFuture: class`
-
-You can use the new type-erased `AnyDeferredPublisher` and `AnyDeferredFuture` to convey
-explicit cold-publisher types across API/module boundaries.
-
-These new types are all `Publisher`, so any operator works on them. New operator overrides exist
-to keep their Deferred nature, as long as it makes sense.  e.g. `DeferredFuture` has an override
-to flatMap into another `DeferredFuture` (and keep the output a `DeferredFuture`), but flatMapping
-into a `DeferredPublisher` would only emit a `DeferredPublisher`. 
-
-### Property and MutableProperty
-
-Combine only offers a single subject that guarantees that it has a current value: `CurrentValueSubject`.
-This subject has two drawbacks: First, it has no write-protection (anyone can update its value). Second,
-it can receive an error, which means that it can stop emitting values forever.
+Combine only offers a single subject that guarantees that it has a current value: `CurrentValueSubject`. This subject has two drawbacks: First, it has no write-protection (anyone can update its value). Second, it can receive an error, which means that it can stop emitting values forever.
 
 `Property` and `MutableProperty` (implementing PropertyProtocol) solve these problems:
 
-* The only generic parameter is the value. These types always use `Never` as their error.
-* APIs can expose `Property` in their protocols, and use `MutableProperty` in internal implementations. This
-allows internal implementations to be the only source of truth for the exposed `Property`.
+* The only generic parameter is the value. These types use `Never` as their Failure (so can never fail.)
+* APIs can expose `Property` in their protocols, and use `MutableProperty` in internal implementations. This allows internal implementations to be the only source of truth for the exposed `Property`.
 
-The `MutableProperty` implementation also has the benefit of guaranteeing thread safety when imperatively
-accessing/modifying the internal value.
+The `MutableProperty` implementation also has the benefit of guaranteeing thread safety when imperatively accessing/modifying the internal value.
 
-### Action class
+An `@Observable UIProperty` class is also available for wrapping Properties such that they can be used with SwiftUI Observable mechanics (ensuring their value is only updated on the main thread.) This is the perfect class to bridge underlying manager state to SwiftUI view models.
 
-ReactiveSwift introduced the concept of an `Action`.  Think of an `Action` as a cold publisher factory.
-Each call to `apply` constructs a cold publisher with the input.  
+## Action
 
-These constructed cold publishers:
-* Cannot run in parallel. Starting a new publisher will interrupt a previous one, or return an immediate error
-that a previous publisher was running.
-* The execution state (whether or not one is in flight, and observing all of the values/errors) can be
-tracking by the parent Action.
+An `Action` is a deferred (cold) publisher factory. Each call to `apply` constructs a new `AnyDeferredPublisher` using the provided input.  
 
-This makes Actions great for hooking up to UI.  i.e. pressing a UIButton can build and run an Action's publisher,
-and the button's loading spinner can reflect the in-flight execution state of the publisher.
+All publishers constructed by a single parent Action:
+* Cannot run in parallel. If any child publisher has an active subscription, then attempting to subscribe to any child publisher will immediately fail.
+* The execution state (whether or not any child publisher is in flight, and observing all of the values/errors of all child publishers) is tracking by the parent Action.
 
-### Quality of Life Extensions
+This makes Actions great for hooking up to UI!  i.e. pressing a Button can build and run an Action's publisher, and the button's loading spinner can reflect the in-flight execution state of the publisher. The action will prevent code from mistakenly firing an underlying publisher twice in parallel.
 
-##### Sink
+## UIScheduler
+
+Typically, when you receive/subscribe using DispatchQueue.main or RunLoop.main, that action will still dispatch asynchronously to the next iteration of the main thread, even if the work was already being on the main thread.
+
+A new scheduler, `UIScheduler` allows you to receive or subscribe on the main thread, but in a way that will execute synchronously/immediately if the receive/subscribe is already occurring in the main thread.
+
+This allows you to guarantee handling updates on the main thread, without observing small visual update delays if the work was already executing on the main thread.
+
+The following QoL Publisher extensions can make this more concise:
+
+```swift
+public extension Publisher {
+  /// Receive synchronously on the main thread if the upstream publisher
+  /// emits on the main thread, otherwise dispatch to main asynchronously.
+  func receiveOnMain()
+
+  /// Receive values on the main thread using `DispatchQueue.main`.
+  /// This will always dispatch asynchronously to the main queue,
+  func receiveOnMainAsync()
+
+  /// Receive values on the main run loop using `RunLoop.main`.
+  /// This will only receive events when the current RunLoop
+  /// finishes (e.g. it will wait until the user finishes scrolling.)
+  func receiveOnMainRunLoop()
+}
+```
+
+## Quality of Life Extensions
+
+### Sink
+
+Combine typically requires you to retain your AnyCancellables, often having to explicitly store them in a `Set<AnyCancellable>` ivar.
 
 There is a new powerful override of `sink`:
 
@@ -130,8 +111,6 @@ func sink(
 ) -> AnyCancellable?
 ```
 
-This `sink` automatically binds the cancellable to the lifetime of the specified object, with automatic garbage collection
-that removes the cancellable from the object if the cancellable completes before the object is deallocated.
+This `sink` automatically binds the cancellable to the lifetime of the specified object, with automatic garbage collection that removes the cancellable from the object if the cancellable completes before the object is deallocated.
 
-This is useful when starting publishers from within the lifetime of longer-lived objects such as UIViewControllers or
-Services/Managers, and not needing to explicitly deal with collections of AnyCancellable.
+This is useful when starting publishers from within the lifetime of longer-lived objects such as UIViewControllers or Services/Managers. You'll never need to explicitly deal with collections of AnyCancellables again, unless your use case requires access for premature cancellation.

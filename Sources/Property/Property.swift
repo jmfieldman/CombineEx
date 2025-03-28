@@ -94,6 +94,13 @@ public extension Property {
     }
 
     func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Output == S.Input {
-        subject.prepend(value).receive(subscriber: subscriber)
+        lock.withLock {
+            if isModifying {
+                assertionFailure("Cannot subscribe to a property value as a side effect of modification")
+            }
+            isModifying = true
+            subject.prepend(_value).receive(subscriber: subscriber)
+            isModifying = false
+        }
     }
 }
