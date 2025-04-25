@@ -15,6 +15,7 @@ import SwiftUI
 /// publisher. Then pass this UIAction to the view where it can
 /// use `applyAnonymous` to construct the associated publisher that
 /// triggers the underlying action.
+@available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 @Observable
 public final class UIAction<Input> {
     /// An @Observable property that indicates whether the action

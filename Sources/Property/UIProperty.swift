@@ -7,6 +7,7 @@ import Combine
 import Foundation
 import SwiftUI
 
+@available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 @Observable
 public final class UIProperty<Output> {
     public typealias Failure = Never
