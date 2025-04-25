@@ -52,6 +52,7 @@ public final class UIAction<Input> {
     }
 }
 
+@available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 public extension Action {
     /// Converts an `Action` to a `UIAction`.
     ///
