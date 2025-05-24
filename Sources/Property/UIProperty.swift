@@ -12,18 +12,28 @@ import SwiftUI
 public final class UIProperty<Output> {
     public typealias Failure = Never
 
-    public var value: Output
+    public private(set) var value: Output
     @ObservationIgnored private var cancellable: AnyCancellable? = nil
     @ObservationIgnored private var captured: any Publisher<Output, Never>
 
     public init<P: PropertyProtocol>(_ capturing: P) where P.Output == Output {
         self.captured = capturing
+
+        // Intentially capture current value here so that self can be used
+        // in the sink
         self.value = capturing.value
         self.cancellable = capturing
+            .dropFirst()
             .receiveOnMain()
             .sink(receiveValue: { [weak self] value in
                 self?.update(value)
             })
+
+        // But we need this to capture the true state of the argument
+        // in a thread-safe manner since we dropFirst on its publisher.
+        // This second update should not be observed as two events since
+        // they are both inside the init.
+        self.value = capturing.value
     }
 
     public init(initial: Output, then: some Publisher<Output, Never>) {
