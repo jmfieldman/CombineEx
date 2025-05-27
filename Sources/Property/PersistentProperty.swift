@@ -29,8 +29,8 @@ public protocol PersistentPropertyStorageEngine {
     ///   - key: The key under which the value should be stored.
     ///
     /// - Throws: PersistentPropertyError if storing fails.
-    func store<T: Codable>(
-        value: T,
+    func store(
+        value: some Codable,
         environmentId: String,
         key: PersistentPropertyKey
     ) throws(PersistentPropertyError)
