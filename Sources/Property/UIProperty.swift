@@ -9,7 +9,7 @@ import SwiftUI
 
 @available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 @Observable
-public final class UIProperty<Output> {
+public final class UIProperty<Output>: PropertyProtocol {
     public typealias Failure = Never
 
     public private(set) var value: Output
@@ -48,5 +48,11 @@ public final class UIProperty<Output> {
 
     private func update(_ value: Output) {
         self.value = value
+    }
+}
+
+public extension UIProperty {
+    func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Output == S.Input {
+        captured.receive(subscriber: subscriber)
     }
 }

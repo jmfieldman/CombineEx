@@ -6,12 +6,12 @@
 import Combine
 import Foundation
 
-public protocol MutablePropertyProtocol: PropertyProtocol {
+public protocol MutablePropertyProtocol<Output>: PropertyProtocol {
     /// The current value of the property
     var value: Output { get set }
 }
 
-public protocol ComposableMutablePropertyProtocol: MutablePropertyProtocol {
+public protocol ComposableMutablePropertyProtocol<Output>: MutablePropertyProtocol {
     /// Allows the caller to modify the value as a single atomic operation.
     ///
     /// This is not a thread-safe increment:
