@@ -78,7 +78,7 @@ public extension Publisher {
         receiveCompletion: ((Subscribers.Completion<Self.Failure>) -> Void)? = nil,
         receiveCancel: (() -> Void)? = nil,
         receiveRequest: ((Subscribers.Demand) -> Void)? = nil
-    ) -> AnyCancellable? {
+    ) -> AnyCancellable {
         let cancellableBox = WeakCancellableBox()
 
         let remove = { [weak object, cancellableBox] in
