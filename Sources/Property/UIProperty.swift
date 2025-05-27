@@ -51,6 +51,7 @@ public final class UIProperty<Output>: PropertyProtocol {
     }
 }
 
+@available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 public extension UIProperty {
     func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Output == S.Input {
         captured.receive(subscriber: subscriber)
