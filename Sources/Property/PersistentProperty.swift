@@ -161,7 +161,7 @@ public final class PersistentProperty<Output: Codable>: ComposableMutablePropert
     private func update(_ value: Output) {
         lock.withLock {
             if isModifying {
-                assertionFailure("You cannot update this property as a side effect of previous modification (invalid cycle.)")
+                assertionFailure("It is considered a programming error if the value of a PersistentProperty is updated as an immediate side effect of a previous update or subscription (invalid update cycle.)")
             }
             isModifying = true
             _value = value
@@ -183,7 +183,7 @@ public final class PersistentProperty<Output: Codable>: ComposableMutablePropert
     public func modify(_ block: (inout Output) -> Void) {
         lock.withLock {
             if isModifying {
-                assertionFailure("You cannot update this property as a side effect of previous modification (invalid cycle.)")
+                assertionFailure("It is considered a programming error if the value of a PersistentProperty is updated as an immediate side effect of a previous update or subscription (invalid update cycle.)")
             }
             isModifying = true
             block(&_value)
@@ -232,10 +232,7 @@ public extension PersistentProperty {
     var value: Output {
         get {
             lock.withLock {
-                if isModifying {
-                    assertionFailure("Cannot read property value imperatively during a side effect of modification")
-                }
-                return _value
+                _value
             }
         }
 
@@ -251,7 +248,7 @@ public extension PersistentProperty {
     func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Output == S.Input {
         lock.withLock {
             if isModifying {
-                assertionFailure("Cannot subscribe to a property value as a side effect of modification")
+                assertionFailure("It is considered a programming error if the value of a PersistentProperty is updated as an immediate side effect of a previous update or subscription (invalid update cycle.)")
             }
             isModifying = true
             subject.receive(subscriber: subscriber)

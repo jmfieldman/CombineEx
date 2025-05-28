@@ -67,7 +67,7 @@ public final class Property<Output>: PropertyProtocol {
     private func update(_ value: Output) {
         lock.withLock {
             if isModifying {
-                assertionFailure("The publisher that is captured by this property has updated during a previous value modification (invalid capture cycle.)")
+                assertionFailure("It is considered a programming error if the value of a Property is updated as an immediate side effect of a previous update or subscription (invalid update cycle.)")
             }
             isModifying = true
             _value = value
@@ -79,25 +79,14 @@ public final class Property<Output>: PropertyProtocol {
 
 public extension Property {
     /// Returns the current value.
-    ///
-    /// It is considered a programming error to read this value imperatively during a
-    /// downstream side effect of this Property being modified. You can refactor your
-    /// publisher chain so that this read occurs on a separate thread, or pipe the value
-    /// around outside of this Property.
     var value: Output {
         lock.withLock {
-            if isModifying {
-                assertionFailure("Cannot read property value imperatively during a side effect of modification")
-            }
-            return _value
+            _value
         }
     }
 
     func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Output == S.Input {
         lock.withLock {
-            if isModifying {
-                assertionFailure("Cannot subscribe to a property value as a side effect of modification")
-            }
             isModifying = true
             subject.prepend(_value).receive(subscriber: subscriber)
             isModifying = false
