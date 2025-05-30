@@ -12,6 +12,8 @@ CombineEx is a Swift Combine extension library that fills significant usabliliy 
 * UIScheduler
 * Quality-of-life Publisher extensions and @Observable integrations
 
+It is heavily influenced by concepts in the amazing [ReactiveSwift](https://github.com/ReactiveCocoa/ReactiveSwift) and [ReactiveCocoa](https://github.com/ReactiveCocoa/ReactiveCocoa) libraries.
+
 ## Hot vs Cold
 
 Combine lacks native semantics around hot vs. cold Publisher types. 
