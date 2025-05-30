@@ -70,5 +70,5 @@ extension Action: ActionTriggerConvertible {
 
 @available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 extension AnyDeferredPublisher: ActionTriggerConvertible {
-    public var asActionTrigger: ActionTrigger<Any> { Action { _ in self }.asActionTrigger }
+    public var asActionTrigger: ActionTrigger<Void> { Action { _ in self }.asActionTrigger }
 }
