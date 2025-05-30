@@ -1,5 +1,5 @@
 //
-//  UIAction.swift
+//  ActionTrigger.swift
 //  Copyright © 2025 Jason Fieldman.
 //
 
@@ -53,7 +53,7 @@ public final class ActionTrigger<Input> {
 }
 
 @available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
-public protocol ActionTriggerConvertible {
+public protocol ActionTriggerConvertible<Input> {
     associatedtype Input
     var asActionTrigger: ActionTrigger<Input> { get }
 }
@@ -70,8 +70,5 @@ extension Action: ActionTriggerConvertible {
 
 @available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 extension AnyDeferredPublisher: ActionTriggerConvertible {
-    public typealias Input = Any
-    public var asActionTrigger: ActionTrigger<Input> {
-        Action { _ in self }.asActionTrigger
-    }
+    public var asActionTrigger: ActionTrigger<Any> { Action { _ in self }.asActionTrigger }
 }
