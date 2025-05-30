@@ -7,17 +7,17 @@ import Combine
 import Foundation
 import SwiftUI
 
-/// A UIAction is a convenience container for Actions that do not
+/// An ActionTrigger is a convenience container for Actions that do not
 /// care about the value/failure of the wrapped action.
 ///
-/// Construct a UIAction inside your view model, where you have access to
+/// Construct an ActionTrigger inside your view model, where you have access to
 /// the underlying values/errors that are emitted from the associated
-/// publisher. Then pass this UIAction to the view where it can
+/// publisher. Then pass this ActionTrigger to the view where it can
 /// use `applyAnonymous` to construct the associated publisher that
 /// triggers the underlying action.
 @available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 @Observable
-public final class UIAction<Input> {
+public final class ActionTrigger<Input> {
     /// An @Observable property that indicates whether the action
     /// is currently executing.
     public let isExecuting: UIProperty<Bool>
@@ -27,7 +27,7 @@ public final class UIAction<Input> {
     @ObservationIgnored
     public let applyAnonymous: (Input) -> AnyDeferredPublisher<Void, Never>
 
-    /// Initializes a UIAction with the given internal action.
+    /// Initializes an ActionTrigger with the given internal action.
     ///
     /// - Parameters:
     ///   - internalAction: The underlying action to be wrapped.
@@ -41,23 +41,37 @@ public final class UIAction<Input> {
         }
     }
 
-    /// Creates a UIAction from an immediate action block.
+    /// Creates an ActionTrigger from an immediate action block.
     ///
     /// - Parameters:
     ///   - block: The closure to execute when the action is applied.
     ///
-    /// - Returns: A new UIAction instance.
-    public static func immediate(_ block: @escaping (Input) -> Void) -> UIAction<Input> {
-        Action<Input, Void, Never>.immediate(block).asUIAction
+    /// - Returns: A new ActionTrigger instance.
+    public static func immediate(_ block: @escaping (Input) -> Void) -> ActionTrigger<Input> {
+        Action<Input, Void, Never>.immediate(block).asActionTrigger
     }
 }
 
 @available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
-public extension Action {
-    /// Converts an `Action` to a `UIAction`.
-    ///
-    /// - Returns: A new `UIAction` instance wrapping the current action.
-    var asUIAction: UIAction<Input> {
-        UIAction(self)
+public protocol ActionTriggerConvertible {
+    associatedtype Input
+    var asActionTrigger: ActionTrigger<Input> { get }
+}
+
+@available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
+extension ActionTrigger: ActionTriggerConvertible {
+    public var asActionTrigger: ActionTrigger<Input> { self }
+}
+
+@available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
+extension Action: ActionTriggerConvertible {
+    public var asActionTrigger: ActionTrigger<Input> { .init(self) }
+}
+
+@available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
+extension AnyDeferredPublisher: ActionTriggerConvertible {
+    public typealias Input = Any
+    public var asActionTrigger: ActionTrigger<Input> {
+        Action { _ in self }.asActionTrigger
     }
 }
