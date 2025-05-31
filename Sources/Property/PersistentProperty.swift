@@ -326,6 +326,11 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
         self.rootDirectory = appended
     }
 
+    /// Ensures that codable primitives are wrapped in a dictionary
+    private struct CodableBox<T: Codable>: Codable {
+        let value: T
+    }
+
     /// Stores a value to the file system with the specified environment ID and key.
     /// - Parameters:
     ///   - value: The value to store, must conform to `Codable`.
@@ -343,7 +348,7 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
         }
 
         do {
-            let data = try JSONEncoder().encode(value)
+            let data = try JSONEncoder().encode(CodableBox(value: value))
             try data.write(to: fileURL, options: .atomic)
         } catch {
             throw FileBasedPersistentPropertyStorageEngineError.encodeToDiskError(error)
@@ -374,8 +379,8 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
 
         do {
             let data = try Data(contentsOf: fileURL)
-            let obj = try JSONDecoder().decode(T.self, from: data)
-            return obj
+            let obj = try JSONDecoder().decode(CodableBox<T>.self, from: data)
+            return obj.value
         } catch {
             throw FileBasedPersistentPropertyStorageEngineError.decodeFromDiskError(error)
         }
