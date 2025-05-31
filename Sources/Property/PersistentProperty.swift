@@ -292,10 +292,18 @@ public enum FileBasedPersistentPropertyStorageEngineError: Error {
     case decodeFromDiskError(Error)
 }
 
+/// A default storage engine that can be used for simple file-based value storage.
 public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorageEngine {
+    /// The root directory where persistent properties are stored.
     private let rootDirectory: URL?
+
+    /// An error that occurred during the initialization of the storage engine, if any.
     private let initializationError: FileBasedPersistentPropertyStorageEngineError?
 
+    /// Initializes the storage engine with a specified environment ID and cache option.
+    /// - Parameters:
+    ///   - environmentId: A unique identifier for the environment.
+    ///   - cache: A boolean indicating whether to use the caches directory or document directory.
     init(environmentId: String, cache: Bool) {
         guard let directory = FileManager.default.urls(for: cache ? .cachesDirectory : .documentDirectory, in: .userDomainMask).first else {
             self.initializationError = .noRootDirectory
@@ -317,6 +325,13 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
         self.rootDirectory = appended
     }
 
+    /// Stores a value to the file system with the specified environment ID and key.
+    /// - Parameters:
+    ///   - value: The value to store, must conform to `Codable`.
+    ///   - environmentId: A unique identifier for the environment. (ignored)
+    ///   - key: The key under which the value is stored, must conform to `PersistentPropertyKey`.
+    /// - Throws: An error if the storage engine is not properly initialized, a file path error occurs,
+    ///           or an encoding error occurs.
     public func store(value: some Codable, environmentId: String, key: PersistentPropertyKey) throws {
         if let error = initializationError {
             throw error
@@ -334,6 +349,13 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
         }
     }
 
+    /// Retrieves a value from the file system with the specified environment ID and key.
+    /// - Parameters:
+    ///   - environmentId: A unique identifier for the environment. (ignored)
+    ///   - key: The key under which the value is stored, must conform to `PersistentPropertyKey`.
+    /// - Throws: An error if the storage engine is not properly initialized, a file path error occurs,
+    ///           or a decoding error occurs.
+    /// - Returns: The retrieved value, if it exists and can be decoded; otherwise, `nil`.
     public func retrieve<T>(environmentId: String, key: PersistentPropertyKey) throws -> T? where T: Codable {
         if let error = initializationError {
             throw error
@@ -359,7 +381,9 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
     }
 }
 
-public struct FileBasedPersistentPropertyEnvironment: PersistentPropertyEnvironmentProviding {
+/// A default implementation of PersistentPropertyEnvironmentProviding that does basic file system
+/// storage inside the subdirectory named after the environmentId.
+private struct FileBasedPersistentPropertyEnvironment: PersistentPropertyEnvironmentProviding {
     public let persistentPropertyEnvironmentId: String
     public let persistentPropertyStorageEngine: any PersistentPropertyStorageEngine
 
@@ -380,6 +404,6 @@ private let __defaultDocumentStorage = FileBasedPersistentPropertyEnvironment(
 )
 
 public extension PersistentPropertyEnvironmentProviding {
-    var defaultCaches: FileBasedPersistentPropertyEnvironment { __defaultCacheStorage }
-    var defaultDocuments: FileBasedPersistentPropertyEnvironment { __defaultDocumentStorage }
+    var defaultCaches: any PersistentPropertyEnvironmentProviding { __defaultCacheStorage }
+    var defaultDocuments: any PersistentPropertyEnvironmentProviding { __defaultDocumentStorage }
 }
