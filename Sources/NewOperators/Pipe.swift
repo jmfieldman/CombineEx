@@ -24,7 +24,7 @@ public func <~ <Output, E: Error>(lhs: any MutablePropertyProtocol<Output>, rhs:
             receiveValue: { [weak lhs] in lhs?.value = $0 }
         )
 
-    // Bind rhs to lifetime of cancellable
+    // Bind rhs to lifetime of cancellable to preserve it if it is a class
     objc_setAssociatedObject(cancellable, &kBindingAssociationKey, rhs, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 }
 
@@ -40,7 +40,7 @@ public func <~ <Output>(lhs: any MutablePropertyProtocol<Output>, rhs: any Publi
             receiveValue: { [weak lhs] in lhs?.value = $0 }
         )
 
-    // Bind rhs to lifetime of cancellable
+    // Bind rhs to lifetime of cancellable to preserve it if it is a class
     objc_setAssociatedObject(cancellable, &kBindingAssociationKey, rhs, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
 }
 

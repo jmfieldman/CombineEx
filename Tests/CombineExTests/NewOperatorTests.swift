@@ -183,6 +183,32 @@ final class NewOperatorTests: XCTestCase {
         XCTAssertEqual(Array(combined.value), ["a"])
     }
 
+    func testMutablePropertyBindingWithStruct() {
+        let testProp = PassthroughSubject<String, Never>()
+        let mutableProp = MutableProperty<Int>(0)
+
+        mutableProp <~ testProp.map(\.count)
+
+        testProp.send("Hello")
+        XCTAssertEqual(mutableProp.value, 5)
+
+        testProp.send("Hello2")
+        XCTAssertEqual(mutableProp.value, 6)
+    }
+
+    func testMutablePropertyBindingWithClass() {
+        let testProp = MutableProperty<String>("")
+        let mutableProp = MutableProperty<Int>(0)
+
+        mutableProp <~ testProp.map(\.count)
+
+        testProp.value = "Hello"
+        XCTAssertEqual(mutableProp.value, 5)
+
+        testProp.value = "Hello2"
+        XCTAssertEqual(mutableProp.value, 6)
+    }
+
     func testPropertyCombineLatestMutate() {
         let mutator = MutableProperty<Bool>(true)
 
