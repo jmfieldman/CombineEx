@@ -14,28 +14,24 @@ public extension PropertyProtocol {
 }
 
 public extension PropertyProtocol {
-    @_disfavoredOverload
     func map<T>(
         _ transform: @escaping (Output) -> T
     ) -> Property<T> {
         lift { $0.map(transform) }
     }
 
-    @_disfavoredOverload
     func map<T>(
         value: T
     ) -> Property<T> {
         lift { _ in Just(value) }
     }
 
-    @_disfavoredOverload
     func map<T>(
         _ keyPath: KeyPath<Output, T>
     ) -> Property<T> {
         lift { $0.map(keyPath) }
     }
 
-    @_disfavoredOverload
     func filter(
         initial: Output,
         _ predicate: @escaping (Output) -> Bool
@@ -43,14 +39,12 @@ public extension PropertyProtocol {
         Property(initial: initial, then: filter(predicate))
     }
 
-    @_disfavoredOverload
     func combinePrevious(
         _ initial: Output
     ) -> Property<(Output, Output)> {
         lift { $0.combinePrevious(initial) }
     }
 
-    @_disfavoredOverload
     func removeDuplicates(
         by isEqual: @escaping (Output, Output) -> Bool
     ) -> Property<Output> {
@@ -59,21 +53,18 @@ public extension PropertyProtocol {
 }
 
 public extension PropertyProtocol where Output: Equatable {
-    @_disfavoredOverload
     func removeDuplicates() -> Property<Output> {
         lift { $0.removeDuplicates() }
     }
 }
 
 public extension PropertyProtocol {
-    @_disfavoredOverload
     func combineLatest<A>(
         _ pA: some PropertyProtocol<A>
     ) -> Property<(Output, A)> {
         lift { $0.combineLatest(pA) }
     }
 
-    @_disfavoredOverload
     func combineLatest<A, B>(
         _ pA: some PropertyProtocol<A>,
         _ pB: some PropertyProtocol<B>
@@ -81,7 +72,6 @@ public extension PropertyProtocol {
         lift { $0.combineLatest(pA, pB) }
     }
 
-    @_disfavoredOverload
     func combineLatest<A, B, C>(
         _ pA: some PropertyProtocol<A>,
         _ pB: some PropertyProtocol<B>,
@@ -90,7 +80,6 @@ public extension PropertyProtocol {
         lift { $0.combineLatest(pA, pB, pC) }
     }
 
-    @_disfavoredOverload
     func combineLatest<A, B, C, D>(
         _ pA: some PropertyProtocol<A>,
         _ pB: some PropertyProtocol<B>,
@@ -100,7 +89,6 @@ public extension PropertyProtocol {
         lift { $0.combineLatest(pA, pB, pC, pD) }
     }
 
-    @_disfavoredOverload
     func combineLatest<A, B, C, D, E>(
         _ pA: some PropertyProtocol<A>,
         _ pB: some PropertyProtocol<B>,
@@ -111,7 +99,6 @@ public extension PropertyProtocol {
         lift { $0.combineLatest(pA, pB, pC, pD, pE) }
     }
 
-    @_disfavoredOverload
     func combineLatest<A, B, C, D, E, F>(
         _ pA: some PropertyProtocol<A>,
         _ pB: some PropertyProtocol<B>,
@@ -123,7 +110,6 @@ public extension PropertyProtocol {
         lift { $0.combineLatest(pA, pB, pC, pD, pE, pF) }
     }
 
-    @_disfavoredOverload
     func combineLatest<A, B, C, D, E, F, G>(
         _ pA: some PropertyProtocol<A>,
         _ pB: some PropertyProtocol<B>,
@@ -136,7 +122,6 @@ public extension PropertyProtocol {
         lift { $0.combineLatest(pA, pB, pC, pD, pE, pF, pG) }
     }
 
-    @_disfavoredOverload
     func combineLatest<A, B, C, D, E, F, G, H>(
         _ pA: some PropertyProtocol<A>,
         _ pB: some PropertyProtocol<B>,
@@ -150,7 +135,6 @@ public extension PropertyProtocol {
         lift { $0.combineLatest(pA, pB, pC, pD, pE, pF, pG, pH) }
     }
 
-    @_disfavoredOverload
     func combineLatest<A, B, C, D, E, F, G, H, I>(
         _ pA: some PropertyProtocol<A>,
         _ pB: some PropertyProtocol<B>,

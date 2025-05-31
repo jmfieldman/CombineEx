@@ -165,6 +165,24 @@ final class NewOperatorTests: XCTestCase {
         XCTAssertEqual(result, [100, 1])
     }
 
+    func testPropertyCombineLatestSimple() {
+        let p1 = Property<[String]>(value: ["a", "b"])
+        let p2 = Property<Bool>(value: true)
+        let p3 = Property<Set<String>>(value: ["a"])
+
+        let combined = Property<Set<String>>
+            .combineLatest(p1, p2, p3)
+            .map { strings, allowed, match -> Set<String> in
+                if allowed {
+                    return Set(strings).intersection(match)
+                } else {
+                    return Set()
+                }
+            }
+
+        XCTAssertEqual(Array(combined.value), ["a"])
+    }
+
     func testCombineLatestSelfPlus9() {
         let p1 = CurrentValueSubject<Int, TestError>(1)
         let p2 = CurrentValueSubject<Int, TestError>(2)

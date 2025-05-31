@@ -64,7 +64,7 @@ final class SinkTests: XCTestCase {
         subject.send(4)
 
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 1)
-        cancellable?.cancel()
+        cancellable.cancel()
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 0)
 
         subject.send(5)
@@ -100,7 +100,7 @@ final class SinkTests: XCTestCase {
         subject.send(4)
 
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 1)
-        cancellable?.cancel()
+        cancellable.cancel()
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 0)
 
         subject.send(5)

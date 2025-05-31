@@ -182,7 +182,7 @@ final class CustomTests: XCTestCase {
         }
 
         let cancellable = custom.sink(duringLifetimeOf: self)
-        cancellable?.cancel()
+        cancellable.cancel()
 
         wait(for: [expectation], timeout: 3)
     }
