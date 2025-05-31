@@ -22,12 +22,7 @@ private func __AnyObjectCancellableLock(_ object: AnyObject) -> NSLock {
     }
 
     let lock = NSLock()
-    objc_setAssociatedObject(
-        object,
-        &kLockAssociationKey,
-        lock,
-        objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC
-    )
+    objc_setAssociatedObject(object, &kLockAssociationKey, lock, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     return lock
 }
 
@@ -44,12 +39,7 @@ func __AnyObjectCancellableStorage(_ object: AnyObject) -> NSMutableSet {
     }
 
     let cancellables = NSMutableSet()
-    objc_setAssociatedObject(
-        object,
-        &kSetAssociationKey,
-        cancellables,
-        objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC
-    )
+    objc_setAssociatedObject(object, &kSetAssociationKey, cancellables, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     return cancellables
 }
 
