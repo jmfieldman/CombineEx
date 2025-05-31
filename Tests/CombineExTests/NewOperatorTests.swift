@@ -184,29 +184,51 @@ final class NewOperatorTests: XCTestCase {
     }
 
     func testMutablePropertyBindingWithStruct() {
-        let testProp = PassthroughSubject<String, Never>()
-        let mutableProp = MutableProperty<Int>(0)
+        weak var prop1: MutableProperty<Int>?
+        weak var prop2: PassthroughSubject<String, Never>?
 
-        mutableProp <~ testProp.map(\.count)
+        autoreleasepool {
+            let mutableProp = MutableProperty<Int>(0)
+            let testProp = PassthroughSubject<String, Never>()
 
-        testProp.send("Hello")
-        XCTAssertEqual(mutableProp.value, 5)
+            prop1 = mutableProp
+            prop2 = testProp
 
-        testProp.send("Hello2")
-        XCTAssertEqual(mutableProp.value, 6)
+            mutableProp <~ testProp.map(\.count)
+
+            testProp.send("Hello")
+            XCTAssertEqual(mutableProp.value, 5)
+
+            testProp.send("Hello2")
+            XCTAssertEqual(mutableProp.value, 6)
+        }
+
+        XCTAssertNil(prop1)
+        XCTAssertNil(prop2)
     }
 
     func testMutablePropertyBindingWithClass() {
-        let testProp = MutableProperty<String>("")
-        let mutableProp = MutableProperty<Int>(0)
+        weak var prop1: MutableProperty<Int>?
+        weak var prop2: MutableProperty<String>?
 
-        mutableProp <~ testProp.map(\.count)
+        autoreleasepool {
+            let mutableProp = MutableProperty<Int>(0)
+            let testProp = MutableProperty<String>("")
 
-        testProp.value = "Hello"
-        XCTAssertEqual(mutableProp.value, 5)
+            prop1 = mutableProp
+            prop2 = testProp
 
-        testProp.value = "Hello2"
-        XCTAssertEqual(mutableProp.value, 6)
+            mutableProp <~ testProp.map(\.count)
+
+            testProp.value = "Hello"
+            XCTAssertEqual(mutableProp.value, 5)
+
+            testProp.value = "Hello2"
+            XCTAssertEqual(mutableProp.value, 6)
+        }
+
+        XCTAssertNil(prop1)
+        XCTAssertNil(prop2)
     }
 
     func testPropertyCombineLatestMutate() {
