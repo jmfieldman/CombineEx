@@ -9,7 +9,7 @@ public extension PropertyProtocol {
     func lift<U>(
         _ transform: @escaping (AnyPublisher<Output, Never>) -> some Publisher<U, Never>
     ) -> Property<U> {
-        Property(unsafe: transform(eraseToAnyPublisher()))
+        Property(unsafe: transform(eraseToAnyPublisher()), capturing: self)
     }
 }
 

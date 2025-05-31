@@ -183,6 +183,29 @@ final class NewOperatorTests: XCTestCase {
         XCTAssertEqual(Array(combined.value), ["a"])
     }
 
+    func testPropertyCombineLatestMutate() {
+        let mutator = MutableProperty<Bool>(true)
+
+        let p1 = Property<[String]>(value: ["a", "b"])
+        let p2 = Property<Bool>(mutator)
+        let p3 = Property<Set<String>>(value: ["a"])
+
+        let mapped = Property<Set<String>>
+            .combineLatest(p1, p2, p3)
+            .map { strings, allowed, match -> Set<String> in
+                if allowed {
+                    return Set(strings).intersection(match)
+                } else {
+                    return Set()
+                }
+            }
+
+        XCTAssertEqual(Array(mapped.value), ["a"])
+
+        mutator.value = false
+        XCTAssertEqual(Array(mapped.value), [])
+    }
+
     func testCombineLatestSelfPlus9() {
         let p1 = CurrentValueSubject<Int, TestError>(1)
         let p2 = CurrentValueSubject<Int, TestError>(2)

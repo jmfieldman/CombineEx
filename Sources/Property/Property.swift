@@ -50,9 +50,11 @@ public final class Property<Output>: PropertyProtocol {
 
     /// Initializes a property from an unsafe Publisher. The publisher *must*
     /// emit an initial value *immediately* when it is initially subscribed to.
-    /// This is primarily used to lift Property operators.
-    public init(unsafe: some Publisher<Output, Never>) {
-        self.captured = nil
+    /// This is primarily used to lift Property operators. The extra capturing
+    /// argument is to ensure that the lifted Property is not deallocated out
+    /// from underneath the new Property.
+    init(unsafe: some Publisher<Output, Never>, capturing: (any PropertyProtocol)?) {
+        self.captured = capturing
         self.cancellable = unsafe.sink(receiveValue: { [weak self] value in
             self?.update(value)
         })
