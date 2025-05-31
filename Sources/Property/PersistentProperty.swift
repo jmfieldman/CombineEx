@@ -303,9 +303,10 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
     /// Initializes the storage engine with a specified environment ID and cache option.
     /// - Parameters:
     ///   - environmentId: A unique identifier for the environment.
-    ///   - cache: A boolean indicating whether to use the caches directory or document directory.
-    init(environmentId: String, cache: Bool) {
-        guard let directory = FileManager.default.urls(for: cache ? .cachesDirectory : .documentDirectory, in: .userDomainMask).first else {
+    ///   - useCacheDirectory: A boolean indicating whether to use the caches directory
+    ///                        or document directory.
+    init(environmentId: String, useCacheDirectory: Bool) {
+        guard let directory = FileManager.default.urls(for: useCacheDirectory ? .cachesDirectory : .documentDirectory, in: .userDomainMask).first else {
             self.initializationError = .noRootDirectory
             self.rootDirectory = nil
             return
@@ -383,27 +384,15 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
 
 /// A default implementation of PersistentPropertyEnvironmentProviding that does basic file system
 /// storage inside the subdirectory named after the environmentId.
-private struct FileBasedPersistentPropertyEnvironment: PersistentPropertyEnvironmentProviding {
+public struct FileBasedPersistentPropertyEnvironment: PersistentPropertyEnvironmentProviding {
     public let persistentPropertyEnvironmentId: String
     public let persistentPropertyStorageEngine: any PersistentPropertyStorageEngine
 
-    init(environmentId: String, storageEngine: any PersistentPropertyStorageEngine) {
+    public init(environmentId: String, useCacheDirectory: Bool = false) {
         self.persistentPropertyEnvironmentId = environmentId
-        self.persistentPropertyStorageEngine = storageEngine
+        self.persistentPropertyStorageEngine = FileBasedPersistentPropertyStorageEngine(
+            environmentId: environmentId,
+            useCacheDirectory: useCacheDirectory
+        )
     }
-}
-
-private let __defaultCacheStorage = FileBasedPersistentPropertyEnvironment(
-    environmentId: "default_environment",
-    storageEngine: FileBasedPersistentPropertyStorageEngine(environmentId: "default_environment", cache: true)
-)
-
-private let __defaultDocumentStorage = FileBasedPersistentPropertyEnvironment(
-    environmentId: "default_environment",
-    storageEngine: FileBasedPersistentPropertyStorageEngine(environmentId: "default_environment", cache: false)
-)
-
-public extension PersistentPropertyEnvironmentProviding {
-    var defaultCaches: any PersistentPropertyEnvironmentProviding { __defaultCacheStorage }
-    var defaultDocuments: any PersistentPropertyEnvironmentProviding { __defaultDocumentStorage }
 }
