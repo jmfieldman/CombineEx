@@ -35,7 +35,7 @@ public protocol PersistentPropertyStorageEngine: Sendable {
     ) throws -> T?
 }
 
-public protocol PersistentPropertyEnvironmentProviding {
+public protocol PersistentPropertyEnvironmentProviding: Sendable {
     /// The environment identifier for persistent properties.
     var persistentPropertyEnvironmentId: String { get }
 
@@ -43,12 +43,12 @@ public protocol PersistentPropertyEnvironmentProviding {
     var persistentPropertyStorageEngine: any PersistentPropertyStorageEngine { get }
 }
 
-public struct PersistentPropertyKey {
+public struct PersistentPropertyKey: Sendable {
     /// The main key for the property.
-    public let key: CustomStringConvertible
+    public let key: String
 
     /// An optional subkey for more specific storage needs.
-    public let subKey: CustomStringConvertible?
+    public let subKey: String?
 
     /// A string suitable as a key for storage systems that require a sanitized string.
     public let sanitizedIndex: String
@@ -62,25 +62,25 @@ public struct PersistentPropertyKey {
         key: CustomStringConvertible,
         subKey: CustomStringConvertible? = nil
     ) {
-        self.key = key
-        self.subKey = subKey
+        self.key = key.description
+        self.subKey = subKey?.description
 
         let illegalCharacters = CharacterSet(charactersIn: "/\\?%*:|\"<>")
             .union(.whitespacesAndNewlines)
             .union(.illegalCharacters)
             .union(.controlCharacters)
 
-        self.sanitizedIndex = key.description.unicodeScalars.map { illegalCharacters.contains($0) ? "_" : String($0) }.joined() +
-            (subKey.flatMap { ".\($0.description)" } ?? "").unicodeScalars.map { illegalCharacters.contains($0) ? "_" : String($0) }.joined()
+        self.sanitizedIndex = self.key.unicodeScalars.map { illegalCharacters.contains($0) ? "_" : String($0) }.joined() +
+            (self.subKey ?? "").unicodeScalars.map { illegalCharacters.contains($0) ? "_" : String($0) }.joined()
     }
 }
 
-public final class PersistentProperty<Output: Codable>: ComposableMutablePropertyProtocol, Sendable {
+public final class PersistentProperty<Output: Codable>: ComposableMutablePropertyProtocol, @unchecked Sendable {
     /// The type of error that can be produced by this property, which is never.
     public typealias Failure = Never
 
     /// A property that holds the current error state of this persistent property.
-    public private(set) lazy var error = Property(mutableError)
+    public let error: Property<Error?>
 
     /// The environment provider that provides the storage engine and environment ID.
     private let environment: PersistentPropertyEnvironmentProviding
@@ -101,7 +101,7 @@ public final class PersistentProperty<Output: Codable>: ComposableMutablePropert
     private let subject: CurrentValueSubject<Output, Failure>
 
     /// A queue for handling write operations.
-    private lazy var writeQueue = DispatchQueue(label: "PersistentProperty.writeQueue.\(key)")
+    private let writeQueue: DispatchQueue
 
     /// A cancellable for the write operation.
     private var writeCancellable: AnyCancellable?
@@ -133,6 +133,8 @@ public final class PersistentProperty<Output: Codable>: ComposableMutablePropert
 
         self.environment = environment
         self.key = key
+        self.error = Property(mutableError)
+        self.writeQueue = DispatchQueue(label: "PersistentProperty.writeQueue.\(key)")
         self._value = initialValue ?? defaultValue
         self.subject = .init(_value)
         self.writeCancellable = subject.sink(receiveValue: { [weak self] value in
