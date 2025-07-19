@@ -6,7 +6,7 @@
 import Combine
 import Foundation
 
-public protocol PersistentPropertyStorageEngine {
+public protocol PersistentPropertyStorageEngine: Sendable {
     /// Stores a value in the persistent storage.
     ///
     /// - Parameters:
@@ -75,7 +75,7 @@ public struct PersistentPropertyKey {
     }
 }
 
-public final class PersistentProperty<Output: Codable>: ComposableMutablePropertyProtocol {
+public final class PersistentProperty<Output: Codable>: ComposableMutablePropertyProtocol, Sendable {
     /// The type of error that can be produced by this property, which is never.
     public typealias Failure = Never
 
@@ -293,7 +293,7 @@ public enum FileBasedPersistentPropertyStorageEngineError: Error {
 }
 
 /// A default storage engine that can be used for simple file-based value storage.
-public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorageEngine {
+public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorageEngine, Sendable {
     /// Specifies the root directory used for this File-based engine
     public enum RootDirectory {
         case documents
@@ -405,7 +405,7 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
 
 /// A default implementation of PersistentPropertyEnvironmentProviding that does basic file system
 /// storage inside the subdirectory named after the environmentId.
-public struct FileBasedPersistentPropertyEnvironment: PersistentPropertyEnvironmentProviding {
+public struct FileBasedPersistentPropertyEnvironment: PersistentPropertyEnvironmentProviding, Sendable {
     public let persistentPropertyEnvironmentId: String
     public let persistentPropertyStorageEngine: any PersistentPropertyStorageEngine
 

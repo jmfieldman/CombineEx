@@ -10,7 +10,7 @@ public protocol PropertyProtocol<Output>: AnyObject, Publisher where Failure == 
     var value: Output { get }
 }
 
-public final class Property<Output>: PropertyProtocol {
+public final class Property<Output>: PropertyProtocol, @unchecked Sendable {
     public typealias Failure = Never
 
     private let lock = NSRecursiveLock()
@@ -18,7 +18,7 @@ public final class Property<Output>: PropertyProtocol {
     private var isModifying = false
     private let subject = PassthroughSubject<Output, Failure>()
     private let captured: (any PropertyProtocol)?
-    private var cancellable: AnyCancellable? = nil
+    private var cancellable: AnyCancellable?
 
     /// Initializes a Property with a constant value.
     public init(value: Output) {

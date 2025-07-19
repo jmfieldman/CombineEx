@@ -14,13 +14,16 @@ public final class Action<Input, Output, Failure: Error> {
     private let errorsSubject = PassthroughSubject<Failure, Never>()
 
     // Public state
-    public private(set) lazy var isExecuting: Property<Bool> = .init(mutableIsExecuting.removeDuplicates())
-    public private(set) lazy var values: AnyPublisher<Output, Never> = valuesSubject.eraseToAnyPublisher()
-    public private(set) lazy var errors: AnyPublisher<Failure, Never> = errorsSubject.eraseToAnyPublisher()
+    public let isExecuting: Property<Bool>
+    public let values: AnyPublisher<Output, Never>
+    public let errors: AnyPublisher<Failure, Never>
 
     /// Create a new Action that executes the given builder's Publisher on `apply`.
     public init(builder: @escaping (Input) -> AnyDeferredPublisher<Output, Failure>) {
         self.publisherBuilder = builder
+        self.isExecuting = .init(mutableIsExecuting.removeDuplicates())
+        self.values = valuesSubject.eraseToAnyPublisher()
+        self.errors = errorsSubject.eraseToAnyPublisher()
     }
 
     /// Applies the action with the given input and returns a deferred publisher.

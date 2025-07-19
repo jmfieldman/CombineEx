@@ -31,7 +31,7 @@ public protocol ComposableMutablePropertyProtocol<Output>: MutablePropertyProtoc
     func tryWithValue<Result>(_ action: (Output) throws -> Result) rethrows -> Result
 }
 
-public final class MutableProperty<Output>: ComposableMutablePropertyProtocol {
+public final class MutableProperty<Output>: ComposableMutablePropertyProtocol, @unchecked Sendable {
     public typealias Failure = Never
 
     private let lock = NSRecursiveLock()
