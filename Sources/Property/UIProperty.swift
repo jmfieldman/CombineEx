@@ -9,7 +9,7 @@ import SwiftUI
 
 @available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 @Observable
-public final class UIProperty<Output>: PropertyProtocol, Sendable {
+public final class UIProperty<Output>: PropertyProtocol, @unchecked Sendable {
     public typealias Failure = Never
 
     public private(set) var value: Output
