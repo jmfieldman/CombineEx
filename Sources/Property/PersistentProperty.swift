@@ -294,8 +294,15 @@ public enum FileBasedPersistentPropertyStorageEngineError: Error {
 
 /// A default storage engine that can be used for simple file-based value storage.
 public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorageEngine {
+    /// Specifies the root directory used for this File-based engine
+    public enum RootDirectory {
+        case documents
+        case caches
+        case appGroup(String)
+    }
+
     /// The root directory where persistent properties are stored.
-    private let rootDirectory: URL?
+    private let rootDirectoryUrl: URL?
 
     /// An error that occurred during the initialization of the storage engine, if any.
     private let initializationError: FileBasedPersistentPropertyStorageEngineError?
@@ -305,25 +312,34 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
     ///   - environmentId: A unique identifier for the environment.
     ///   - useCacheDirectory: A boolean indicating whether to use the caches directory
     ///                        or document directory.
-    init(environmentId: String, useCacheDirectory: Bool) {
-        guard let directory = FileManager.default.urls(for: useCacheDirectory ? .cachesDirectory : .documentDirectory, in: .userDomainMask).first else {
+    init(environmentId: String, rootDirectory: RootDirectory) {
+        let directoryUrl: URL? = switch rootDirectory {
+        case .documents:
+            FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        case .caches:
+            FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        case let .appGroup(identifier):
+            FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier)
+        }
+
+        guard let directoryUrl else {
             self.initializationError = .noRootDirectory
-            self.rootDirectory = nil
+            self.rootDirectoryUrl = nil
             return
         }
 
-        let appended = directory.appendingPathExtension(environmentId).appendingPathComponent("_PersistentProperties_")
+        let appended = directoryUrl.appendingPathExtension(environmentId).appendingPathComponent("_PersistentProperties_")
 
         do {
             try FileManager.default.createDirectory(at: appended, withIntermediateDirectories: true, attributes: nil)
         } catch {
             self.initializationError = .unableToCreateDirectory(error)
-            self.rootDirectory = nil
+            self.rootDirectoryUrl = nil
             return
         }
 
         self.initializationError = nil
-        self.rootDirectory = appended
+        self.rootDirectoryUrl = appended
     }
 
     /// Ensures that codable primitives are wrapped in a dictionary
@@ -343,7 +359,7 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
             throw error
         }
 
-        guard let fileURL = rootDirectory?.appendingPathComponent(key.sanitizedIndex) else {
+        guard let fileURL = rootDirectoryUrl?.appendingPathComponent(key.sanitizedIndex) else {
             throw FileBasedPersistentPropertyStorageEngineError.filePathError
         }
 
@@ -367,7 +383,7 @@ public class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorage
             throw error
         }
 
-        guard let fileURL = rootDirectory?.appendingPathComponent(key.sanitizedIndex) else {
+        guard let fileURL = rootDirectoryUrl?.appendingPathComponent(key.sanitizedIndex) else {
             throw FileBasedPersistentPropertyStorageEngineError.filePathError
         }
 
@@ -393,11 +409,11 @@ public struct FileBasedPersistentPropertyEnvironment: PersistentPropertyEnvironm
     public let persistentPropertyEnvironmentId: String
     public let persistentPropertyStorageEngine: any PersistentPropertyStorageEngine
 
-    public init(environmentId: String, useCacheDirectory: Bool = false) {
+    public init(environmentId: String, rootDirectory: FileBasedPersistentPropertyStorageEngine.RootDirectory = .documents) {
         self.persistentPropertyEnvironmentId = environmentId
         self.persistentPropertyStorageEngine = FileBasedPersistentPropertyStorageEngine(
             environmentId: environmentId,
-            useCacheDirectory: useCacheDirectory
+            rootDirectory: rootDirectory
         )
     }
 }
