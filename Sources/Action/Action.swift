@@ -115,6 +115,22 @@ public extension Action {
             }
         }
     }
+
+    static func withTask<I, O>(_ task: @escaping (I) async -> O) -> Action<I, O, Never> {
+        Action<I, O, Never> { input in
+            DeferredFuture.withTask {
+                await task(input)
+            }.eraseToAnyDeferredPublisher()
+        }
+    }
+
+    static func withThrowingTask<I, O, F>(_ task: @escaping (I) async throws(F) -> O) -> Action<I, O, F> {
+        Action<I, O, F> { input in
+            DeferredFuture<O, F>.withTask { () throws(F) in
+                try await task(input)
+            }.eraseToAnyDeferredPublisher()
+        }
+    }
 }
 
 public enum ActionError<Failure: Error>: Error {

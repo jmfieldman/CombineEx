@@ -26,6 +26,20 @@ final class ActionTests: XCTestCase {
         wait(for: [expectation], timeout: 1)
     }
 
+    func testBasicActionTask() {
+        let (action, countable) = ActionTests.createDoubleActionTask()
+        XCTAssertEqual(countable.count, 0)
+        let apply = action.apply(1)
+        XCTAssertEqual(countable.count, 0)
+        let expectation = XCTestExpectation(description: "value expectation")
+        apply.handleValue {
+            XCTAssertEqual($0, 2)
+            XCTAssertEqual(countable.count, 1)
+            expectation.fulfill()
+        }.sink(duringLifetimeOf: self)
+        wait(for: [expectation], timeout: 1)
+    }
+
     // Actions and Publishers should not retain themselves
     func testBasicActionMemoryRetention() {
         weak var action: Action<Int, Int, TestError>?
@@ -200,6 +214,20 @@ private extension ActionTests {
                 }
             }
             .eraseToAnyDeferredPublisher()
+        }
+        return (action, countable)
+    }
+
+    static func createDoubleActionTask(internalDelay: TimeInterval? = nil) -> (Action<Int, Int, TestError>, Countable) {
+        let countable = Countable()
+        let action = Action<Int, Int, TestError>.withThrowingTask { input throws(TestError) in
+            countable.count += 1
+            try? await Task.sleep(for: .milliseconds((internalDelay ?? 0) * 1000))
+            if input < 0 {
+                throw TestError.error1
+            } else {
+                return input * 2
+            }
         }
         return (action, countable)
     }
