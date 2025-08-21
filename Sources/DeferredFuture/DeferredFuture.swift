@@ -324,4 +324,27 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
             wrapped.createPublisher().eraseToAnyPublisher()
         })
     }
+
+    /// Returns an `AnyDeferredFuture` that immediately publishes a single value
+    /// and then completes.
+    ///
+    /// - Parameter value: The single value that will be published.
+    /// - Returns: An `AnyDeferredFuture` that publishes `value` exactly once and then completes.
+    @_disfavoredOverload
+    public static func just(_ value: Output) -> AnyDeferredFuture<Output, Failure> {
+        DeferredFuture { promise in
+            promise(.success(value))
+        }.eraseToAnyDeferredFuture()
+    }
+
+    /// Returns an `AnyDeferredFuture` that immediately fails with the specified error.
+    ///
+    /// - Parameter failure: The error that this publisher will immediately emit.
+    /// - Returns: An `AnyDeferredFuture` that fails with `failure` and never publishes any value.
+    @_disfavoredOverload
+    public static func fail(_ failure: Failure) -> AnyDeferredFuture<Output, Failure> {
+        DeferredFuture<Output, Failure> { promise in
+            promise(.failure(failure))
+        }.eraseToAnyDeferredFuture()
+    }
 }
