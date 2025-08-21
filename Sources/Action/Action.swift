@@ -131,6 +131,19 @@ public extension Action {
             }.eraseToAnyDeferredPublisher()
         }
     }
+
+    static func withThrowingTask<I, O, F>(
+        nonconformingErrorHandler: @escaping (Error) -> F,
+        task: @escaping (I) async throws -> O
+    ) -> Action<I, O, F> {
+        Action<I, O, F> { input in
+            DeferredFuture<O, F>.withTask(
+                nonconformingErrorHandler: nonconformingErrorHandler
+            ) { () throws in
+                try await task(input)
+            }.eraseToAnyDeferredPublisher()
+        }
+    }
 }
 
 public enum ActionError<Failure: Error>: Error {
