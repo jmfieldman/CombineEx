@@ -43,7 +43,7 @@ public protocol PersistentPropertyEnvironmentProviding: Sendable {
     var persistentPropertyStorageEngine: any PersistentPropertyStorageEngine { get }
 }
 
-public struct PersistentPropertyKey: Sendable {
+public struct PersistentPropertyKey: Hashable, Sendable {
     /// The main key for the property.
     public let key: String
 
