@@ -330,7 +330,7 @@ public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyS
             return
         }
 
-        let appended = directoryUrl.appendingPathExtension(environmentId).appendingPathComponent("_PersistentProperties_")
+        let appended = directoryUrl.appendingPathComponent(environmentId).appendingPathComponent("_PersistentProperties_")
 
         do {
             try FileManager.default.createDirectory(at: appended, withIntermediateDirectories: true, attributes: nil)
