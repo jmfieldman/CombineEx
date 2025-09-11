@@ -5,42 +5,31 @@
 
 import Combine
 import Foundation
+import Security
 
 public protocol PersistentPropertyStorageEngine: Sendable {
     /// Stores a value in the persistent storage.
     ///
     /// - Parameters:
     ///   - value: The value to be stored, conforming to Codable.
-    ///   - environmentId: The identifier for the environment.
     ///   - key: The key under which the value should be stored.
     ///
     /// - Throws: PersistentPropertyError if storing fails.
     func store(
         value: some Codable,
-        environmentId: String,
         key: PersistentPropertyKey
     ) throws
 
     /// Retrieves a value from the persistent storage.
     ///
     /// - Parameters:
-    ///   - environmentId: The identifier for the environment.
     ///   - key: The key under which the value is stored.
     ///
     /// - Returns: The retrieved value, if available, conforming to Codable.
     /// - Throws: PersistentPropertyError if retrieval fails.
     func retrieve<T: Codable>(
-        environmentId: String,
         key: PersistentPropertyKey
     ) throws -> T?
-}
-
-public protocol PersistentPropertyEnvironmentProviding: Sendable {
-    /// The environment identifier for persistent properties.
-    var persistentPropertyEnvironmentId: String { get }
-
-    /// The storage engine used for persistent properties.
-    var persistentPropertyStorageEngine: any PersistentPropertyStorageEngine { get }
 }
 
 public struct PersistentPropertyKey: Hashable, Sendable {
@@ -82,8 +71,8 @@ public final class PersistentProperty<Output: Codable>: ComposableMutablePropert
     /// A property that holds the current error state of this persistent property.
     public let error: Property<Error?>
 
-    /// The environment provider that provides the storage engine and environment ID.
-    private let environment: PersistentPropertyEnvironmentProviding
+    /// The storage engine for this property.
+    private let storageEngine: any PersistentPropertyStorageEngine
 
     /// The key that identifies this property in the storage.
     private let key: PersistentPropertyKey
@@ -116,22 +105,19 @@ public final class PersistentProperty<Output: Codable>: ComposableMutablePropert
     ///   - key: The key that identifies this property in the persistent storage.
     ///   - defaultValue: The default value to use if no value is found in the persistent storage.
     public init(
-        environment: PersistentPropertyEnvironmentProviding,
+        storageEngine: any PersistentPropertyStorageEngine,
         key: PersistentPropertyKey,
         defaultValue: Output
     ) {
         var initialValue: Output?
 
         do {
-            initialValue = try environment.persistentPropertyStorageEngine.retrieve(
-                environmentId: environment.persistentPropertyEnvironmentId,
-                key: key
-            )
+            initialValue = try storageEngine.retrieve(key: key)
         } catch {
             mutableError.value = error
         }
 
-        self.environment = environment
+        self.storageEngine = storageEngine
         self.key = key
         self.error = Property(mutableError)
         self.writeQueue = DispatchQueue(label: "PersistentProperty.writeQueue.\(key)")
@@ -140,9 +126,8 @@ public final class PersistentProperty<Output: Codable>: ComposableMutablePropert
         self.writeCancellable = subject.sink(receiveValue: { [weak self] value in
             guard let self else { return }
             do {
-                try self.environment.persistentPropertyStorageEngine.store(
+                try self.storageEngine.store(
                     value: value,
-                    environmentId: self.environment.persistentPropertyEnvironmentId,
                     key: key
                 )
             } catch {
@@ -152,12 +137,12 @@ public final class PersistentProperty<Output: Codable>: ComposableMutablePropert
     }
 
     public convenience init(
-        environment: PersistentPropertyEnvironmentProviding,
+        storageEngine: any PersistentPropertyStorageEngine,
         key: CustomStringConvertible,
         defaultValue: Output
     ) {
         self.init(
-            environment: environment,
+            storageEngine: storageEngine,
             key: PersistentPropertyKey(key: key),
             defaultValue: defaultValue
         )
@@ -271,7 +256,7 @@ public extension PersistentProperty {
     }
 }
 
-// MARK: - Concrete Default Environments
+// MARK: - Concrete File-Based Persistence Engine
 
 /// An enumeration representing possible errors that can occur in the `FileBasedPersistentPropertyStorageEngine`.
 public enum FileBasedPersistentPropertyStorageEngineError: Error {
@@ -298,8 +283,17 @@ public enum FileBasedPersistentPropertyStorageEngineError: Error {
 public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyStorageEngine, Sendable {
     /// Specifies the root directory used for this File-based engine
     public enum RootDirectory {
+        /// Standard Documents directory
         case documents
+
+        /// Standard Caches directory
         case caches
+
+        /// Temporary directory
+        case temporary
+
+        /// Use the App Group document container. Useful for sharing storage with
+        /// your app extensions.
         case appGroup(String)
     }
 
@@ -320,6 +314,8 @@ public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyS
             FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
         case .caches:
             FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+        case .temporary:
+            URL(fileURLWithPath: NSTemporaryDirectory())
         case let .appGroup(identifier):
             FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier)
         }
@@ -344,6 +340,16 @@ public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyS
         self.rootDirectoryUrl = appended
     }
 
+    /// Attempt to wipe and restore the directory holding the persistent property values
+    public func wipeDirectory() {
+        guard let rootDirectoryUrl else {
+            return
+        }
+
+        try? FileManager.default.removeItem(at: rootDirectoryUrl)
+        try? FileManager.default.createDirectory(at: rootDirectoryUrl, withIntermediateDirectories: true, attributes: nil)
+    }
+
     /// Ensures that codable primitives are wrapped in a dictionary
     private struct CodableBox<T: Codable>: Codable {
         let value: T
@@ -352,11 +358,10 @@ public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyS
     /// Stores a value to the file system with the specified environment ID and key.
     /// - Parameters:
     ///   - value: The value to store, must conform to `Codable`.
-    ///   - environmentId: A unique identifier for the environment. (ignored)
     ///   - key: The key under which the value is stored, must conform to `PersistentPropertyKey`.
     /// - Throws: An error if the storage engine is not properly initialized, a file path error occurs,
     ///           or an encoding error occurs.
-    public func store(value: some Codable, environmentId: String, key: PersistentPropertyKey) throws {
+    public func store(value: some Codable, key: PersistentPropertyKey) throws {
         if let error = initializationError {
             throw error
         }
@@ -375,12 +380,11 @@ public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyS
 
     /// Retrieves a value from the file system with the specified environment ID and key.
     /// - Parameters:
-    ///   - environmentId: A unique identifier for the environment. (ignored)
     ///   - key: The key under which the value is stored, must conform to `PersistentPropertyKey`.
     /// - Throws: An error if the storage engine is not properly initialized, a file path error occurs,
     ///           or a decoding error occurs.
     /// - Returns: The retrieved value, if it exists and can be decoded; otherwise, `nil`.
-    public func retrieve<T>(environmentId: String, key: PersistentPropertyKey) throws -> T? where T: Codable {
+    public func retrieve<T>(key: PersistentPropertyKey) throws -> T? where T: Codable {
         if let error = initializationError {
             throw error
         }
@@ -405,17 +409,115 @@ public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyS
     }
 }
 
-/// A default implementation of PersistentPropertyEnvironmentProviding that does basic file system
-/// storage inside the subdirectory named after the environmentId.
-public struct FileBasedPersistentPropertyEnvironment: PersistentPropertyEnvironmentProviding, Sendable {
-    public let persistentPropertyEnvironmentId: String
-    public let persistentPropertyStorageEngine: any PersistentPropertyStorageEngine
+// MARK: - Concrete Keychain-Based Persistence Engine
 
-    public init(environmentId: String, rootDirectory: FileBasedPersistentPropertyStorageEngine.RootDirectory = .documents) {
-        self.persistentPropertyEnvironmentId = environmentId
-        self.persistentPropertyStorageEngine = FileBasedPersistentPropertyStorageEngine(
-            environmentId: environmentId,
-            rootDirectory: rootDirectory
-        )
+/// An enumeration representing possible errors that can occur in the `FileBasedPersistentPropertyStorageEngine`.
+public enum KeychainPersistentPropertyStorageEngineError: Error {
+    /// A security error occurred accessing the data from the keychain.
+    case securityError(OSStatus)
+
+    /// Indicates an error occurred during encoding.
+    /// - Parameter underlyingError: The original error that caused the failure to encode.
+    case encodeError(Error)
+
+    /// Indicates an error occurred during decoding.
+    /// - Parameter underlyingError: The original error that caused the failure to decode.
+    case decodeError(Error)
+}
+
+public final class KeychainPersistentPropertyStorageEngine: PersistentPropertyStorageEngine, Sendable {
+    private let accessGroup: String
+    private let service: String
+    private let synchronized: Bool
+
+    /// Use the device keychain
+    ///  - accessGroup: The keychain access group. Make sure you have Keychain Sharing
+    ///    entitlements with at least one access group enabled. The string you pass to
+    ///    `accessGroup` should be prefixes with your 10-digit `AppIdentifierPrefix`
+    ///    bundle value, e.g. "XXXXXXXXXX.com.yourdomain.yourgroup"
+    ///  - service: represents the keychain service string, but should be some value
+    ///    representing the access scope of your key/value pairs. For example, you
+    ///    can construct it like, "\(app_name)_\(userId)_\(prod|dev|local)"
+    ///  - synchronized: whether or not to synchronize this in the iCloud keychain
+    public init(accessGroup: String, service: String, synchronized: Bool) {
+        self.accessGroup = accessGroup
+        self.service = service
+        self.synchronized = synchronized
+    }
+
+    /// Ensures that codable primitives are wrapped in a dictionary
+    private struct CodableBox<T: Codable>: Codable {
+        let value: T
+    }
+
+    /// Stores a value to the keychain key.
+    /// - Parameters:
+    ///   - value: The value to store, must conform to `Codable`.
+    ///   - key: The key under which the value is stored, must conform to `PersistentPropertyKey`.
+    /// - Throws: An error if the storage engine is not properly initialized, a file path error occurs,
+    ///           or an encoding error occurs.
+    public func store(value: some Codable, key: PersistentPropertyKey) throws {
+        let data: Data
+        do {
+            data = try JSONEncoder().encode(CodableBox(value: value))
+        } catch {
+            throw KeychainPersistentPropertyStorageEngineError.encodeError(error)
+        }
+
+        let keychainItem = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrAccount: key.sanitizedIndex,
+            kSecAttrService: service,
+            kSecAttrAccessGroup: accessGroup,
+            kSecAttrSynchronizable: synchronized,
+            kSecValueData: data,
+        ] as [String: Any]
+
+        let status = SecItemAdd(keychainItem as CFDictionary, nil)
+        if status != errSecSuccess {
+            // Attempt to update instead
+            let query = [
+                kSecClass: kSecClassGenericPassword,
+                kSecAttrSynchronizable: synchronized,
+                kSecAttrAccount: key.sanitizedIndex,
+                kSecAttrService: service,
+                kSecAttrAccessGroup: accessGroup,
+            ] as [String: Any]
+
+            let updateStatus = SecItemUpdate(query as CFDictionary, [kSecValueData: data] as CFDictionary)
+            if updateStatus != errSecSuccess {
+                throw KeychainPersistentPropertyStorageEngineError.securityError(updateStatus)
+            }
+        }
+    }
+
+    /// Retrieves a value from the keychain with the specified environment ID and key.
+    /// - Parameters:
+    ///   - key: The key under which the value is stored, must conform to `PersistentPropertyKey`.
+    /// - Throws: An error if the storage engine is not properly initialized, a file path error occurs,
+    ///           or a decoding error occurs.
+    /// - Returns: The retrieved value, if it exists and can be decoded; otherwise, `nil`.
+    public func retrieve<T>(key: PersistentPropertyKey) throws -> T? where T: Decodable, T: Encodable {
+        let query = [
+            kSecMatchLimit: kSecMatchLimitOne,
+            kSecReturnData: true,
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrAccount: key.sanitizedIndex,
+            kSecAttrService: service,
+            kSecAttrAccessGroup: accessGroup,
+        ] as [String: Any]
+
+        var readData: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &readData)
+        guard status == errSecSuccess, let data = readData as? Data else {
+            throw KeychainPersistentPropertyStorageEngineError.securityError(status)
+        }
+
+        do {
+            let obj = try JSONDecoder().decode(CodableBox<T>.self, from: data)
+            return obj.value
+        } catch {
+            throw FileBasedPersistentPropertyStorageEngineError.decodeFromDiskError(error)
+        }
     }
 }
