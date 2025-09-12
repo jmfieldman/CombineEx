@@ -306,7 +306,7 @@ public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyS
     /// Initializes the storage engine with a specified root directory
     /// - Parameters:
     ///   - rootDirectoryUrl: The directory to store all persistent value files
-    init(rootDirectoryUrl: URL) {
+    public init(rootDirectoryUrl: URL) {
         do {
             try FileManager.default.createDirectory(at: rootDirectoryUrl, withIntermediateDirectories: true, attributes: nil)
         } catch {
@@ -323,7 +323,7 @@ public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyS
     /// - Parameters:
     ///   - environmentId: A unique identifier for the environment.
     ///   - rootDirectory: A enum of possible root storage directories.
-    init(environmentId: String, rootDirectory: RootDirectory) {
+    public init(environmentId: String, rootDirectory: RootDirectory) {
         let directoryUrl: URL? = switch rootDirectory {
         case .documents:
             FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
