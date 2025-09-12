@@ -303,11 +303,26 @@ public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyS
     /// An error that occurred during the initialization of the storage engine, if any.
     private let initializationError: FileBasedPersistentPropertyStorageEngineError?
 
-    /// Initializes the storage engine with a specified environment ID and cache option.
+    /// Initializes the storage engine with a specified root directory
+    /// - Parameters:
+    ///   - rootDirectoryUrl: The directory to store all persistent value files
+    init(rootDirectoryUrl: URL) {
+        do {
+            try FileManager.default.createDirectory(at: rootDirectoryUrl, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            self.initializationError = .unableToCreateDirectory(error)
+            self.rootDirectoryUrl = nil
+            return
+        }
+
+        self.initializationError = nil
+        self.rootDirectoryUrl = rootDirectoryUrl
+    }
+
+    /// Initializes the storage engine with a specified environment ID and root directory option.
     /// - Parameters:
     ///   - environmentId: A unique identifier for the environment.
-    ///   - useCacheDirectory: A boolean indicating whether to use the caches directory
-    ///                        or document directory.
+    ///   - rootDirectory: A enum of possible root storage directories.
     init(environmentId: String, rootDirectory: RootDirectory) {
         let directoryUrl: URL? = switch rootDirectory {
         case .documents:
