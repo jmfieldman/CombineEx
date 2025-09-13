@@ -82,7 +82,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     ///
     /// - Parameter promise: A closure that you must call with either
     ///   `.success(Output)` or `.failure(Failure)` to resolve the future.
-    public let attemptToFulfill: (@escaping WrappedFuture.Promise) -> Void
+    public let attemptToFulfill: (@escaping @Sendable WrappedFuture.Promise) -> Void
 
     /// The internal `Deferred` that wraps the `Future`. The `Future`
     /// is only created when this `Deferred` is subscribed to.
@@ -95,7 +95,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     ///   you must call to complete the future. This closure is deferred
     ///   until subscription time.
     public init(
-        _ attemptToFulfill: @escaping (@escaping WrappedFuture.Promise) -> Void
+        _ attemptToFulfill: @escaping (@escaping @Sendable WrappedFuture.Promise) -> Void
     ) {
         self.attemptToFulfill = attemptToFulfill
         self.wrappedDeferredFuture = Deferred {
@@ -273,7 +273,7 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
     /// - Parameter attemptToFulfill: A closure that is deferred
     ///   until subscription time, used to complete or fail the future.
     public convenience init(
-        attemptToFulfill: @escaping (@escaping WrappedFuture.Promise) -> Void
+        attemptToFulfill: @escaping (@escaping @Sendable WrappedFuture.Promise) -> Void
     ) {
         self.init(DeferredFuture(attemptToFulfill))
     }
