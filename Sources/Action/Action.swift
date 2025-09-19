@@ -33,7 +33,7 @@ public final class Action<Input, Output, Failure: Error> {
     ///  - Returns: A deferred publisher that emits the result of the action or an `ActionError`.
     public func apply(_ input: Input) -> AnyDeferredPublisher<Output, ActionError<Failure>> {
         // Explicitly hold self - The Action will live as long as its applied children.
-        Deferred { [self] in
+        Deferred { [self] () -> AnyPublisher<Output, ActionError<Failure>> in
             var canBegin = false
             mutableIsExecuting.modify { isExecuting in
                 if !isExecuting {
@@ -45,7 +45,7 @@ public final class Action<Input, Output, Failure: Error> {
             }
 
             if !canBegin {
-                return AnyDeferredPublisher<Output, ActionError<Failure>>.fail(.disabled)
+                return .fail(.disabled)
             }
 
             return publisherBuilder(input)
@@ -65,7 +65,7 @@ public final class Action<Input, Output, Failure: Error> {
                 }, receiveCancel: { [weak self] in
                     self?.mutableIsExecuting.value = false
                 })
-                .eraseToAnyDeferredPublisher()
+                .eraseToAnyPublisher()
 
         }.eraseToAnyDeferredPublisher()
     }
