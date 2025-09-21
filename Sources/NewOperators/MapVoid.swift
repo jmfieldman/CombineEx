@@ -24,7 +24,7 @@ public extension DeferredPublisherProtocol {
     }
 }
 
-public extension DeferredFuture {
+public extension DeferredFutureProtocol {
     /// Maps the output of this deferred future to `Void`, discarding the original value.
     ///
     /// - Returns: A deferred future that produces `Void` values.
