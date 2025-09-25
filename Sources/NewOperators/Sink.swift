@@ -63,11 +63,11 @@ public extension Publisher {
     @discardableResult
     func sink(
         duringLifetimeOf object: AnyObject,
-        receiveSubscription: ((any Subscription) -> Void)? = nil,
-        receiveValue: ((Self.Output) -> Void)? = nil,
-        receiveCompletion: ((Subscribers.Completion<Self.Failure>) -> Void)? = nil,
-        receiveCancel: (() -> Void)? = nil,
-        receiveRequest: ((Subscribers.Demand) -> Void)? = nil
+        receiveSubscription: (@Sendable (any Subscription) -> Void)? = nil,
+        receiveValue: (@Sendable (Self.Output) -> Void)? = nil,
+        receiveCompletion: (@Sendable (Subscribers.Completion<Self.Failure>) -> Void)? = nil,
+        receiveCancel: (@Sendable () -> Void)? = nil,
+        receiveRequest: (@Sendable (Subscribers.Demand) -> Void)? = nil
     ) -> AnyCancellable {
         let cancellableBox = WeakCancellableBox()
 
