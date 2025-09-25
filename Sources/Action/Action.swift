@@ -89,6 +89,16 @@ public final class Action<Input, Output, Failure: Error> {
             }
             .eraseToAnyDeferredPublisher()
     }
+
+    /// Convenience method to allow parameter-less application for Actions with Void input.
+    public func apply() -> AnyDeferredPublisher<Output, ActionError<Failure>> where Input == Void {
+        apply(())
+    }
+
+    /// Convenience method to allow parameter-less application for Actions with Void input.
+    public func applyIfPossible() -> AnyDeferredPublisher<Output, Failure> where Input == Void {
+        applyIfPossible(())
+    }
 }
 
 public extension Action {
