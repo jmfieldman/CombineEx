@@ -417,8 +417,3 @@ private extension DeferredFutureTests {
         cancellable.cancel()
     }
 }
-
-class TestBox<T> {
-    var value: T
-    init(_ initial: T) { self.value = initial }
-}

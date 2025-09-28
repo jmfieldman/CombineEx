@@ -16,14 +16,15 @@ public final class Property<Output>: PropertyProtocol, @unchecked Sendable {
     private let lock = NSRecursiveLock()
     private var _value: Output!
     private var isModifying = false
-    private let subject = PassthroughSubject<Output, Failure>()
-    private let captured: (any PropertyProtocol)?
+    private let capturedProperty: (any PropertyProtocol)?
+    private let capturedPublisher: (any Publisher<Output, Never>)?
     private var cancellable: AnyCancellable?
 
     /// Initializes a Property with a constant value.
     public init(value: Output) {
         self._value = value
-        self.captured = nil
+        self.capturedProperty = nil
+        self.capturedPublisher = nil
         self.cancellable = nil
     }
 
@@ -32,7 +33,8 @@ public final class Property<Output>: PropertyProtocol, @unchecked Sendable {
     /// a concrete read-only Property.
     public init<P: PropertyProtocol>(_ capturing: P) where P.Output == Output {
         self._value = capturing.value
-        self.captured = capturing
+        self.capturedProperty = capturing
+        self.capturedPublisher = capturing
         self.cancellable = capturing.sink(receiveValue: { [weak self] value in
             self?.update(value)
         })
@@ -41,20 +43,22 @@ public final class Property<Output>: PropertyProtocol, @unchecked Sendable {
     /// Initializes a Property with an initial value, and then updates with each
     /// new value from the provided publisher.
     public init(initial: Output, then: some Publisher<Output, Never>) {
+        let shared = then.share()
+
         self._value = initial
-        self.captured = nil
-        self.cancellable = then.sink(receiveValue: { [weak self] value in
+        self.capturedProperty = nil
+        self.capturedPublisher = shared
+        self.cancellable = shared.sink(receiveValue: { [weak self] value in
             self?.update(value)
         })
     }
 
     /// Initializes a property from an unsafe Publisher. The publisher *must*
     /// emit an initial value *immediately* when it is initially subscribed to.
-    /// This is primarily used to lift Property operators. The extra capturing
-    /// argument is to ensure that the lifted Property is not deallocated out
-    /// from underneath the new Property.
-    init(unsafe: some Publisher<Output, Never>, capturing: (any PropertyProtocol)?) {
-        self.captured = capturing
+    /// This is primarily used to lift Property operators.
+    init(unsafe: some Publisher<Output, Never>, capturing: any PropertyProtocol) {
+        self.capturedProperty = capturing
+        self.capturedPublisher = unsafe
         self.cancellable = unsafe.sink(receiveValue: { [weak self] value in
             self?.update(value)
         })
@@ -73,7 +77,6 @@ public final class Property<Output>: PropertyProtocol, @unchecked Sendable {
             }
             isModifying = true
             _value = value
-            subject.send(value)
             isModifying = false
         }
     }
@@ -90,7 +93,15 @@ public extension Property {
     func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Output == S.Input {
         lock.withLock {
             isModifying = true
-            subject.prepend(_value).receive(subscriber: subscriber)
+            if let publisher = capturedPublisher {
+                if capturedProperty == nil {
+                    publisher.eraseToAnyPublisher().prepend(_value).receive(subscriber: subscriber)
+                } else {
+                    publisher.receive(subscriber: subscriber)
+                }
+            } else {
+                Just(_value).receive(subscriber: subscriber)
+            }
             isModifying = false
         }
     }

@@ -36,3 +36,15 @@ extension Publisher {
 class Countable {
     var count: Int = 0
 }
+
+class TestAccumulator<T: Equatable> {
+    var values: [T] = []
+    func append(_ t: T) {
+        values.append(t)
+    }
+}
+
+class TestBox<T> {
+    var value: T
+    init(_ initial: T) { self.value = initial }
+}

@@ -14,7 +14,7 @@ private enum TestError: Error {
 final class AttemptMapTests: XCTestCase {
     func testAttemptMap_TransformsOutputSuccessfully() {
         let publisher = PassthroughSubject<Int, TestError>()
-        var results: [String?] = []
+        let results = TestAccumulator<String?>()
 
         publisher
             .attemptMap { value -> Result<String, TestError> in
@@ -34,12 +34,12 @@ final class AttemptMapTests: XCTestCase {
         publisher.send(2)
         publisher.send(completion: .finished)
 
-        XCTAssertEqual(results, ["1", "2", nil])
+        XCTAssertEqual(results.values, ["1", "2", nil])
     }
 
     func testAttemptMap_TransformsOutputWithError() {
         let publisher = PassthroughSubject<Int, TestError>()
-        var results: [String?] = []
+        let results = TestAccumulator<String?>()
 
         publisher
             .attemptMap { value -> Result<String, TestError> in
@@ -60,6 +60,6 @@ final class AttemptMapTests: XCTestCase {
         publisher.send(2)
         publisher.send(completion: .finished)
 
-        XCTAssertEqual(results, ["1", "fail"])
+        XCTAssertEqual(results.values, ["1", "fail"])
     }
 }

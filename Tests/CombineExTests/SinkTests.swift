@@ -20,8 +20,8 @@ private class LifetimeClass {
 final class SinkTests: XCTestCase {
     func testSinkDuringLifetimeReleases() {
         let subject = CurrentValueSubject<Int, TestError>(1)
-        var accumulator: [Int] = []
-        var cancel = false
+        let accumulator = TestAccumulator<Int>()
+        let cancel = TestBox(false)
 
         autoreleasepool {
             let lifetime = LifetimeClass()
@@ -29,7 +29,7 @@ final class SinkTests: XCTestCase {
                 .handleValue { accumulator.append($0) }
                 .sink(
                     duringLifetimeOf: lifetime,
-                    receiveCancel: { cancel = true }
+                    receiveCancel: { cancel.value = true }
                 )
 
             subject.send(2)
@@ -42,13 +42,13 @@ final class SinkTests: XCTestCase {
 
         Thread.sleep(forTimeInterval: 0.01)
         subject.send(5)
-        XCTAssertEqual(accumulator, [1, 2, 3, 4])
-        XCTAssertEqual(cancel, true)
+        XCTAssertEqual(accumulator.values, [1, 2, 3, 4])
+        XCTAssertEqual(cancel.value, true)
     }
 
     func testSinkDuringLifetimeOperatesOnSet() {
         let subject = CurrentValueSubject<Int, TestError>(1)
-        var accumulator: [Int] = []
+        let accumulator = TestAccumulator<Int>()
         let lifetime = LifetimeClass()
 
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 0)
@@ -68,29 +68,29 @@ final class SinkTests: XCTestCase {
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 0)
 
         subject.send(5)
-        XCTAssertEqual(accumulator, [1, 2, 3, 4])
+        XCTAssertEqual(accumulator.values, [1, 2, 3, 4])
     }
 
     func testSinkDuringLifetimeBlocksWithCancel() {
         let subject = CurrentValueSubject<Int, TestError>(1)
-        var accumulator: [Int] = []
+        let accumulator = TestAccumulator<Int>()
         let lifetime = LifetimeClass()
 
-        var sub = false
-        var req = false
-        var comp = false
-        var cancel = false
+        let sub = TestBox(false)
+        let req = TestBox(false)
+        let comp = TestBox(false)
+        let cancel = TestBox(false)
 
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 0)
 
         let cancellable = subject
             .sink(
                 duringLifetimeOf: lifetime,
-                receiveSubscription: { _ in sub = true },
+                receiveSubscription: { _ in sub.value = true },
                 receiveValue: { accumulator.append($0) },
-                receiveCompletion: { _ in comp = true },
-                receiveCancel: { cancel = true },
-                receiveRequest: { _ in req = true }
+                receiveCompletion: { _ in comp.value = true },
+                receiveCancel: { cancel.value = true },
+                receiveRequest: { _ in req.value = true }
             )
 
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 1)
@@ -104,33 +104,33 @@ final class SinkTests: XCTestCase {
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 0)
 
         subject.send(5)
-        XCTAssertEqual(accumulator, [1, 2, 3, 4])
-        XCTAssertEqual(sub, true)
-        XCTAssertEqual(req, true)
-        XCTAssertEqual(comp, false)
-        XCTAssertEqual(cancel, true)
+        XCTAssertEqual(accumulator.values, [1, 2, 3, 4])
+        XCTAssertEqual(sub.value, true)
+        XCTAssertEqual(req.value, true)
+        XCTAssertEqual(comp.value, false)
+        XCTAssertEqual(cancel.value, true)
     }
 
     func testSinkDuringLifetimeBlocksWithFinish() {
         let subject = CurrentValueSubject<Int, TestError>(1)
-        var accumulator: [Int] = []
+        let accumulator = TestAccumulator<Int>()
         let lifetime = LifetimeClass()
 
-        var sub = false
-        var req = false
-        var comp = false
-        var cancel = false
+        let sub = TestBox(false)
+        let req = TestBox(false)
+        let comp = TestBox(false)
+        let cancel = TestBox(false)
 
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 0)
 
         subject
             .sink(
                 duringLifetimeOf: lifetime,
-                receiveSubscription: { _ in sub = true },
+                receiveSubscription: { _ in sub.value = true },
                 receiveValue: { accumulator.append($0) },
-                receiveCompletion: { _ in comp = true },
-                receiveCancel: { cancel = true },
-                receiveRequest: { _ in req = true }
+                receiveCompletion: { _ in comp.value = true },
+                receiveCancel: { cancel.value = true },
+                receiveRequest: { _ in req.value = true }
             )
 
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 1)
@@ -144,10 +144,10 @@ final class SinkTests: XCTestCase {
         XCTAssertEqual(__AnyObjectCancellableStorage(lifetime).count, 0)
 
         subject.send(5)
-        XCTAssertEqual(accumulator, [1, 2, 3, 4])
-        XCTAssertEqual(sub, true)
-        XCTAssertEqual(req, true)
-        XCTAssertEqual(comp, true)
-        XCTAssertEqual(cancel, false)
+        XCTAssertEqual(accumulator.values, [1, 2, 3, 4])
+        XCTAssertEqual(sub.value, true)
+        XCTAssertEqual(req.value, true)
+        XCTAssertEqual(comp.value, true)
+        XCTAssertEqual(cancel.value, false)
     }
 }

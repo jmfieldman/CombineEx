@@ -26,7 +26,7 @@ final class CustomTests: XCTestCase {
             }
         }
 
-        var values: [Int] = []
+        let values = TestAccumulator<Int>()
         custom
             .handleValue { values.append($0) }
             .handleFinished { expectation.fulfill() }
@@ -34,7 +34,7 @@ final class CustomTests: XCTestCase {
             .sink(duringLifetimeOf: self)
 
         wait(for: [expectation], timeout: 3)
-        XCTAssertEqual(values, [1, 2])
+        XCTAssertEqual(values.values, [1, 2])
     }
 
     func testCustom_BasicValues_ErasedToAny() {
@@ -51,7 +51,7 @@ final class CustomTests: XCTestCase {
             }
         }.eraseToAnyDeferredPublisher()
 
-        var values: [Int] = []
+        let values = TestAccumulator<Int>()
         custom
             .handleValue { values.append($0) }
             .handleFinished { expectation.fulfill() }
@@ -59,7 +59,7 @@ final class CustomTests: XCTestCase {
             .sink(duringLifetimeOf: self)
 
         wait(for: [expectation], timeout: 3)
-        XCTAssertEqual(values, [1, 2])
+        XCTAssertEqual(values.values, [1, 2])
     }
 
     func testCustom_BasicValues_ActuallyDeferred() {
@@ -80,7 +80,7 @@ final class CustomTests: XCTestCase {
         autoreleasepool {
             let expectation = XCTestExpectation(description: "wait")
             XCTAssertEqual(deferredTest, 0)
-            var values: [Int] = []
+            let values = TestAccumulator<Int>()
             custom
                 .handleValue { values.append($0) }
                 .handleFinished { expectation.fulfill() }
@@ -89,13 +89,13 @@ final class CustomTests: XCTestCase {
 
             XCTAssertEqual(deferredTest, 1)
             wait(for: [expectation], timeout: 3)
-            XCTAssertEqual(values, [1, 2])
+            XCTAssertEqual(values.values, [1, 2])
         }
 
         autoreleasepool {
             let expectation = XCTestExpectation(description: "wait")
             XCTAssertEqual(deferredTest, 1)
-            var values: [Int] = []
+            let values = TestAccumulator<Int>()
             custom
                 .handleValue { values.append($0) }
                 .handleFinished { expectation.fulfill() }
@@ -104,7 +104,7 @@ final class CustomTests: XCTestCase {
 
             XCTAssertEqual(deferredTest, 2)
             wait(for: [expectation], timeout: 3)
-            XCTAssertEqual(values, [1, 2])
+            XCTAssertEqual(values.values, [1, 2])
         }
     }
 
@@ -122,7 +122,7 @@ final class CustomTests: XCTestCase {
             }
         }
 
-        var values: [Int] = []
+        let values = TestAccumulator<Int>()
         custom
             .handleValue { values.append($0) }
             .handleFinished {
@@ -135,7 +135,7 @@ final class CustomTests: XCTestCase {
             .sink(duringLifetimeOf: self)
 
         wait(for: [expectation], timeout: 3)
-        XCTAssertEqual(values, [1, 2])
+        XCTAssertEqual(values.values, [1, 2])
     }
 
     func testCustom_NoValuesAfterCompletion() {
@@ -153,17 +153,17 @@ final class CustomTests: XCTestCase {
             }
         }
 
-        var values: [Int] = []
-        var didFinish = false
+        let values = TestAccumulator<Int>()
+        let didFinish = TestBox<Bool>(false)
         custom
             .handleValue { values.append($0) }
-            .handleFinished { didFinish = true }
+            .handleFinished { didFinish.value = true }
             .handleError { XCTFail("unexpected error: \($0)") }
             .sink(duringLifetimeOf: self)
 
         wait(for: [expectation], timeout: 3)
-        XCTAssertEqual(values, [1])
-        XCTAssertEqual(didFinish, true)
+        XCTAssertEqual(values.values, [1])
+        XCTAssertEqual(didFinish.value, true)
     }
 
     func testCustom_CancelledEmitsProperly() {
