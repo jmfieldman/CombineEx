@@ -109,6 +109,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     /// - Parameter task: An async function whose return value is emitted as
     ///   the value of the future, or whose thrown error is emitted as the
     ///   failure.
+    @_disfavoredOverload
     public static func withTask(_ task: @escaping () async throws(Failure) -> Output) -> Self {
         .init { promise in
             Task {
@@ -116,6 +117,27 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
                     try await promise(.success(task()))
                 } catch {
                     promise(.failure(error))
+                }
+            }
+        }
+    }
+
+    /// Create a `DeferredFuture` that attempts to execute an async function
+    /// and returns its value (or thrown error as a failure).
+    ///
+    /// This is a more lenient version of the `withTask` constructor that handles
+    /// the compose error wrapping internally.
+    ///
+    /// - Parameter task: An async function whose return value is emitted as
+    ///   the value of the future, or whose thrown error is emitted as the
+    ///   failure.
+    static func withTask(_ task: @escaping () async throws -> Output) -> Self where Failure: CompositeError {
+        .init { promise in
+            Task {
+                do {
+                    try await promise(.success(task()))
+                } catch {
+                    promise(.failure(Failure.wrapping(error)))
                 }
             }
         }
