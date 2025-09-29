@@ -235,4 +235,28 @@ final class PropertyTests: XCTestCase {
         let t = await prop.async()
         XCTAssertEqual(t, 3)
     }
+
+    func testFlatMap() {
+        struct TestObj {
+            let innerProperty: MutableProperty<Int>
+        }
+        let innerProp1 = MutableProperty(1)
+        let innerProp2 = MutableProperty(10)
+
+        let testObjProperty = MutableProperty<TestObj>(TestObj(innerProperty: innerProp1))
+        let outerProperty: Property<Int> = testObjProperty.flatMap(\.innerProperty)
+
+        let accumulator = TestAccumulator<Int>()
+        outerProperty
+            .handleValue { accumulator.append($0) }
+            .sink(duringLifetimeOf: self)
+
+        innerProp1.value = 2
+        innerProp1.value = 3
+        testObjProperty.value = TestObj(innerProperty: innerProp2)
+        innerProp2.value = 20
+        innerProp2.value = 30
+
+        XCTAssertEqual(accumulator.values, [1, 2, 3, 10, 20, 30])
+    }
 }

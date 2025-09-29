@@ -51,6 +51,12 @@ public extension PropertyProtocol {
     ) -> Property<Output> {
         lift { $0.removeDuplicates(by: isEqual) }
     }
+
+    func flatMap<NewOutput>(
+        _ transform: @escaping (Output) -> any PropertyProtocol<NewOutput>
+    ) -> Property<NewOutput> {
+        lift { $0.flatMapLatest { value in transform(value).eraseToAnyPublisher() } }
+    }
 }
 
 public extension PropertyProtocol where Output: Equatable {
