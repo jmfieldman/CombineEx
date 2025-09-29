@@ -229,4 +229,10 @@ final class PropertyTests: XCTestCase {
         XCTAssertEqual(accumulator1.values, [0, 2, 4])
         XCTAssertEqual(accumulator2.values, [0, 1, 2])
     }
+
+    func testAsyncAccess() async {
+        let prop = Property(value: 3)
+        let t = await prop.async()
+        XCTAssertEqual(t, 3)
+    }
 }

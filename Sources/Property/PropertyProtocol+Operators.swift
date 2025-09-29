@@ -4,6 +4,7 @@
 //
 
 import Combine
+import Foundation
 
 public extension PropertyProtocol {
     func lift<U>(
@@ -248,5 +249,17 @@ public extension PropertyProtocol {
         _ pJ: some PropertyProtocol<J>
     ) -> Property<(A, B, C, D, E, F, G, H, I, J)> {
         pA.combineLatest(pB, pC, pD, pE, pF, pG, pH, pI, pJ)
+    }
+}
+
+public extension PropertyProtocol where Output: Sendable {
+    /// Provides an async function that returns the current value after it is
+    /// accessed asychronously on the specified queue.
+    func async(_ queue: DispatchQueue = .global()) async -> Output {
+        await DeferredFuture<Output, Never> { promise in
+            queue.async {
+                promise(.success(self.value))
+            }
+        }.async()
     }
 }

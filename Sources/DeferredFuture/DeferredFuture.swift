@@ -126,7 +126,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     /// and returns its value (or thrown error as a failure).
     ///
     /// This is a more lenient version of the `withTask` constructor that handles
-    /// the compose error wrapping internally.
+    /// the CompositeError wrapping internally.
     ///
     /// - Parameter task: An async function whose return value is emitted as
     ///   the value of the future, or whose thrown error is emitted as the
@@ -368,5 +368,49 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
         DeferredFuture<Output, Failure> { promise in
             promise(.failure(failure))
         }.eraseToAnyDeferredFuture()
+    }
+
+    /// Create an `AnyDeferredFuture` that attempts to execute an async function
+    /// and returns its value (or thrown error as a failure).
+    ///
+    /// This is a more lenient version of the `withTask` constructor that handles
+    /// the CompositeError wrapping internally.
+    ///
+    /// - Parameter task: An async function whose return value is emitted as
+    ///   the value of the future, or whose thrown error is emitted as the
+    ///   failure.
+    public static func withTask(
+        _ task: @escaping () async throws -> Output
+    ) -> AnyDeferredFuture<Output, Failure> where Failure: CompositeError {
+        DeferredFuture<Output, Failure>.withTask(task).eraseToAnyDeferredFuture()
+    }
+
+    /// Create an `AnyDeferredFuture` that attempts to execute an async function
+    /// and returns its value (or thrown error as a failure).
+    ///
+    /// - Parameter task: An async function whose return value is emitted as
+    ///   the value of the future, or whose thrown error is emitted as the
+    ///   failure.
+    @_disfavoredOverload
+    public static func withTask(
+        _ task: @escaping () async throws(Failure) -> Output
+    ) -> AnyDeferredFuture<Output, Failure> {
+        DeferredFuture<Output, Failure>.withTask(task).eraseToAnyDeferredFuture()
+    }
+
+    /// Create an `AnyDeferredFuture` that attempts to execute an async function
+    /// and returns its value (or thrown error as a failure).
+    ///
+    /// - Parameter task: An async function whose return value is emitted as
+    ///   the value of the future, or whose thrown error is emitted as the
+    ///   failure.
+    public static func withTask(
+        nonconformingErrorHandler: @escaping (Error) -> Failure,
+        task: @escaping () async throws -> Output
+    ) -> AnyDeferredFuture<Output, Failure> {
+        DeferredFuture<Output, Failure>.withTask(
+            nonconformingErrorHandler: nonconformingErrorHandler,
+            task: task
+        ).eraseToAnyDeferredFuture()
     }
 }
