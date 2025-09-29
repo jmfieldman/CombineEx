@@ -131,7 +131,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     /// - Parameter task: An async function whose return value is emitted as
     ///   the value of the future, or whose thrown error is emitted as the
     ///   failure.
-    static func withTask(_ task: @escaping () async throws -> Output) -> Self where Failure: CompositeError {
+    public static func withTask(_ task: @escaping () async throws -> Output) -> Self where Failure: CompositeError {
         .init { promise in
             Task {
                 do {
