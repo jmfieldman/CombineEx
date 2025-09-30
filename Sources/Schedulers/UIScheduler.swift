@@ -14,6 +14,8 @@ import Combine
 import Dispatch
 #endif
 
+import Foundation
+
 /// A scheduler that executes its work on the main queue as soon as possible.
 ///
 /// This scheduler is inspired by the
@@ -40,11 +42,11 @@ public struct UIScheduler: Scheduler, Sendable {
     public var minimumTolerance: SchedulerTimeType.Stride { DispatchQueue.main.minimumTolerance }
 
     public func onMainThread() -> Bool {
-        DispatchQueue.getSpecific(key: key) == value
+        Thread.isMainThread
     }
 
     public func schedule(options: SchedulerOptions? = nil, _ action: @escaping () -> Void) {
-        if DispatchQueue.getSpecific(key: key) == value {
+        if onMainThread() {
             action()
         } else {
             DispatchQueue.main.schedule(action)
@@ -71,11 +73,4 @@ public struct UIScheduler: Scheduler, Sendable {
             after: date, interval: interval, tolerance: tolerance, options: nil, action
         )
     }
-
-    private init() {
-        DispatchQueue.main.setSpecific(key: key, value: value)
-    }
 }
-
-private let key = DispatchSpecificKey<UInt8>()
-private let value: UInt8 = 0
