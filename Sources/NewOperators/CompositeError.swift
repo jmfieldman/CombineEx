@@ -29,6 +29,10 @@ public extension Publisher {
     func wrapWithCompositeFailure<NewFailure>() -> Publishers.MapError<Self, NewFailure> where NewFailure: CompositeError {
         mapError { NewFailure.wrapping($0) }
     }
+
+    func wrapWithCompositeFailure<NewFailure>(_ t: NewFailure.Type) -> Publishers.MapError<Self, NewFailure> where NewFailure: CompositeError {
+        mapError { NewFailure.wrapping($0) }
+    }
 }
 
 public extension DeferredPublisherProtocol {
@@ -36,11 +40,21 @@ public extension DeferredPublisherProtocol {
     func wrapWithCompositeFailure<NewFailure>() -> Deferred<Publishers.MapError<WrappedPublisher, NewFailure>> where WrappedPublisher: Publisher, NewFailure: CompositeError {
         deferredLift { $0.wrapWithCompositeFailure() }
     }
+
+    @_disfavoredOverload
+    func wrapWithCompositeFailure<NewFailure>(_ t: NewFailure.Type) -> Deferred<Publishers.MapError<WrappedPublisher, NewFailure>> where WrappedPublisher: Publisher, NewFailure: CompositeError {
+        deferredLift { $0.wrapWithCompositeFailure() }
+    }
 }
 
 public extension DeferredFutureProtocol {
     @_disfavoredOverload
     func wrapWithCompositeFailure<NewFailure>() -> DeferredFuture<Output, NewFailure> where NewFailure: CompositeError {
+        mapError { NewFailure.wrapping($0) }
+    }
+
+    @_disfavoredOverload
+    func wrapWithCompositeFailure<NewFailure>(_ t: NewFailure.Type) -> DeferredFuture<Output, NewFailure> where NewFailure: CompositeError {
         mapError { NewFailure.wrapping($0) }
     }
 }

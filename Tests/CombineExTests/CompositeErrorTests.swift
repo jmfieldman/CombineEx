@@ -122,12 +122,41 @@ final class CompositeErrorTests: XCTestCase {
         }
     }
 
-    func testPromotion() async throws {
+    func testWrapWithComposite() async throws {
         func makeFuture() -> AnyDeferredFuture<Int, CompositeTestError> {
             DeferredFuture<Int, TestError> { promise in
                 promise(.failure(.error1))
             }
             .wrapWithCompositeFailure()
+            .eraseToAnyDeferredFuture()
+        }
+
+        var e: Error?
+        do {
+            let _ = try await makeFuture().asyncThrowing()
+            XCTFail("Should not hit")
+        } catch {
+            e = error
+        }
+
+        guard let eTest = e as? CompositeTestError else {
+            XCTFail("Bad")
+            return
+        }
+
+        if case let .e1(eValue) = eTest, case .error1 = eValue {
+            // Good
+        } else {
+            XCTFail("Bad")
+        }
+    }
+
+    func testWrapWithCompositeExplicit() async throws {
+        func makeFuture() -> AnyDeferredFuture<Int, CompositeTestError> {
+            DeferredFuture<Int, TestError> { promise in
+                promise(.failure(.error1))
+            }
+            .wrapWithCompositeFailure(CompositeTestError.self)
             .eraseToAnyDeferredFuture()
         }
 
