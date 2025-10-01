@@ -39,4 +39,9 @@ public extension Publisher {
     func receiveOnMainRunLoop() -> Publishers.ReceiveOn<Self, RunLoop> {
         receive(on: RunLoop.main)
     }
+
+    /// Configures the publisher to receive values on a background queue with the specified QoS.
+    func receiveInBackground(qos: DispatchQoS.QoSClass = .default) -> Publishers.ReceiveOn<Self, DispatchQueue> {
+        receive(on: DispatchQueue.global(qos: qos))
+    }
 }

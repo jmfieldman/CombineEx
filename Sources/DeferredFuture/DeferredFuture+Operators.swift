@@ -516,4 +516,14 @@ public extension DeferredFutureProtocol {
             }
         }
     }
+
+    /// Configures the publisher to receive values on a background queue with the specified QoS.
+    @_disfavoredOverload
+    func receiveInBackground(qos: DispatchQoS.QoSClass = .default) -> DeferredFuture<Output, Failure> {
+        futureLiftResult { outerResult, innerPromise in
+            DispatchQueue.global(qos: qos).async {
+                innerPromise(outerResult)
+            }
+        }
+    }
 }

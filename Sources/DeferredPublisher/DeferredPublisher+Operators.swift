@@ -1108,6 +1108,12 @@ public extension DeferredPublisherProtocol {
     func receiveOnMainRunLoop() -> Deferred<Publishers.ReceiveOn<WrappedPublisher, RunLoop>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.receive(on: RunLoop.main) }
     }
+
+    /// Configures the publisher to receive values on a background queue with the specified QoS.
+    @_disfavoredOverload
+    func receiveInBackground(qos: DispatchQoS.QoSClass = .default) -> Deferred<Publishers.ReceiveOn<WrappedPublisher, DispatchQueue>> where WrappedPublisher.Failure == Failure {
+        deferredLift { $0.receive(on: DispatchQueue.global(qos: qos)) }
+    }
 }
 
 // MARK: Debugging
