@@ -22,17 +22,15 @@ private enum TestOtherError: Error {
 private enum CompositeTestError: Error, CompositeError {
     case e1(TestError)
     case e2(TestError2)
-    case underlying(Error)
+    case unexpected(Error)
 
-    static func wrapping(_ error: any Error) -> CompositeTestError {
-        if let e = error as? CompositeTestError {
-            e
-        } else if let e = error as? TestError {
+    static func wrappingSuberror(_ error: any Error) -> CompositeTestError? {
+        if let e = error as? TestError {
             .e1(e)
         } else if let e = error as? TestError2 {
             .e2(e)
         } else {
-            .underlying(error)
+            nil
         }
     }
 }
@@ -115,7 +113,7 @@ final class CompositeErrorTests: XCTestCase {
             return
         }
 
-        if case let .underlying(eValue) = eTest {
+        if case let .unexpected(eValue) = eTest {
             XCTAssertNotNil(eValue as? TestOtherError)
         } else {
             XCTFail("Bad")

@@ -137,7 +137,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
                 do {
                     try await promise(.success(task()))
                 } catch {
-                    promise(.failure(Failure.wrapping(error)))
+                    promise(.failure(Failure.wrappingAllCases(error)))
                 }
             }
         }
