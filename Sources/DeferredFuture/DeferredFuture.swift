@@ -102,7 +102,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
             Future(attemptToFulfill)
         }
     }
-
+    
     /// Create a `DeferredFuture` that attempts to execute an async function
     /// and returns its value (or thrown error as a failure).
     ///
@@ -256,6 +256,30 @@ public extension DeferredFuture {
     /// - Returns: A new `DeferredFuture` that immediately fails with `error`.
     static func fail(_ error: Failure) -> DeferredFuture<Output, Failure> {
         DeferredFuture { $0(.failure(error)) }
+    }
+    
+    /// Creates a deferred future that runs the specified block and emits the result
+    static func closure(_ block: @escaping () -> Result<Output, Failure>) -> DeferredFuture<Output, Failure> {
+        DeferredFuture { promise in
+            let result = block()
+            promise(result)
+        }
+    }
+    
+    /// Creates a deferred future that runs the specified block and emits the success
+    static func successClosure(_ block: @escaping () -> Output) -> DeferredFuture<Output, Failure> {
+        DeferredFuture { promise in
+            let result = block()
+            promise(.success(result))
+        }
+    }
+    
+    /// Creates a deferred future that runs the specified block and emits the failure
+    static func failureClosure(_ block: @escaping () -> Failure) -> DeferredFuture<Output, Failure> {
+        DeferredFuture { promise in
+            let result = block()
+            promise(.failure(result))
+        }
     }
 }
 
