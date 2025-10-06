@@ -17,7 +17,7 @@ import SwiftUI
 /// triggers the underlying action.
 @available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 @Observable
-public final class ActionTrigger<Input> {
+public final class ActionTrigger<Input>: Sendable {
     /// An @Observable property that indicates whether the action
     /// is currently executing.
     public let isExecuting: UIProperty<Bool>
@@ -25,7 +25,7 @@ public final class ActionTrigger<Input> {
     /// A closure that applies this anonymous action with the given input
     /// and returns a publisher associated with it.
     @ObservationIgnored
-    public let applyAnonymous: (Input) -> AnyDeferredPublisher<Void, Never>
+    public let applyAnonymous: @Sendable (Input) -> AnyDeferredPublisher<Void, Never>
 
     /// Initializes an ActionTrigger with the given internal action.
     ///

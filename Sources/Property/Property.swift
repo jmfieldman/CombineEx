@@ -6,7 +6,7 @@
 import Combine
 import Foundation
 
-public protocol PropertyProtocol<Output>: AnyObject, Publisher where Failure == Never {
+public protocol PropertyProtocol<Output>: AnyObject, Publisher where Failure == Never, Output: Sendable {
     var value: Output { get }
 }
 
@@ -19,7 +19,6 @@ public final class Property<Output>: PropertyProtocol, @unchecked Sendable {
     private let capturedProperty: (any PropertyProtocol)?
     private let capturedPublisher: (any Publisher<Output, Never>)?
     private var cancellable: AnyCancellable?
-
     /// Initializes a Property with a constant value.
     public init(value: Output) {
         self._value = value

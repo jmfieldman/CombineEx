@@ -8,7 +8,7 @@ import Foundation
 
 public extension PropertyProtocol {
     func lift<U>(
-        _ transform: @escaping (AnyPublisher<Output, Never>) -> some Publisher<U, Never>
+        _ transform: @escaping @Sendable (AnyPublisher<Output, Never>) -> some Publisher<U, Never>
     ) -> Property<U> {
         Property(unsafe: transform(eraseToAnyPublisher()), capturing: self)
     }
@@ -16,7 +16,7 @@ public extension PropertyProtocol {
 
 public extension PropertyProtocol {
     func map<T>(
-        _ transform: @escaping (Output) -> T
+        _ transform: @escaping @Sendable (Output) -> T
     ) -> Property<T> {
         lift { $0.map(transform) }
     }
@@ -35,7 +35,7 @@ public extension PropertyProtocol {
 
     func filter(
         initial: Output,
-        _ predicate: @escaping (Output) -> Bool
+        _ predicate: @escaping @Sendable (Output) -> Bool
     ) -> Property<Output> {
         Property(initial: initial, then: filter(predicate))
     }
@@ -47,13 +47,13 @@ public extension PropertyProtocol {
     }
 
     func removeDuplicates(
-        by isEqual: @escaping (Output, Output) -> Bool
+        by isEqual: @escaping @Sendable (Output, Output) -> Bool
     ) -> Property<Output> {
         lift { $0.removeDuplicates(by: isEqual) }
     }
 
     func flatMap<NewOutput>(
-        _ transform: @escaping (Output) -> any PropertyProtocol<NewOutput>
+        _ transform: @escaping @Sendable (Output) -> any PropertyProtocol<NewOutput>
     ) -> Property<NewOutput> {
         lift { $0.flatMapLatest { value in transform(value).eraseToAnyPublisher() } }
     }

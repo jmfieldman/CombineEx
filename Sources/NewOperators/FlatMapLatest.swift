@@ -11,7 +11,7 @@ public extension Publisher {
     /// - Parameter transform: A closure that takes an element of the current publisher and returns a new publisher.
     /// - Returns: A `Publishers.SwitchToLatest` instance that emits elements from the latest inner publisher.
     func flatMapLatest<P: Publisher>(
-        _ transform: @escaping (Output) -> P
+        _ transform: @escaping @Sendable (Output) -> P
     ) -> Publishers.SwitchToLatest<P, Publishers.Map<Self, P>> {
         map(transform).switchToLatest()
     }
@@ -24,7 +24,7 @@ public extension DeferredPublisherProtocol {
     /// - Returns: A `Deferred<Publishers.SwitchToLatest>` instance that emits elements from the latest inner publisher.
     @_disfavoredOverload
     func flatMapLatest<P: Publisher>(
-        _ transform: @escaping (WrappedPublisher.Output) -> P
+        _ transform: @escaping @Sendable (WrappedPublisher.Output) -> P
     ) -> Deferred<Publishers.SwitchToLatest<P, Publishers.Map<WrappedPublisher, P>>> where WrappedPublisher: Publisher {
         deferredLift { $0.map(transform).switchToLatest() }
     }
