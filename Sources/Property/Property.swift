@@ -89,6 +89,10 @@ public extension Property {
         }
     }
 
+    static func just(_ value: Output) -> Self {
+        .init(value: value)
+    }
+
     func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Output == S.Input {
         lock.withLock {
             isModifying = true

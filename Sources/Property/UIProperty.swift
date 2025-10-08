@@ -56,4 +56,8 @@ public extension UIProperty {
     func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Output == S.Input {
         captured.receive(subscriber: subscriber)
     }
+
+    static func just(_ value: Output) -> Self {
+        .init(Property(value: value))
+    }
 }
