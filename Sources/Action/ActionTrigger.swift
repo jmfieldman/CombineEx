@@ -71,8 +71,8 @@ public final class ActionTrigger<Input>: Sendable {
     ///   - block: The closure to execute when the action is applied.
     ///
     /// - Returns: A new ActionTrigger instance.
-    public static func immediate(_ block: @escaping (Input) -> Void) -> ActionTrigger<Input> {
-        Action<Input, Void, Never>.immediate(block).asActionTrigger
+    public static func immediate(_ block: @MainActor @escaping (Input) -> Void) -> ActionTrigger<Input> {
+        Action<Input, Void, Never>.immediateOnMainActor(block).asActionTrigger
     }
 }
 

@@ -114,6 +114,16 @@ public extension Action {
         }
     }
 
+    static func immediateOnMainActor<I, O>(_ block: @MainActor @escaping (I) -> O) -> Action<I, O, Never> {
+        Action<I, O, Never> { input in
+            AnyDeferredFuture<O, Never> { promise in
+                DispatchQueue.main.async {
+                    promise(.success(block(input)))
+                }
+            }.eraseToAnyDeferredPublisher()
+        }
+    }
+
     static func immediateResult<I, O, F>(_ block: @escaping (I) -> Result<O, F>) -> Action<I, O, F> {
         Action<I, O, F> { input in
             let result = block(input)
