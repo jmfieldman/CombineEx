@@ -41,6 +41,30 @@ public final class ActionTrigger<Input>: Sendable {
         }
     }
 
+    /// Conveince wrapper around `applyAnonymous`
+    public func apply(_ input: Input) -> AnyDeferredPublisher<Void, Never> {
+        applyAnonymous(input)
+    }
+
+    /// Conveince wrapper around `applyAnonymous` where input is Void
+    public func apply() -> AnyDeferredPublisher<Void, Never> where Input == Void {
+        applyAnonymous(())
+    }
+
+    /// Conveince wrapper around `applyAnonymous` that sinks the resulting
+    /// publisher against itself. Useful when you know the action will take
+    /// the lifetime of the UI.
+    public func fire(_ input: Input) {
+        applyAnonymous(input).sink(duringLifetimeOf: self)
+    }
+
+    /// Conveince wrapper around `applyAnonymous` that sinks the resulting
+    /// publisher against itself. Useful when you know the action will take
+    /// the lifetime of the UI.
+    public func fire() where Input == Void {
+        applyAnonymous(()).sink(duringLifetimeOf: self)
+    }
+
     /// Creates an ActionTrigger from an immediate action block.
     ///
     /// - Parameters:
