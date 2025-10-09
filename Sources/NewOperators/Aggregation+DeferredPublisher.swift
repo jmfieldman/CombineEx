@@ -510,3 +510,37 @@ public extension DeferredPublisherProtocol {
         }
     }
 }
+
+// MARK: - Array
+
+public extension DeferredPublisherProtocol {
+    @_disfavoredOverload
+    static func zip(
+        array: [some Publisher<Output, Failure>]
+    ) -> Deferred<Publishers.Aggregate<[Output], Failure>> {
+        Deferred {
+            Publishers.Aggregate<[Output], Failure>(
+                strategy: .zip)
+            { accumulator in
+                array.forEach { accumulator.add($0) }
+            } aggregationBlock: {
+                $0 as! [Output]
+            }
+        }
+    }
+
+    @_disfavoredOverload
+    static func combineLatest(
+        array: [some Publisher<Output, Failure>]
+    ) -> Deferred<Publishers.Aggregate<[Output], Failure>> {
+        Deferred {
+            Publishers.Aggregate<[Output], Failure>(
+                strategy: .combineLatest)
+            { accumulator in
+                array.forEach { accumulator.add($0) }
+            } aggregationBlock: {
+                $0 as! [Output]
+            }
+        }
+    }
+}

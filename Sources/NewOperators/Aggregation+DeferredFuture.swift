@@ -224,3 +224,12 @@ public extension Array where Element: DeferredFutureProtocol {
         }
     }
 }
+
+public extension DeferredFutureProtocol {
+    @_disfavoredOverload
+    static func combineLatest(
+        array: [some DeferredFutureProtocol<Output, Failure>]
+    ) -> DeferredFuture<[Output], Failure> {
+        array.combineLatest()
+    }
+}

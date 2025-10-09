@@ -509,3 +509,29 @@ public extension Publisher {
         }
     }
 }
+
+public extension Publisher {
+    static func zip(
+        array: [some Publisher<Output, Failure>]
+    ) -> Publishers.Aggregate<[Output], Failure> {
+        Publishers.Aggregate<[Output], Failure>(
+            strategy: .zip)
+        { accumulator in
+            array.forEach { accumulator.add($0) }
+        } aggregationBlock: {
+            $0 as! [Output]
+        }
+    }
+
+    static func combineLatest(
+        array: [some Publisher<Output, Failure>]
+    ) -> Publishers.Aggregate<[Output], Failure> {
+        Publishers.Aggregate<[Output], Failure>(
+            strategy: .combineLatest)
+        { accumulator in
+            array.forEach { accumulator.add($0) }
+        } aggregationBlock: {
+            $0 as! [Output]
+        }
+    }
+}
