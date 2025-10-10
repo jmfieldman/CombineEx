@@ -102,7 +102,7 @@ public final class Action<Input, Output, Failure: Error> {
 }
 
 public extension Action {
-    static func value<O>(_ value: O) -> Action<Void, O, Never> {
+    static func just<O>(_ value: O) -> Action<Void, O, Never> {
         Action<Void, O, Never> {
             .just(value)
         }
