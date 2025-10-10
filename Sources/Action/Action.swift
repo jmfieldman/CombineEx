@@ -6,7 +6,7 @@
 import Combine
 import Foundation
 
-public final class Action<Input, Output, Failure: Error> {
+public final class Action<Input, Output, Failure: Error>: @unchecked Sendable {
     // Private state
     private let publisherBuilder: (Input) -> AnyDeferredPublisher<Output, Failure>
     private let mutableIsExecuting: MutableProperty<Bool> = .init(false)
