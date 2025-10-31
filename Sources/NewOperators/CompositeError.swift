@@ -64,6 +64,8 @@ public extension CompositeError {
 public final class CompositeErrorMap<T: CompositeError> {
     private var internalArray: [(CompositeErrorMapElementProtocol, (Any) -> T)] = []
 
+    public init() {}
+
     public func mapping<E: Error>(_ type: E.Type, resolution: @escaping (E) -> T) -> Self {
         internalArray.append((CompositeErrorMapElement(type), { resolution($0 as! E) }))
         return self
