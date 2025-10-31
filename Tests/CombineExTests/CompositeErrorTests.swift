@@ -24,15 +24,9 @@ private enum CompositeTestError: Error, CompositeError {
     case e2(TestError2)
     case unexpected(Error)
 
-    static func wrappingSuberror(_ error: any Error) -> CompositeTestError? {
-        if let e = error as? TestError {
-            .e1(e)
-        } else if let e = error as? TestError2 {
-            .e2(e)
-        } else {
-            nil
-        }
-    }
+    static let errorMap = CompositeErrorMap<CompositeTestError>()
+        .registering(TestError.self) { .e1($0) }
+        .registering(TestError2.self) { .e2($0) }
 }
 
 final class CompositeErrorTests: XCTestCase {
