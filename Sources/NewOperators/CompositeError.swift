@@ -61,7 +61,7 @@ public extension CompositeError {
     }
 }
 
-public final class CompositeErrorMap<T: CompositeError> {
+public final class CompositeErrorMap<T: CompositeError>: @unchecked Sendable {
     private var internalArray: [(CompositeErrorMapElementProtocol, (Any) -> T)] = []
 
     public init() {}
