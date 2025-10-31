@@ -25,8 +25,8 @@ private enum CompositeTestError: Error, CompositeError {
     case unexpected(Error)
 
     static let errorMap = CompositeErrorMap<CompositeTestError>()
-        .registering(TestError.self) { .e1($0) }
-        .registering(TestError2.self) { .e2($0) }
+        .mapping(TestError.self) { .e1($0) }
+        .mapping(TestError2.self) { .e2($0) }
 }
 
 final class CompositeErrorTests: XCTestCase {

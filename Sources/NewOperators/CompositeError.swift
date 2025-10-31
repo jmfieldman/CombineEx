@@ -21,8 +21,6 @@ import Foundation
 /// `CompositeError` must always have a case `unexpected(Error)` to handle
 /// errors that do not cleanly map into other well-named cases.
 public protocol CompositeError: Error {
-    static func wrappingSuberror(_ error: Error) -> Self?
-
     /// A `CompsiteError` must implement this map that dispatches
     /// any sub-error into the proper case.
     ///
