@@ -107,20 +107,29 @@ public final class Action<Input, Output, Failure: Error>: @unchecked Sendable {
 }
 
 public extension Action {
-    static func just<O>(_ value: O) -> Action<Void, O, Never> {
-        Action<Void, O, Never> {
+    static func just<O>(
+        enabledIf: Property<Bool> = .just(true),
+        _ value: O
+    ) -> Action<Void, O, Never> {
+        Action<Void, O, Never>(enabledIf: enabledIf) {
             .just(value)
         }
     }
 
-    static func immediate<I, O>(_ block: @escaping (I) -> O) -> Action<I, O, Never> {
-        Action<I, O, Never> { input in
+    static func immediate<I, O>(
+        enabledIf: Property<Bool> = .just(true),
+        _ block: @escaping (I) -> O
+    ) -> Action<I, O, Never> {
+        Action<I, O, Never>(enabledIf: enabledIf) { input in
             .just(block(input))
         }
     }
 
-    static func immediateOnMainActor<I, O>(_ block: @MainActor @escaping (I) -> O) -> Action<I, O, Never> {
-        Action<I, O, Never> { input in
+    static func immediateOnMainActor<I, O>(
+        enabledIf: Property<Bool> = .just(true),
+        _ block: @MainActor @escaping (I) -> O
+    ) -> Action<I, O, Never> {
+        Action<I, O, Never>(enabledIf: enabledIf) { input in
             AnyDeferredFuture<O, Never> { promise in
                 DispatchQueue.main.async {
                     promise(.success(block(input)))
@@ -129,8 +138,11 @@ public extension Action {
         }
     }
 
-    static func immediateResult<I, O, F>(_ block: @escaping (I) -> Result<O, F>) -> Action<I, O, F> {
-        Action<I, O, F> { input in
+    static func immediateResult<I, O, F>(
+        enabledIf: Property<Bool> = .just(true),
+        _ block: @escaping (I) -> Result<O, F>
+    ) -> Action<I, O, F> {
+        Action<I, O, F>(enabledIf: enabledIf) { input in
             let result = block(input)
             switch result {
             case let .success(output):
@@ -141,16 +153,22 @@ public extension Action {
         }
     }
 
-    static func withTask<I, O>(_ task: @escaping (I) async -> O) -> Action<I, O, Never> {
-        Action<I, O, Never> { input in
+    static func withTask<I, O>(
+        enabledIf: Property<Bool> = .just(true),
+        _ task: @escaping (I) async -> O
+    ) -> Action<I, O, Never> {
+        Action<I, O, Never>(enabledIf: enabledIf) { input in
             DeferredFuture.withTask {
                 await task(input)
             }.eraseToAnyDeferredPublisher()
         }
     }
 
-    static func withThrowingTask<I, O, F>(_ task: @escaping (I) async throws(F) -> O) -> Action<I, O, F> {
-        Action<I, O, F> { input in
+    static func withThrowingTask<I, O, F>(
+        enabledIf: Property<Bool> = .just(true),
+        _ task: @escaping (I) async throws(F) -> O
+    ) -> Action<I, O, F> {
+        Action<I, O, F>(enabledIf: enabledIf) { input in
             DeferredFuture<O, F>.withTask { () throws(F) in
                 try await task(input)
             }.eraseToAnyDeferredPublisher()
@@ -158,10 +176,11 @@ public extension Action {
     }
 
     static func withThrowingTask<I, O, F>(
+        enabledIf: Property<Bool> = .just(true),
         nonconformingErrorHandler: @escaping (Error) -> F,
         task: @escaping (I) async throws -> O
     ) -> Action<I, O, F> {
-        Action<I, O, F> { input in
+        Action<I, O, F>(enabledIf: enabledIf) { input in
             DeferredFuture<O, F>.withTask(
                 nonconformingErrorHandler: nonconformingErrorHandler
             ) { () throws in

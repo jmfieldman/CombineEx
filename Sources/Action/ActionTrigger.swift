@@ -73,11 +73,15 @@ public final class ActionTrigger<Input>: Sendable {
     /// Creates an ActionTrigger from an immediate action block.
     ///
     /// - Parameters:
+    ///   - enabledIf: The action can only fire when this is true.
     ///   - block: The closure to execute when the action is applied.
     ///
     /// - Returns: A new ActionTrigger instance.
-    public static func immediate(_ block: @MainActor @escaping (Input) -> Void) -> ActionTrigger<Input> {
-        Action<Input, Void, Never>.immediateOnMainActor(block).asActionTrigger
+    public static func immediate(
+        enabledIf: Property<Bool> = .just(true),
+        _ block: @MainActor @escaping (Input) -> Void
+    ) -> ActionTrigger<Input> {
+        Action<Input, Void, Never>.immediateOnMainActor(enabledIf: enabledIf, block).asActionTrigger
     }
 }
 
@@ -100,4 +104,9 @@ extension Action: ActionTriggerConvertible {
 @available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
 extension AnyDeferredPublisher: ActionTriggerConvertible {
     public var asActionTrigger: ActionTrigger<Void> { Action { _ in self }.asActionTrigger }
+}
+
+@available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
+extension AnyDeferredFuture: ActionTriggerConvertible {
+    public var asActionTrigger: ActionTrigger<Void> { Action { _ in self.eraseToAnyDeferredPublisher() }.asActionTrigger }
 }
