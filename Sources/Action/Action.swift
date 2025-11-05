@@ -14,16 +14,21 @@ public final class Action<Input, Output, Failure: Error>: @unchecked Sendable {
     private let errorsSubject = PassthroughSubject<Failure, Never>()
 
     // Public state
+    public let enabled: Property<Bool>
     public let isExecuting: Property<Bool>
     public let values: AnyPublisher<Output, Never>
     public let errors: AnyPublisher<Failure, Never>
 
     /// Create a new Action that executes the given builder's Publisher on `apply`.
-    public init(builder: @escaping (Input) -> AnyDeferredPublisher<Output, Failure>) {
+    public init(
+        enabledIf: Property<Bool> = .just(true),
+        builder: @escaping (Input) -> AnyDeferredPublisher<Output, Failure>
+    ) {
         self.publisherBuilder = builder
         self.isExecuting = .init(mutableIsExecuting.removeDuplicates())
         self.values = valuesSubject.eraseToAnyPublisher()
         self.errors = errorsSubject.eraseToAnyPublisher()
+        self.enabled = enabledIf
     }
 
     /// Applies the action with the given input and returns a deferred publisher.
@@ -36,7 +41,7 @@ public final class Action<Input, Output, Failure: Error>: @unchecked Sendable {
         Deferred { [self] () -> AnyPublisher<Output, ActionError<Failure>> in
             var canBegin = false
             mutableIsExecuting.modify { isExecuting in
-                if !isExecuting {
+                if !isExecuting, enabled.value {
                     isExecuting = true
                     canBegin = true
                 } else {
