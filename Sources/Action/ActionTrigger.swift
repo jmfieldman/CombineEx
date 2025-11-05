@@ -24,7 +24,7 @@ public final class ActionTrigger<Input>: Sendable {
 
     /// An @Observable property that indicates whether the UI element
     /// associated with firing this action should be enabled or not
-    public let enabled: UIProperty<Bool>
+    public let isEnabled: UIProperty<Bool>
 
     /// A closure that applies this anonymous action with the given input
     /// and returns a publisher associated with it.
@@ -37,7 +37,7 @@ public final class ActionTrigger<Input>: Sendable {
     ///   - internalAction: The underlying action to be wrapped.
     public init(_ internalAction: Action<Input, some Any, some Any>) {
         self.isExecuting = UIProperty(internalAction.isExecuting)
-        self.enabled = UIProperty(internalAction.enabled)
+        self.isEnabled = UIProperty(internalAction.isEnabled)
         self.applyAnonymous = { input in
             internalAction.applyIfPossible(input)
                 .demoteFailure()
