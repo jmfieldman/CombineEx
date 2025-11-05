@@ -42,7 +42,9 @@ public final class Property<Output>: PropertyProtocol, @unchecked Sendable {
     /// Initializes a Property with an initial value, and then updates with each
     /// new value from the provided publisher.
     public init(initial: Output, then: some Publisher<Output, Never>) {
-        let shared = then.share()
+        let shared = then
+            .multicast { CurrentValueSubject<Output, Never>(initial) }
+            .autoconnect()
 
         self._value = initial
         self.capturedProperty = nil

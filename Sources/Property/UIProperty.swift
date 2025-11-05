@@ -13,7 +13,6 @@ public final class UIProperty<Output>: PropertyProtocol, @unchecked Sendable {
     public typealias Failure = Never
 
     public private(set) var value: Output
-    @ObservationIgnored private var cancellable: AnyCancellable? = nil
     @ObservationIgnored private var captured: any Publisher<Output, Never>
 
     public init<P: PropertyProtocol>(_ capturing: P) where P.Output == Output {
@@ -22,12 +21,12 @@ public final class UIProperty<Output>: PropertyProtocol, @unchecked Sendable {
         // Intentially capture current value here so that self can be used
         // in the sink
         self.value = capturing.value
-        self.cancellable = capturing
+        capturing
             .dropFirst()
-            .receiveOnMain()
-            .sink(receiveValue: { [weak self] value in
+            .handleValueOnMainActor { [weak self] value in
                 self?.update(value)
-            })
+            }
+            .sink(duringLifetimeOf: self)
 
         // But we need this to capture the true state of the argument
         // in a thread-safe manner since we dropFirst on its publisher.
@@ -39,14 +38,14 @@ public final class UIProperty<Output>: PropertyProtocol, @unchecked Sendable {
     public init(initial: Output, then: some Publisher<Output, Never>) {
         self.captured = then
         self.value = initial
-        self.cancellable = then
-            .receiveOnMain()
-            .sink(receiveValue: { [weak self] value in
+        then
+            .handleValueOnMainActor { [weak self] value in
                 self?.update(value)
-            })
+            }
+            .sink(duringLifetimeOf: self)
     }
 
-    private func update(_ value: Output) {
+    @MainActor private func update(_ value: Output) {
         self.value = value
     }
 }
