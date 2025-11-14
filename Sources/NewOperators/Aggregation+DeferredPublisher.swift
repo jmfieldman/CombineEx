@@ -27,7 +27,7 @@ public extension DeferredPublisherProtocol {
     @_disfavoredOverload
     func combineLatest<A, NewOutput>(
         _ p1: some Publisher<A, Failure>,
-        _ transform: @escaping (Output, A) -> NewOutput
+        _ transform: @escaping @Sendable (Output, A) -> NewOutput
     ) -> Deferred<Publishers.Aggregate<NewOutput, Failure>> {
         Deferred {
             Publishers.Aggregate<NewOutput, Failure>(
@@ -63,7 +63,7 @@ public extension DeferredPublisherProtocol {
     func combineLatest<A, B, NewOutput>(
         _ p1: some Publisher<A, Failure>,
         _ p2: some Publisher<B, Failure>,
-        _ transform: @escaping (Output, A, B) -> NewOutput
+        _ transform: @escaping @Sendable (Output, A, B) -> NewOutput
     ) -> Deferred<Publishers.Aggregate<NewOutput, Failure>> {
         Deferred {
             Publishers.Aggregate<NewOutput, Failure>(
@@ -103,7 +103,7 @@ public extension DeferredPublisherProtocol {
         _ p1: some Publisher<A, Failure>,
         _ p2: some Publisher<B, Failure>,
         _ p3: some Publisher<C, Failure>,
-        _ transform: @escaping (Output, A, B, C) -> NewOutput
+        _ transform: @escaping @Sendable (Output, A, B, C) -> NewOutput
     ) -> Deferred<Publishers.Aggregate<NewOutput, Failure>> {
         Deferred {
             Publishers.Aggregate<NewOutput, Failure>(

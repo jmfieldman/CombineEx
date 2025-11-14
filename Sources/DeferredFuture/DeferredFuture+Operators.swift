@@ -12,7 +12,7 @@ public extension DeferredFutureProtocol {
     /// This allows the caller to transform the output type/value of the receiver.
     /// Failures are piped through without change.
     @inlinable func futureLiftOutput<NewOutput>(
-        _ lift: @escaping (Output, @escaping Future<NewOutput, Failure>.Promise) -> Void
+        _ lift: @escaping @Sendable (Output, @escaping Future<NewOutput, Failure>.Promise) -> Void
     ) -> DeferredFuture<NewOutput, Failure> {
         let outerAttempt = attemptToFulfill
         return DeferredFuture<NewOutput, Failure> { innerPromise in
@@ -31,7 +31,7 @@ public extension DeferredFutureProtocol {
     /// This allows the caller to transform the failure type/value of the receiver.
     /// Successes are piped through without change.
     @inlinable func futureLiftFailure<NewFailure: Error>(
-        _ lift: @escaping (Failure, @escaping Future<Output, NewFailure>.Promise) -> Void
+        _ lift: @escaping @Sendable (Failure, @escaping Future<Output, NewFailure>.Promise) -> Void
     ) -> DeferredFuture<Output, NewFailure> {
         let outerAttempt = attemptToFulfill
         return DeferredFuture<Output, NewFailure> { innerPromise in
@@ -49,7 +49,7 @@ public extension DeferredFutureProtocol {
     /// Maps a result from the receiving DeferredFuture into the `lift` tuple.
     /// This allows the caller to act on the result of the receiver.
     @inlinable func futureLiftResult<Output>(
-        _ lift: @escaping (Result<Self.Output, Failure>, @escaping Future<Output, Failure>.Promise) -> Void
+        _ lift: @escaping @Sendable (Result<Self.Output, Failure>, @escaping Future<Output, Failure>.Promise) -> Void
     ) -> DeferredFuture<Output, Failure> {
         let outerAttempt = attemptToFulfill
         return DeferredFuture<Output, Failure> { innerPromise in
@@ -63,7 +63,7 @@ public extension DeferredFutureProtocol {
     /// This allows the caller to transform the failure of the receiver into a new output.
     /// Successes are piped through without change.
     @inlinable func futureLiftFailureToOutput(
-        _ lift: @escaping (Failure, @escaping Future<Output, Failure>.Promise) -> Void
+        _ lift: @escaping @Sendable (Failure, @escaping Future<Output, Failure>.Promise) -> Void
     ) -> DeferredFuture<Output, Failure> {
         let outerAttempt = attemptToFulfill
         return DeferredFuture<Output, Failure> { innerPromise in
@@ -88,7 +88,7 @@ public extension DeferredFutureProtocol {
     /// - Returns: A new `DeferredFuture` that contains the transformed output.
     @_disfavoredOverload
     func map<NewOutput>(
-        _ transform: @escaping (Output) -> NewOutput
+        _ transform: @escaping @Sendable (Output) -> NewOutput
     ) -> DeferredFuture<NewOutput, Failure> {
         futureLiftOutput { outerOutput, innerPromise in
             innerPromise(.success(transform(outerOutput)))
@@ -101,7 +101,7 @@ public extension DeferredFutureProtocol {
     /// - Returns: A new `DeferredFuture` that contains the transformed output or an error if thrown.
     @_disfavoredOverload
     func tryMap<NewOutput>(
-        _ transform: @escaping (Output) throws -> NewOutput
+        _ transform: @escaping @Sendable (Output) throws -> NewOutput
     ) -> DeferredFuture<NewOutput, Failure> where Failure == Error {
         futureLiftOutput { outerOutput, innerPromise in
             do {
@@ -119,7 +119,7 @@ public extension DeferredFutureProtocol {
     /// - Returns: A new `DeferredFuture` that contains the transformed failure.
     @_disfavoredOverload
     func mapError<NewFailure: Error>(
-        _ transform: @escaping (Failure) -> NewFailure
+        _ transform: @escaping @Sendable (Failure) -> NewFailure
     ) -> DeferredFuture<Output, NewFailure> {
         futureLiftFailure { outerFailure, innerPromise in
             innerPromise(.failure(transform(outerFailure)))
@@ -143,7 +143,7 @@ public extension DeferredFutureProtocol {
     /// - Returns: A new `DeferredFuture` that contains the output of the transformed `DeferredFuture`.
     @_disfavoredOverload
     func flatMap<NewOutput>(
-        _ transform: @escaping (Output) -> some DeferredFutureProtocol<NewOutput, Failure>
+        _ transform: @escaping @Sendable (Output) -> some DeferredFutureProtocol<NewOutput, Failure>
     ) -> DeferredFuture<NewOutput, Failure> {
         futureLiftOutput { outerOutput, innerPromise in
             transform(outerOutput).attemptToFulfill { innerResult in
@@ -163,7 +163,7 @@ public extension DeferredFutureProtocol {
     /// - Returns: A new `DeferredFuture` that contains the output of the transformed `DeferredFuture`.
     @_disfavoredOverload
     func flatMapError<NewFailure>(
-        _ transform: @escaping (Failure) -> some DeferredFutureProtocol<Output, NewFailure>
+        _ transform: @escaping @Sendable (Failure) -> some DeferredFutureProtocol<Output, NewFailure>
     ) -> DeferredFuture<Output, NewFailure> {
         futureLiftFailure { outerFailure, innerPromise in
             transform(outerFailure).attemptToFulfill { innerResult in
@@ -213,7 +213,7 @@ public extension DeferredFutureProtocol {
     /// - Returns: A `DeferredFuture` that attempts to fulfill based on the transformed deferred future.
     @_disfavoredOverload
     func `catch`(
-        _ transform: @escaping (Failure) -> some DeferredFutureProtocol<Output, Failure>
+        _ transform: @escaping @Sendable (Failure) -> some DeferredFutureProtocol<Output, Failure>
     ) -> DeferredFuture<Output, Failure> {
         futureLiftFailureToOutput { outerFailure, innerPromise in
             transform(outerFailure).attemptToFulfill { innerResult in
@@ -235,7 +235,7 @@ public extension DeferredFutureProtocol {
     /// - Returns: A `DeferredFuture` that attempts to fulfill based on the transformed deferred future.
     @_disfavoredOverload
     func tryCatch(
-        _ transform: @escaping (Failure) throws -> some DeferredFutureProtocol<Output, Failure>
+        _ transform: @escaping @Sendable (Failure) throws -> some DeferredFutureProtocol<Output, Failure>
     ) -> DeferredFuture<Output, Failure> where Failure == Error {
         futureLiftFailureToOutput { outerFailure, innerPromise in
             do {
@@ -371,7 +371,7 @@ public extension DeferredFutureProtocol {
     ///   - decoder: The decoder to use for decoding the output.
     /// - Returns: A new `DeferredFuture` that contains the decoded item.
     @_disfavoredOverload
-    func decode<Item: Decodable, Coder: TopLevelDecoder>(
+    func decode<Item: Sendable & Decodable, Coder: TopLevelDecoder>(
         item: Item.Type,
         decoder: Coder
     ) -> DeferredFuture<Item, Failure> where Failure == Error, Output == Coder.Input {

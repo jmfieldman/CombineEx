@@ -30,7 +30,7 @@ private class CombineLatestAccumulator<Output, Failure: Error> {
     init(
         _ outerPromise: @escaping Future<Output, Failure>.Promise,
         _ count: Int,
-        onAccumulated: @escaping ([Any]) -> Output
+        onAccumulated: @escaping @Sendable ([Any]) -> Output
     ) {
         self.values = [Any](repeating: 0, count: count)
         self.outerPromise = outerPromise
@@ -102,7 +102,7 @@ public extension DeferredFutureProtocol {
     @_disfavoredOverload
     func combineLatest<P, T>(
         _ other: some DeferredFutureProtocol<P, Failure>,
-        _ transform: @escaping (Self.Output, P) -> T
+        _ transform: @escaping @Sendable (Self.Output, P) -> T
     ) -> DeferredFuture<T, Failure> {
         DeferredFuture { promise in
             let accumulator = CombineLatestAccumulator(promise, 2) {
@@ -147,7 +147,7 @@ public extension DeferredFutureProtocol {
     func combineLatest<P, Q, T>(
         _ publisher1: some DeferredFutureProtocol<P, Failure>,
         _ publisher2: some DeferredFutureProtocol<Q, Failure>,
-        _ transform: @escaping (Self.Output, P, Q) -> T
+        _ transform: @escaping @Sendable (Self.Output, P, Q) -> T
     ) -> DeferredFuture<T, Failure> {
         DeferredFuture { promise in
             let accumulator = CombineLatestAccumulator(promise, 3) {
@@ -198,7 +198,7 @@ public extension DeferredFutureProtocol {
         _ publisher1: some DeferredFutureProtocol<P, Failure>,
         _ publisher2: some DeferredFutureProtocol<Q, Failure>,
         _ publisher3: some DeferredFutureProtocol<R, Failure>,
-        _ transform: @escaping (Self.Output, P, Q, R) -> T
+        _ transform: @escaping @Sendable (Self.Output, P, Q, R) -> T
     ) -> DeferredFuture<T, Failure> {
         DeferredFuture { promise in
             let accumulator = CombineLatestAccumulator(promise, 4) {

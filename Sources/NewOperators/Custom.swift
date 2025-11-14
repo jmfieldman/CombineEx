@@ -46,7 +46,7 @@ public extension Publishers {
         ///
         /// - Parameter subscriptionHandler: A closure that handles the subscription logic.
         public init(
-            _ subscriptionHandler: @escaping (any CustomSubscriptionHandler<Output, Failure>) -> Void
+            _ subscriptionHandler: @escaping @Sendable (any CustomSubscriptionHandler<Output, Failure>) -> Void
         ) {
             self.subscriptionHandler = subscriptionHandler
         }
@@ -121,14 +121,14 @@ public extension Publishers {
 ///   - Output: The type of values produced by the publisher.
 ///   - Failure: The type of error that can occur, conforming to `Error`.
 public struct DeferredCustom<Output, Failure: Error>: DeferredPublisherProtocol {
-    private let subscriptionHandler: (any Publishers.CustomSubscriptionHandler<Output, Failure>) -> Void
+    private let subscriptionHandler: @Sendable (any Publishers.CustomSubscriptionHandler<Output, Failure>) -> Void
     public let createPublisher: () -> any Publisher<Output, Failure>
 
     /// Initializes the deferred custom publisher with a subscription handler.
     ///
     /// - Parameter subscriptionHandler: A closure that handles the subscription logic.
     public init(
-        subscriptionHandler: @escaping (any Publishers.CustomSubscriptionHandler<Output, Failure>) -> Void
+        subscriptionHandler: @escaping @Sendable (any Publishers.CustomSubscriptionHandler<Output, Failure>) -> Void
     ) {
         self.subscriptionHandler = subscriptionHandler
         self.createPublisher = {

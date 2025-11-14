@@ -6,9 +6,9 @@
 import Combine
 import Foundation
 
-public final class DeferredFutureDemuxer<Key: Hashable, Output, Failure: Error> {
+public final class DeferredFutureDemuxer<Key: Hashable, Output, Failure: Error>: @unchecked Sendable {
     /// The operation we are initialized with
-    private let operation: (Key) -> AnyDeferredFuture<Output, Failure>
+    private let operation: @Sendable (Key) -> AnyDeferredFuture<Output, Failure>
 
     /// Queue to begin execution of internal futures.
     private let promiseQueue: DispatchQueue
@@ -28,7 +28,7 @@ public final class DeferredFutureDemuxer<Key: Hashable, Output, Failure: Error> 
     ///
     /// You can decide which DispatchQueue to initiate the future's work.
     /// If you pass nil it will use the global default background queue.
-    public init(_ operation: @escaping (Key) -> AnyDeferredFuture<Output, Failure>, promiseQueue: DispatchQueue? = nil) {
+    public init(_ operation: @escaping @Sendable (Key) -> AnyDeferredFuture<Output, Failure>, promiseQueue: DispatchQueue? = nil) {
         self.operation = operation
         self.promiseQueue = promiseQueue ?? .global(qos: .default)
     }

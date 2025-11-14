@@ -32,8 +32,8 @@ public extension Publishers {
         }
 
         private let strategy: Strategy
-        private let componentBuilder: (any AggregatePublisherAggregator<Failure>) -> Void
-        private let aggregationBlock: ([Any]) -> Output
+        private let componentBuilder: @Sendable (any AggregatePublisherAggregator<Failure>) -> Void
+        private let aggregationBlock: @Sendable ([Any]) -> Output
 
         /// Creates a new `Aggregate` publisher.
         ///
@@ -43,8 +43,8 @@ public extension Publishers {
         ///   - aggregationBlock: A block that takes an array of values and returns a single output value.
         public init(
             strategy: Strategy,
-            componentBuilder: @escaping (any AggregatePublisherAggregator<Failure>) -> Void,
-            aggregationBlock: @escaping ([Any]) -> Output
+            componentBuilder: @escaping @Sendable (any AggregatePublisherAggregator<Failure>) -> Void,
+            aggregationBlock: @escaping @Sendable ([Any]) -> Output
         ) {
             self.strategy = strategy
             self.componentBuilder = componentBuilder
@@ -95,8 +95,8 @@ public extension Publishers {
             init(
                 subscriber: S,
                 strategy: Strategy,
-                componentBuilder: @escaping (AggregateSubscription) -> Void,
-                aggregationBlock: @escaping ([Any]) -> Output
+                componentBuilder: @escaping @Sendable (AggregateSubscription) -> Void,
+                aggregationBlock: @escaping @Sendable ([Any]) -> Output
             ) {
                 self.subscriber = subscriber
                 self.strategy = strategy

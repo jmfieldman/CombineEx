@@ -66,7 +66,7 @@ public final class CompositeErrorMap<T: CompositeError>: @unchecked Sendable {
 
     public init() {}
 
-    public func mapping<E: Error>(_ type: E.Type, resolution: @escaping (E) -> T) -> Self {
+    public func mapping<E: Error>(_ type: E.Type, resolution: @escaping @Sendable (E) -> T) -> Self {
         internalArray.append((CompositeErrorMapElement(type), { resolution($0 as! E) }))
         return self
     }

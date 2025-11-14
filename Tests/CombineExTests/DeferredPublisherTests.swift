@@ -132,7 +132,7 @@ private extension DeferredPublisherTests {
     func basicSingleFutureTest<Output: Equatable>(
         input: Output,
         output: Output,
-        _ transform: @escaping (AnyDeferredPublisher<Output, TestError>) -> AnyDeferredPublisher<Output, TestError>
+        _ transform: @escaping @Sendable (AnyDeferredPublisher<Output, TestError>) -> AnyDeferredPublisher<Output, TestError>
     ) {
         var countableInnerFire = 0
         var sinkResult: Output?

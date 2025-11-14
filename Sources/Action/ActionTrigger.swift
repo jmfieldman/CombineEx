@@ -79,7 +79,7 @@ public final class ActionTrigger<Input>: Sendable {
     /// - Returns: A new ActionTrigger instance.
     public static func immediate(
         enabledIf: Property<Bool> = .just(true),
-        _ block: @MainActor @escaping (Input) -> Void
+        _ block: @MainActor @escaping @Sendable (Input) -> Void
     ) -> ActionTrigger<Input> {
         Action<Input, Void, Never>.immediateOnMainActor(enabledIf: enabledIf, block).asActionTrigger
     }

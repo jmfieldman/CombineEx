@@ -42,7 +42,7 @@ public class BindTarget<T> {
     public init<Target: AnyObject>(
         target: Target,
         scheduler: some Scheduler = UIScheduler.shared,
-        handler: @escaping (Target, T) -> Void
+        handler: @escaping @Sendable (Target, T) -> Void
     ) {
         self.onSink = { [weak target] publisher in
             guard let target else {
@@ -78,7 +78,7 @@ public extension BindTargetProviding {
 
     func bind<T>(
         receiveOn scheduler: some Scheduler = UIScheduler.shared,
-        _ handler: @escaping (Self, T) -> Void
+        _ handler: @escaping @Sendable (Self, T) -> Void
     ) -> BindTarget<T> {
         BindTarget(target: self, scheduler: scheduler, handler: handler)
     }

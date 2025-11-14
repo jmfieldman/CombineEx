@@ -13,7 +13,7 @@ public extension Publishers {
         public typealias Failure = Upstream.Failure
 
         private let upstream: Upstream
-        private let transform: (Upstream.Output) -> Result<NewOutput, Failure>
+        private let transform: @Sendable (Upstream.Output) -> Result<NewOutput, Failure>
 
         /// Creates a new `AttemptMap` publisher.
         ///
@@ -21,7 +21,7 @@ public extension Publishers {
         ///   - upstream: The upstream publisher from which to receive values.
         ///   - transform: A closure that takes an element from the upstream publisher and returns
         ///                a `Result` containing either the transformed value or a failure.
-        public init(upstream: Upstream, transform: @escaping (Upstream.Output) -> Result<NewOutput, Failure>) {
+        public init(upstream: Upstream, transform: @escaping @Sendable (Upstream.Output) -> Result<NewOutput, Failure>) {
             self.upstream = upstream
             self.transform = transform
         }
@@ -44,7 +44,7 @@ private extension Publishers.AttemptMap {
         private let transform: (Upstream.Output) -> Result<NewOutput, Upstream.Failure>
         private var subscriber: S?
 
-        init(transform: @escaping (Upstream.Output) -> Result<NewOutput, Upstream.Failure>, subscriber: S) {
+        init(transform: @escaping @Sendable (Upstream.Output) -> Result<NewOutput, Upstream.Failure>, subscriber: S) {
             self.transform = transform
             self.subscriber = subscriber
         }
@@ -88,7 +88,7 @@ public extension Publisher {
     /// - Parameter transform: A closure that takes an element and returns a `Result` containing the transformed value or a failure.
     /// - Returns: A `Publishers.AttemptMap` instance that applies the transformation to each element.
     func attemptMap<NewOutput>(
-        _ transform: @escaping (Output) -> Result<NewOutput, Failure>
+        _ transform: @escaping @Sendable (Output) -> Result<NewOutput, Failure>
     ) -> Publishers.AttemptMap<Self, NewOutput> {
         Publishers.AttemptMap(upstream: self, transform: transform)
     }
@@ -101,7 +101,7 @@ public extension DeferredPublisherProtocol {
     /// - Returns: A `Deferred<Publishers.AttemptMap<WrappedPublisher, NewOutput>>` instance that applies the transformation to each element.
     @_disfavoredOverload
     func attemptMap<NewOutput>(
-        _ transform: @escaping (WrappedPublisher.Output) -> Result<NewOutput, Failure>
+        _ transform: @escaping @Sendable (WrappedPublisher.Output) -> Result<NewOutput, Failure>
     ) -> Deferred<Publishers.AttemptMap<WrappedPublisher, NewOutput>> where WrappedPublisher.Failure == Failure {
         deferredLift { $0.attemptMap(transform) }
     }
@@ -114,7 +114,7 @@ public extension DeferredFutureProtocol {
     /// - Returns: A `DeferredFuture<NewOutput, Failure>` instance that applies the transformation to the output.
     @_disfavoredOverload
     func attemptMap<NewOutput>(
-        _ transform: @escaping (Output) -> Result<NewOutput, Failure>
+        _ transform: @escaping @Sendable (Output) -> Result<NewOutput, Failure>
     ) -> DeferredFuture<NewOutput, Failure> {
         futureLiftOutput { outerResult, innerPromise in
             innerPromise(transform(outerResult))

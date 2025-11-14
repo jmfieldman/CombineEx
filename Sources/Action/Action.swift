@@ -22,7 +22,7 @@ public final class Action<Input, Output, Failure: Error>: @unchecked Sendable {
     /// Create a new Action that executes the given builder's Publisher on `apply`.
     public init(
         enabledIf: Property<Bool> = .just(true),
-        builder: @escaping (Input) -> AnyDeferredPublisher<Output, Failure>
+        builder: @escaping @Sendable (Input) -> AnyDeferredPublisher<Output, Failure>
     ) {
         self.publisherBuilder = builder
         self.isExecuting = .init(mutableIsExecuting.removeDuplicates())
@@ -118,7 +118,7 @@ public extension Action {
 
     static func immediate<I, O>(
         enabledIf: Property<Bool> = .just(true),
-        _ block: @escaping (I) -> O
+        _ block: @escaping @Sendable (I) -> O
     ) -> Action<I, O, Never> {
         Action<I, O, Never>(enabledIf: enabledIf) { input in
             .just(block(input))
@@ -127,7 +127,7 @@ public extension Action {
 
     static func immediateOnMainActor<I, O>(
         enabledIf: Property<Bool> = .just(true),
-        _ block: @MainActor @escaping (I) -> O
+        _ block: @MainActor @escaping @Sendable (I) -> O
     ) -> Action<I, O, Never> {
         Action<I, O, Never>(enabledIf: enabledIf) { input in
             AnyDeferredFuture<O, Never> { promise in
@@ -140,7 +140,7 @@ public extension Action {
 
     static func immediateResult<I, O, F>(
         enabledIf: Property<Bool> = .just(true),
-        _ block: @escaping (I) -> Result<O, F>
+        _ block: @escaping @Sendable (I) -> Result<O, F>
     ) -> Action<I, O, F> {
         Action<I, O, F>(enabledIf: enabledIf) { input in
             let result = block(input)
@@ -155,7 +155,7 @@ public extension Action {
 
     static func withTask<I, O>(
         enabledIf: Property<Bool> = .just(true),
-        _ task: @escaping (I) async -> O
+        _ task: @escaping @Sendable (I) async -> O
     ) -> Action<I, O, Never> {
         Action<I, O, Never>(enabledIf: enabledIf) { input in
             DeferredFuture.withTask {
@@ -166,7 +166,7 @@ public extension Action {
 
     static func withThrowingTask<I, O, F>(
         enabledIf: Property<Bool> = .just(true),
-        _ task: @escaping (I) async throws(F) -> O
+        _ task: @escaping @Sendable (I) async throws(F) -> O
     ) -> Action<I, O, F> {
         Action<I, O, F>(enabledIf: enabledIf) { input in
             DeferredFuture<O, F>.withTask { () throws(F) in
@@ -177,8 +177,8 @@ public extension Action {
 
     static func withThrowingTask<I, O, F>(
         enabledIf: Property<Bool> = .just(true),
-        nonconformingErrorHandler: @escaping (Error) -> F,
-        task: @escaping (I) async throws -> O
+        nonconformingErrorHandler: @escaping @Sendable (Error) -> F,
+        task: @escaping @Sendable (I) async throws -> O
     ) -> Action<I, O, F> {
         Action<I, O, F>(enabledIf: enabledIf) { input in
             DeferredFuture<O, F>.withTask(

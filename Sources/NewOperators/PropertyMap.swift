@@ -101,7 +101,7 @@ public extension Publisher {
     /// - Returns: A `PropertyMap` publisher that applies the transformation.
     func propertyMap<Element: Identifiable & Equatable, TransformOutput>(
         removeDuplicates: Bool = true,
-        transform: @escaping (Property<Element>) -> TransformOutput
+        transform: @escaping @Sendable (Property<Element>) -> TransformOutput
     ) -> Publishers.PropertyMap<Self, Element, TransformOutput> where Output == [Element] {
         Publishers.PropertyMap(
             upstream: self,
@@ -128,7 +128,7 @@ public extension DeferredPublisherProtocol {
     @_disfavoredOverload
     func propertyMap<Element: Identifiable & Equatable, TransformOutput>(
         removeDuplicates: Bool = true,
-        transform: @escaping (Property<Element>) -> TransformOutput
+        transform: @escaping @Sendable (Property<Element>) -> TransformOutput
     ) -> Deferred<Publishers.PropertyMap<WrappedPublisher, Element, TransformOutput>> where WrappedPublisher.Output == [Element] {
         deferredLift {
             $0.propertyMap(removeDuplicates: removeDuplicates, transform: transform)
