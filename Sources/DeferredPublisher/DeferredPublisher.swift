@@ -50,7 +50,7 @@ extension Deferred: DeferredPublisherProtocol {
 /// publisher upon subscription, delaying the creation of the actual publisher
 /// until values are requested. This is similar to Combine's `AnyPublisher`,
 /// but specifically designed for deferred work.
-public class AnyDeferredPublisher<Output, Failure: Error>: DeferredPublisherProtocol {
+public class AnyDeferredPublisher<Output, Failure: Error>: DeferredPublisherProtocol, @unchecked Sendable {
     /// A convenience type alias for the publisher produced by this deferred publisher.
     public typealias WrappedPublisher = AnyPublisher<Output, Failure>
 

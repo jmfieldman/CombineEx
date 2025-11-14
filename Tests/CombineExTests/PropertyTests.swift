@@ -169,14 +169,12 @@ final class PropertyTests: XCTestCase {
     }
 
     func testPropertyComplexPostAssignmentStream() {
-        var capturedHandler: (any Publishers.CustomSubscriptionHandler<Int, Never>)? = nil
-        let custom = Publishers.Custom<Int, Never> { handler in
-            capturedHandler = handler
-        }.eraseToAnyPublisher()
+        let capturedSubject = PassthroughSubject<Int, Never>()
 
-        let property = Property<Int>(initial: 0, then: custom)
+        let property = Property<Int>(initial: 0, then: capturedSubject)
         let accumulator1 = TestAccumulator<Int>()
         let accumulator2 = TestAccumulator<Int>()
+        let accumulator3 = TestAccumulator<Int>()
 
         property
             .map { $0 * 2 }
@@ -188,18 +186,26 @@ final class PropertyTests: XCTestCase {
             .map { $0 * 2 }
             .sink(duringLifetimeOf: self)
 
-        capturedHandler?.sendValue(1)
-        capturedHandler?.sendValue(2)
+        capturedSubject.send(1)
+        capturedSubject.send(2)
 
         XCTAssertEqual(accumulator1.values, [0, 2, 4])
         XCTAssertEqual(accumulator2.values, [0, 1, 2])
+        XCTAssertEqual(accumulator3.values, [])
+
+        property
+            .handleValue { accumulator3.append($0) }
+            .sink(duringLifetimeOf: self)
+
+        capturedSubject.send(3)
+
+        XCTAssertEqual(accumulator1.values, [0, 2, 4, 6])
+        XCTAssertEqual(accumulator2.values, [0, 1, 2, 3])
+        XCTAssertEqual(accumulator3.values, [2, 3])
     }
 
     func testPropertyRetention() {
-        var capturedHandler: (any Publishers.CustomSubscriptionHandler<Int, Never>)? = nil
-        let custom = Publishers.Custom<Int, Never> { handler in
-            capturedHandler = handler
-        }.eraseToAnyPublisher()
+        let capturedSubject = PassthroughSubject<Int, Never>()
 
         let accumulator1 = TestAccumulator<Int>()
         let accumulator2 = TestAccumulator<Int>()
@@ -207,7 +213,7 @@ final class PropertyTests: XCTestCase {
         weak var weakProp: Property<Int>? = nil
 
         autoreleasepool {
-            let property = Property<Int>(initial: 0, then: custom)
+            let property = Property<Int>(initial: 0, then: capturedSubject)
             weakProp = property
 
             property
@@ -223,8 +229,8 @@ final class PropertyTests: XCTestCase {
 
         XCTAssertNil(weakProp)
 
-        capturedHandler?.sendValue(1)
-        capturedHandler?.sendValue(2)
+        capturedSubject.send(1)
+        capturedSubject.send(2)
 
         XCTAssertEqual(accumulator1.values, [0, 2, 4])
         XCTAssertEqual(accumulator2.values, [0, 1, 2])

@@ -294,7 +294,7 @@ public extension DeferredFuture {
 /// Use this type when you need to return a deferred future without
 /// exposing its actual type in your API, allowing for flexibility
 /// in future implementation changes.
-public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol {
+public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, @unchecked Sendable {
     /// A convenience alias for the concrete `DeferredFuture` type
     /// wrapped by this class.
     public typealias WrappedDeferredFuture = DeferredFuture<Output, Failure>

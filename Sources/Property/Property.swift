@@ -42,8 +42,14 @@ public final class Property<Output>: PropertyProtocol, @unchecked Sendable {
     /// Initializes a Property with an initial value, and then updates with each
     /// new value from the provided publisher.
     public init(initial: Output, then: some Publisher<Output, Never>) {
+        let subject = ReplaySubject<Output, Never>(bufferSize: 1)
+        subject.send(initial)
+
+        // Cannot use a CurrentValueSubject as the subject here, since it will pick
+        // up the upstream termination from 'then:' and stop relaying to future
+        // subscribers. Use ReplaySubject from CombineExt
         let shared = then
-            .multicast { CurrentValueSubject<Output, Never>(initial) }
+            .multicast(subject: subject)
             .autoconnect()
 
         self._value = initial
@@ -99,11 +105,7 @@ public extension Property {
         lock.withLock {
             isModifying = true
             if let publisher = capturedPublisher {
-                if capturedProperty == nil {
-                    publisher.eraseToAnyPublisher().prepend(_value).receive(subscriber: subscriber)
-                } else {
-                    publisher.receive(subscriber: subscriber)
-                }
+                publisher.receive(subscriber: subscriber)
             } else {
                 Just(_value).receive(subscriber: subscriber)
             }
