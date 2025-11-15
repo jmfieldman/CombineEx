@@ -23,7 +23,7 @@ public protocol DeferredFutureProtocol<Output, Failure>: Publisher {
     /// This closure is typically called once a subscriber requests values,
     /// allowing you to provide the eventual result (`.success`) or error
     /// (`.failure`).
-    var attemptToFulfill: @Sendable (@escaping @Sendable Future<Output, Failure>.Promise) -> Void { get }
+    var attemptToFulfill: (@escaping Future<Output, Failure>.Promise) -> Void { get }
 
     /// Erases the concrete deferred future type, returning an
     /// `AnyDeferredFuture` that hides the implementation details.
@@ -82,7 +82,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     ///
     /// - Parameter promise: A closure that you must call with either
     ///   `.success(Output)` or `.failure(Failure)` to resolve the future.
-    public let attemptToFulfill: @Sendable (@escaping @Sendable WrappedFuture.Promise) -> Void
+    public let attemptToFulfill: (@escaping @Sendable WrappedFuture.Promise) -> Void
 
     /// The internal `Deferred` that wraps the `Future`. The `Future`
     /// is only created when this `Deferred` is subscribed to.
@@ -95,7 +95,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     ///   you must call to complete the future. This closure is deferred
     ///   until subscription time.
     public init(
-        _ attemptToFulfill: @escaping @Sendable (@escaping @Sendable WrappedFuture.Promise) -> Void
+        _ attemptToFulfill: @escaping (@escaping @Sendable WrappedFuture.Promise) -> Void
     ) {
         self.attemptToFulfill = attemptToFulfill
         self.wrappedDeferredFuture = Deferred {
@@ -110,7 +110,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     ///   the value of the future, or whose thrown error is emitted as the
     ///   failure.
     @_disfavoredOverload
-    public static func withTask(_ task: @escaping @Sendable () async throws(Failure) -> Output) -> Self {
+    public static func withTask(_ task: @escaping () async throws(Failure) -> Output) -> Self {
         .init { promise in
             Task {
                 do throws(Failure) {
@@ -131,7 +131,7 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     /// - Parameter task: An async function whose return value is emitted as
     ///   the value of the future, or whose thrown error is emitted as the
     ///   failure.
-    public static func withTask(_ task: @escaping @Sendable () async throws -> Output) -> Self where Failure: CompositeError {
+    public static func withTask(_ task: @escaping () async throws -> Output) -> Self where Failure: CompositeError {
         .init { promise in
             Task {
                 do {
@@ -150,8 +150,8 @@ public struct DeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, Pu
     ///   the value of the future, or whose thrown error is emitted as the
     ///   failure.
     public static func withTask(
-        nonconformingErrorHandler: @escaping @Sendable (Error) -> Failure,
-        task: @escaping @Sendable () async throws -> Output
+        nonconformingErrorHandler: @escaping (Error) -> Failure,
+        task: @escaping () async throws -> Output
     ) -> Self {
         .init { promise in
             Task {
@@ -259,7 +259,7 @@ public extension DeferredFuture {
     }
 
     /// Creates a deferred future that runs the specified block and emits the result
-    static func closure(_ block: @escaping @Sendable () -> Result<Output, Failure>) -> DeferredFuture<Output, Failure> {
+    static func closure(_ block: @escaping () -> Result<Output, Failure>) -> DeferredFuture<Output, Failure> {
         DeferredFuture { promise in
             let result = block()
             promise(result)
@@ -267,7 +267,7 @@ public extension DeferredFuture {
     }
 
     /// Creates a deferred future that runs the specified block and emits the success
-    static func successClosure(_ block: @escaping @Sendable () -> Output) -> DeferredFuture<Output, Failure> {
+    static func successClosure(_ block: @escaping () -> Output) -> DeferredFuture<Output, Failure> {
         DeferredFuture { promise in
             let result = block()
             promise(.success(result))
@@ -275,7 +275,7 @@ public extension DeferredFuture {
     }
 
     /// Creates a deferred future that runs the specified block and emits the failure
-    static func failureClosure(_ block: @escaping @Sendable () -> Failure) -> DeferredFuture<Output, Failure> {
+    static func failureClosure(_ block: @escaping () -> Failure) -> DeferredFuture<Output, Failure> {
         DeferredFuture { promise in
             let result = block()
             promise(.failure(result))
@@ -319,7 +319,7 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, 
     /// - Parameter attemptToFulfill: A closure that is deferred
     ///   until subscription time, used to complete or fail the future.
     public convenience init(
-        attemptToFulfill: @escaping @Sendable (@escaping @Sendable WrappedFuture.Promise) -> Void
+        attemptToFulfill: @escaping (@escaping @Sendable WrappedFuture.Promise) -> Void
     ) {
         self.init(DeferredFuture(attemptToFulfill))
     }
@@ -347,7 +347,7 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, 
     /// The closure that attempts to fulfill the underlying future’s promise.
     ///
     /// This simply forwards to the wrapped deferred future.
-    public var attemptToFulfill: @Sendable (@escaping @Sendable Future<Output, Failure>.Promise) -> Void {
+    public var attemptToFulfill: (@escaping Future<Output, Failure>.Promise) -> Void {
         wrappedDeferredFuture.attemptToFulfill
     }
 
@@ -404,7 +404,7 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, 
     ///   the value of the future, or whose thrown error is emitted as the
     ///   failure.
     public static func withTask(
-        _ task: @escaping @Sendable () async throws -> Output
+        _ task: @escaping () async throws -> Output
     ) -> AnyDeferredFuture<Output, Failure> where Failure: CompositeError {
         DeferredFuture<Output, Failure>.withTask(task).eraseToAnyDeferredFuture()
     }
@@ -417,7 +417,7 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, 
     ///   failure.
     @_disfavoredOverload
     public static func withTask(
-        _ task: @escaping @Sendable () async throws(Failure) -> Output
+        _ task: @escaping () async throws(Failure) -> Output
     ) -> AnyDeferredFuture<Output, Failure> {
         DeferredFuture<Output, Failure>.withTask(task).eraseToAnyDeferredFuture()
     }
@@ -429,8 +429,8 @@ public class AnyDeferredFuture<Output, Failure: Error>: DeferredFutureProtocol, 
     ///   the value of the future, or whose thrown error is emitted as the
     ///   failure.
     public static func withTask(
-        nonconformingErrorHandler: @escaping @Sendable (Error) -> Failure,
-        task: @escaping @Sendable () async throws -> Output
+        nonconformingErrorHandler: @escaping (Error) -> Failure,
+        task: @escaping () async throws -> Output
     ) -> AnyDeferredFuture<Output, Failure> {
         DeferredFuture<Output, Failure>.withTask(
             nonconformingErrorHandler: nonconformingErrorHandler,

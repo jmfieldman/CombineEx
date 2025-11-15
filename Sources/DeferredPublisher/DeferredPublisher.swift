@@ -83,7 +83,7 @@ public class AnyDeferredPublisher<Output, Failure: Error>: DeferredPublisherProt
     /// - Parameter createPublisher: A closure that returns a `WrappedPublisher`
     ///   every time it's called. This closure is deferred until subscription.
     public convenience init(
-        createPublisher: @escaping @Sendable () -> WrappedPublisher
+        createPublisher: @escaping () -> WrappedPublisher
     ) {
         // Wrap the closure in a Deferred<WrappedPublisher>, then
         // forward to the designated initializer.
