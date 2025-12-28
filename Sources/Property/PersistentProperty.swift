@@ -60,7 +60,7 @@ public struct PersistentPropertyKey: Hashable, Sendable {
             .union(.controlCharacters)
 
         self.sanitizedIndex = self.key.unicodeScalars.map { illegalCharacters.contains($0) ? "_" : String($0) }.joined() +
-            (self.subKey ?? "").unicodeScalars.map { illegalCharacters.contains($0) ? "_" : String($0) }.joined()
+            (self.subKey.flatMap { "\($0)," } ?? "").unicodeScalars.map { illegalCharacters.contains($0) ? "_" : String($0) }.joined()
     }
 }
 
@@ -298,7 +298,7 @@ public final class FileBasedPersistentPropertyStorageEngine: PersistentPropertyS
     }
 
     /// The root directory where persistent properties are stored.
-    private let rootDirectoryUrl: URL?
+    public let rootDirectoryUrl: URL?
 
     /// An error that occurred during the initialization of the storage engine, if any.
     private let initializationError: FileBasedPersistentPropertyStorageEngineError?
