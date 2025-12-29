@@ -15,6 +15,10 @@ public final class UIProperty<Output>: PropertyProtocol, @unchecked Sendable {
     public private(set) var value: Output
     @ObservationIgnored private var captured: any Publisher<Output, Never>
 
+    public var readonlyBinding: Binding<Output> {
+        Binding(get: { self.value }, set: { _ in })
+    }
+
     public init<P: PropertyProtocol>(_ capturing: P) where P.Output == Output {
         self.captured = capturing
 
