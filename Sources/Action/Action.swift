@@ -31,6 +31,15 @@ public final class Action<Input, Output, Failure: Error>: @unchecked Sendable {
         self.isEnabled = enabledIf
     }
 
+    /// Create a new Action that executes the given builder's Future on `apply`.
+    @_disfavoredOverload
+    public convenience init(
+        enabledIf: Property<Bool> = .just(true),
+        builder: @escaping (Input) -> AnyDeferredFuture<Output, Failure>
+    ) {
+        self.init(enabledIf: enabledIf, builder: { builder($0).eraseToAnyDeferredPublisher() })
+    }
+
     /// Applies the action with the given input and returns a deferred publisher.
     /// Note that no work begins until the publisher is subscribed to.
     ///
