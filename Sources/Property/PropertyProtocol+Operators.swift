@@ -7,6 +7,17 @@ import Combine
 import Foundation
 
 public extension PropertyProtocol {
+    func eraseToProperty() -> Property<Output> {
+        Property(self)
+    }
+
+    @available(iOS 17, macOS 14, tvOS 17, watchOS 10, *)
+    func eraseToUIProperty() -> UIProperty<Output> {
+        UIProperty(self)
+    }
+}
+
+public extension PropertyProtocol {
     func lift<U>(
         _ transform: @escaping @Sendable (AnyPublisher<Output, Never>) -> some Publisher<U, Never>
     ) -> Property<U> {
