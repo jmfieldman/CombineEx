@@ -172,7 +172,7 @@ public extension PropertyProtocol {
     static func combineLatest<A, B>(
         _ pA: some PropertyProtocol<A>,
         _ pB: some PropertyProtocol<B>
-    ) -> Property<(A, B)> {
+    ) -> Property<(A, B)> where A == Output {
         pA.combineLatest(pB)
     }
 
@@ -180,7 +180,7 @@ public extension PropertyProtocol {
         _ pA: some PropertyProtocol<A>,
         _ pB: some PropertyProtocol<B>,
         _ pC: some PropertyProtocol<C>
-    ) -> Property<(A, B, C)> {
+    ) -> Property<(A, B, C)> where A == Output {
         pA.combineLatest(pB, pC)
     }
 
@@ -189,7 +189,7 @@ public extension PropertyProtocol {
         _ pB: some PropertyProtocol<B>,
         _ pC: some PropertyProtocol<C>,
         _ pD: some PropertyProtocol<D>
-    ) -> Property<(A, B, C, D)> {
+    ) -> Property<(A, B, C, D)> where A == Output {
         pA.combineLatest(pB, pC, pD)
     }
 
@@ -199,7 +199,7 @@ public extension PropertyProtocol {
         _ pC: some PropertyProtocol<C>,
         _ pD: some PropertyProtocol<D>,
         _ pE: some PropertyProtocol<E>
-    ) -> Property<(A, B, C, D, E)> {
+    ) -> Property<(A, B, C, D, E)> where A == Output {
         pA.combineLatest(pB, pC, pD, pE)
     }
 
@@ -210,7 +210,7 @@ public extension PropertyProtocol {
         _ pD: some PropertyProtocol<D>,
         _ pE: some PropertyProtocol<E>,
         _ pF: some PropertyProtocol<F>
-    ) -> Property<(A, B, C, D, E, F)> {
+    ) -> Property<(A, B, C, D, E, F)> where A == Output {
         pA.combineLatest(pB, pC, pD, pE, pF)
     }
 
@@ -222,7 +222,7 @@ public extension PropertyProtocol {
         _ pE: some PropertyProtocol<E>,
         _ pF: some PropertyProtocol<F>,
         _ pG: some PropertyProtocol<G>
-    ) -> Property<(A, B, C, D, E, F, G)> {
+    ) -> Property<(A, B, C, D, E, F, G)> where A == Output {
         pA.combineLatest(pB, pC, pD, pE, pF, pG)
     }
 
@@ -235,7 +235,7 @@ public extension PropertyProtocol {
         _ pF: some PropertyProtocol<F>,
         _ pG: some PropertyProtocol<G>,
         _ pH: some PropertyProtocol<H>
-    ) -> Property<(A, B, C, D, E, F, G, H)> {
+    ) -> Property<(A, B, C, D, E, F, G, H)> where A == Output {
         pA.combineLatest(pB, pC, pD, pE, pF, pG, pH)
     }
 
@@ -249,7 +249,7 @@ public extension PropertyProtocol {
         _ pG: some PropertyProtocol<G>,
         _ pH: some PropertyProtocol<H>,
         _ pI: some PropertyProtocol<I>
-    ) -> Property<(A, B, C, D, E, F, G, H, I)> {
+    ) -> Property<(A, B, C, D, E, F, G, H, I)> where A == Output {
         pA.combineLatest(pB, pC, pD, pE, pF, pG, pH, pI)
     }
 
@@ -264,7 +264,7 @@ public extension PropertyProtocol {
         _ pH: some PropertyProtocol<H>,
         _ pI: some PropertyProtocol<I>,
         _ pJ: some PropertyProtocol<J>
-    ) -> Property<(A, B, C, D, E, F, G, H, I, J)> {
+    ) -> Property<(A, B, C, D, E, F, G, H, I, J)> where A == Output {
         pA.combineLatest(pB, pC, pD, pE, pF, pG, pH, pI, pJ)
     }
 }
