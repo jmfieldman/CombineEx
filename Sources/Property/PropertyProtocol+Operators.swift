@@ -32,6 +32,7 @@ public extension PropertyProtocol {
         lift { $0.map(transform) }
     }
 
+    @_disfavoredOverload
     func map<T>(
         value: T
     ) -> Property<T> {
